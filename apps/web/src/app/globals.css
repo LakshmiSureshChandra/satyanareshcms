@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #faf7f1;
+  --color-paper-2: #f3eee4;
+  --color-ink: #1c1712;
+  --color-ink-soft: #5c534a;
+  --color-line: #e2dacb;
+  --color-accent: #c2320a;
+  --color-accent-dark: #9a2808;
+  --color-gold: #b98a2f;
+
+  --font-sans: var(--font-telugu-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-telugu-serif), Georgia, serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* editorial headline style */
+.headline {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+/* double newspaper rule */
+.rule-double {
+  border-top: 3px solid var(--color-ink);
+  position: relative;
+}
+.rule-double::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--color-ink);
+}
+
+/* article body content (rendered HTML from the CMS) */
+.prose-news {
+  font-size: 1.075rem;
+  line-height: 1.95;
+  color: var(--color-ink);
+}
+.prose-news p { margin: 1.1em 0; }
+.prose-news h2, .prose-news h3 { font-family: var(--font-serif); font-weight: 700; margin: 1.4em 0 0.6em; line-height: 1.4; }
+.prose-news h2 { font-size: 1.45em; }
+.prose-news h3 { font-size: 1.2em; }
+.prose-news a { color: var(--color-accent); text-decoration: underline; text-underline-offset: 3px; }
+.prose-news img { border-radius: 6px; margin: 1.5em auto; max-width: 100%; height: auto; }
+.prose-news iframe { max-width: 100%; margin: 1.5em auto; border-radius: 6px; aspect-ratio: 16/9; width: 100%; height: auto; }
+.prose-news blockquote { border-left: 3px solid var(--color-accent); padding-left: 1em; font-style: italic; color: var(--color-ink-soft); }
+.prose-news ul, .prose-news ol { padding-left: 1.5em; margin: 1em 0; }
+.prose-news ul { list-style: disc; }
+.prose-news ol { list-style: decimal; }
+
+/* card image zoom */
+.card-img { overflow: hidden; }
+.card-img img { transition: transform 0.5s ease; }
+.card-zoom:hover .card-img img { transform: scale(1.04); }
+
+/* staggered load-in for homepage sections */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.rise { animation: rise 0.55s ease both; }
+.rise-1 { animation-delay: 0.05s; }
+.rise-2 { animation-delay: 0.15s; }
+.rise-3 { animation-delay: 0.25s; }
+
+/* ---------- admin ---------- */
+.admin-input {
+  width: 100%;
+  border-radius: 0.375rem;
+  border: 1px solid #d6d3d1;
+  background: #fff;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+}
+.admin-input:focus {
+  border-color: #78716c;
+  box-shadow: 0 0 0 3px #e7e5e4;
+}
+.admin-label {
+  margin-bottom: 0.25rem;
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #44403c;
+}
+
+/* TipTap editor */
+.tiptap {
+  min-height: 420px;
+  padding: 1rem;
+  outline: none;
+  line-height: 1.9;
+}
+.tiptap img { max-width: 100%; border-radius: 4px; }
+.tiptap iframe { max-width: 100%; aspect-ratio: 16/9; width: 100%; height: auto; }
+.tiptap h2 { font-size: 1.4em; font-weight: 700; margin: 1em 0 0.5em; }
+.tiptap h3 { font-size: 1.15em; font-weight: 700; margin: 1em 0 0.5em; }
+.tiptap ul { list-style: disc; padding-left: 1.5em; }
+.tiptap ol { list-style: decimal; padding-left: 1.5em; }
+.tiptap blockquote { border-left: 3px solid #ccc; padding-left: 1em; color: #666; }
+.tiptap a { color: #c2320a; text-decoration: underline; }

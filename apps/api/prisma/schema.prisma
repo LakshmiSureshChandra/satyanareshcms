@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  manager
+}
+
+enum PostType {
+  post
+  page
+}
+
+enum MenuType {
+  custom
+  post
+  page
+  category
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  mobile    String?   @unique @db.Char(10)
+  password  String
+  role      Role      @default(manager)
+  status    Boolean   @default(true)
+  resetToken String?  @map("reset_token")
+  resetTokenExpiresAt DateTime? @map("reset_token_expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  posts     Post[]    @relation("author")
+
+  @@map("users")
+}
+
+model Post {
+  id              Int        @id @default(autoincrement())
+  title           String
+  slug            String     @unique
+  content         String     @db.LongText
+  bannerImage     String?    @map("banner_image")
+  type            PostType   @default(post)
+  tags            String?
+  sortOrder       Int        @default(0) @map("sort_order")
+  createdBy       Int?       @map("created_by")
+  updatedBy       Int?       @map("updated_by")
+  publishedAt     DateTime?  @map("published_at")
+  metaTitle       String?    @map("meta_title")
+  metaDescription String?    @map("meta_description") @db.Text
+  status          Boolean    @default(false)
+  views           Int        @default(0) @db.UnsignedInt
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  deletedAt       DateTime?  @map("deleted_at")
+  author          User?      @relation("author", fields: [createdBy], references: [id], onDelete: SetNull)
+  categories      CategoryPost[]
+
+  @@index([type, status, publishedAt])
+  @@fulltext([title, content])
+  @@map("posts")
+}
+
+model Category {
+  id          Int        @id @default(autoincrement())
+  name        String
+  slug        String     @unique
+  description String?    @db.Text
+  parentId    Int?       @map("parent_id")
+  bannerImage String?    @map("banner_image")
+  status      Boolean    @default(true)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  parent      Category?  @relation("tree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("tree")
+  posts       CategoryPost[]
+
+  @@map("categories")
+}
+
+model CategoryPost {
+  postId     Int      @map("post_id")
+  categoryId Int      @map("category_id")
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([postId, categoryId])
+  @@map("category_posts")
+}
+
+model Menu {
+  id        Int      @id @default(autoincrement())
+  title     String
+  type      MenuType @default(custom)
+  url       String?
+  refId     Int?     @map("ref_id")
+  parentId  Int?     @map("parent_id")
+  order     Int      @default(0)
+  newWindow Boolean  @default(false) @map("new_window")
+  parent    Menu?    @relation("tree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Menu[]   @relation("tree")
+
+  @@map("menus")
+}
+
+model Option {
+  key   String  @id @map("option_name")
+  value String? @map("option_value") @db.Text
+
+  @@map("options")
+}
+
+model Media {
+  id        Int       @id @default(autoincrement())
+  name      String
+  file      String
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("media")
+}
+
+model ContactSubmission {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  company   String?
+  phone     String?
+  message   String?  @db.Text
+  handled   Boolean  @default(false)
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([handled, createdAt])
+  @@map("contact_submissions")
+}

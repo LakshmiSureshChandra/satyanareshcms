@@ -1,0 +1,11 @@
+{
+  "name": "akganesh",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/api & npm run dev --workspace=apps/web",
+    "build": "npm run build --workspaces"
+  }
+}
