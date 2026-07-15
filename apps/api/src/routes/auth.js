@@ -12,7 +12,9 @@ const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20 })
 const cookieOpts = {
   httpOnly: true,
   sameSite: 'lax',
-  secure: process.env.NODE_ENV === 'production',
+  // secure only when the site is actually served over HTTPS — a secure cookie
+  // is dropped by browsers over plain HTTP (e.g. IP-based demo before a domain).
+  secure: (process.env.WEB_URL || '').startsWith('https'),
   maxAge: 7 * 24 * 3600 * 1000,
   path: '/',
 }
