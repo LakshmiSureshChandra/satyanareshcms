@@ -34,7 +34,7 @@ export default async function HomePage() {
           <div className="md:col-span-2">
             <OverlayCard post={lead} />
           </div>
-          <div className="flex flex-col justify-between gap-5 rounded-3xl border border-line bg-white/50 p-5">
+          <div className="flex flex-col justify-between gap-5 rounded-lg border border-line bg-white/50 p-5">
             {side.map((p) => (
               <PostRow key={p.id} post={p} />
             ))}
@@ -66,7 +66,7 @@ export default async function HomePage() {
       {home.more.length > 0 && (
         <section className="rise-3 rise py-8">
           <SectionTitle>మరిన్ని వార్తలు</SectionTitle>
-          <div className="grid gap-x-10 gap-y-7 rounded-3xl border border-line bg-white/50 p-6 md:grid-cols-2 md:p-8">
+          <div className="grid gap-x-10 gap-y-7 rounded-lg border border-line bg-white/50 p-6 md:grid-cols-2 md:p-8">
             {home.more.map((p) => (
               <PostRow key={p.id} post={p} />
             ))}

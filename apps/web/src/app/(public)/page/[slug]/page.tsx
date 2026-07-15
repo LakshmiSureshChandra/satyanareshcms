@@ -44,7 +44,7 @@ export default async function StaticPage({ params }: { params: Promise<{ slug: s
       <h1 className="section-title text-3xl md:text-4xl">{page.title}</h1>
       {banner && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={banner} alt={page.title} className="mt-6 w-full rounded-3xl" />
+        <img src={banner} alt={page.title} className="mt-6 w-full rounded-lg" />
       )}
       <div className="prose-news mt-4" dangerouslySetInnerHTML={{ __html: page.content }} />
     </div>

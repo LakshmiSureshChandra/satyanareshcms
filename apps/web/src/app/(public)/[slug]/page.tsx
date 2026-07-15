@@ -113,21 +113,19 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
           <h1 className="headline mt-3 text-3xl leading-snug md:text-[2.6rem] md:leading-[1.25]">{post.title}</h1>
 
-          <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-ink-soft">
+          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 border-y border-line py-3 text-sm text-ink-soft">
             {post.author && (
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/70 py-1 pl-1 pr-3.5 font-semibold text-ink ring-1 ring-line">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink font-display text-xs font-bold text-lime">
-                  {post.author.name.charAt(0)}
-                </span>
-                {post.author.name}
-              </span>
+              <>
+                <span className="font-semibold text-ink">{post.author.name}</span>
+                <span className="text-line">|</span>
+              </>
             )}
-            <time dateTime={post.publishedAt} className="font-medium">{formatDate(post.publishedAt)}</time>
+            <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
           </div>
 
           {img && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={img} alt={post.title} className="mt-7 w-full rounded-3xl" />
+            <img src={img} alt={post.title} className="mt-7 w-full rounded-lg" />
           )}
 
           <div className="prose-news mt-3" dangerouslySetInnerHTML={{ __html: post.content }} />
@@ -138,7 +136,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 <Link
                   key={t}
                   href={`/tag/${encodeURIComponent(t)}`}
-                  className="rounded-full bg-paper-2 px-3.5 py-1.5 text-xs font-bold text-ink-soft transition-colors hover:bg-ink hover:text-lime"
+                  className="border border-line px-3 py-1.5 text-xs font-semibold text-ink-soft transition-colors hover:border-accent hover:text-accent"
                 >
                   #{t}
                 </Link>
@@ -146,7 +144,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             </div>
           )}
 
-          <div className="mt-7 rounded-3xl border border-line bg-white/60 p-5">
+          <div className="mt-7 rounded-lg border border-line bg-white/60 p-5">
             <ShareButtons url={url} title={post.title} />
           </div>
 

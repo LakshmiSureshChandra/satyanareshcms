@@ -12,13 +12,13 @@ const LEGAL: [string, string][] = [
 
 export function Footer({ settings, categories }: { settings: Settings; categories: CategoryNode[] }) {
   return (
-    <footer className="mt-20 rounded-t-[2.5rem] bg-ink text-paper">
+    <footer className="mt-20 border-t-4 border-accent bg-ink text-paper">
       <div className="mx-auto max-w-6xl px-6 py-14">
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm">
             <p className="headline text-4xl text-paper">
               {settings.site_name}
-              <span className="text-accent">.</span>
+              <span className="text-gold">.</span>
             </p>
             <p className="mt-3 text-sm leading-relaxed text-paper/60">
               తాజా వార్తలు, విశ్లేషణలు మరియు ప్రత్యేక కథనాలు — {settings.site_name} లో చదవండి.
@@ -34,7 +34,7 @@ export function Footer({ settings, categories }: { settings: Settings; categorie
               <ul className="space-y-2.5 text-sm">
                 {categories.slice(0, 8).map((c) => (
                   <li key={c.id}>
-                    <Link href={`/category/${c.slug}`} className="text-paper/75 transition-colors hover:text-lime">
+                    <Link href={`/category/${c.slug}`} className="text-paper/75 transition-colors hover:text-gold">
                       {c.name}
                     </Link>
                   </li>
@@ -44,11 +44,11 @@ export function Footer({ settings, categories }: { settings: Settings; categorie
             <div>
               <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">సమాచారం</p>
               <ul className="space-y-2.5 text-sm">
-                <li><Link href="/page/about-us" className="text-paper/75 transition-colors hover:text-lime">About Us</Link></li>
-                <li><Link href="/contact" className="text-paper/75 transition-colors hover:text-lime">Contact</Link></li>
+                <li><Link href="/page/about-us" className="text-paper/75 transition-colors hover:text-gold">About Us</Link></li>
+                <li><Link href="/contact" className="text-paper/75 transition-colors hover:text-gold">Contact</Link></li>
                 {LEGAL.map(([label, href]) => (
                   <li key={href}>
-                    <Link href={href} className="text-paper/75 transition-colors hover:text-lime">{label}</Link>
+                    <Link href={href} className="text-paper/75 transition-colors hover:text-gold">{label}</Link>
                   </li>
                 ))}
               </ul>

@@ -25,33 +25,33 @@ function DesktopItem({ item }: { item: MenuItem }) {
     return (
       <MenuLink
         item={item}
-        className="rounded-full px-4 py-2 text-[15px] font-semibold transition-colors hover:bg-ink hover:text-paper"
+        className="border-b-2 border-transparent px-4 py-3 text-[15px] font-semibold transition-colors hover:border-accent hover:text-accent"
       />
     )
   return (
     <div className="group relative">
       <MenuLink
         item={item}
-        className="flex items-center gap-1 rounded-full px-4 py-2 text-[15px] font-semibold transition-colors hover:bg-ink hover:text-paper after:content-['▾'] after:text-[10px] after:opacity-60"
+        className="flex items-center gap-1 border-b-2 border-transparent px-4 py-3 text-[15px] font-semibold transition-colors hover:border-accent hover:text-accent after:content-['▾'] after:text-[10px] after:opacity-60"
       />
-      <div className="invisible absolute left-0 top-full z-40 min-w-56 rounded-2xl border border-line bg-paper p-1.5 opacity-0 shadow-xl transition-all group-hover:visible group-hover:opacity-100">
+      <div className="invisible absolute left-0 top-full z-40 min-w-56 border border-line bg-paper py-1 opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100">
         {item.children.map((c) => {
           const hasKids = c.children.length > 0
           return (
             <div key={c.id} className="group/sub relative">
               <MenuLink
                 item={c}
-                className={`flex items-center justify-between gap-2 rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-paper-2 hover:text-accent ${hasKids ? "after:content-['›'] after:text-ink-soft" : ''}`}
+                className={`flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium hover:bg-paper-2 hover:text-accent ${hasKids ? "after:content-['›'] after:text-ink-soft" : ''}`}
               />
               {hasKids && (
                 // pl-1 bridges the hover gap so the flyout doesn't close mid-travel
                 <div className="invisible absolute left-full top-0 z-50 min-w-48 pl-1 opacity-0 transition-all group-hover/sub:visible group-hover/sub:opacity-100">
-                  <div className="rounded-2xl border border-line bg-paper p-1.5 shadow-xl">
+                  <div className="border border-line bg-paper py-1 shadow-lg">
                     {c.children.map((g) => (
                       <MenuLink
                         key={g.id}
                         item={g}
-                        className="block rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-paper-2 hover:text-accent"
+                        className="block px-4 py-2.5 text-sm font-medium hover:bg-paper-2 hover:text-accent"
                       />
                     ))}
                   </div>
@@ -140,7 +140,7 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
           </nav>
 
           <button
-            className="ml-auto rounded-full bg-ink p-2.5 text-paper transition-transform hover:scale-105 md:ml-0"
+            className="ml-auto rounded-md border border-line p-2.5 text-ink transition-colors hover:border-accent hover:text-accent md:ml-0"
             onClick={() => { setSearchOpen(!searchOpen); setOpen(false) }}
             aria-label="Search"
           >
@@ -160,9 +160,9 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="వార్తలు వెతకండి…"
-                className="w-full rounded-full border border-line bg-white/70 px-5 py-2.5 outline-none focus:border-accent"
+                className="w-full rounded-md border border-line bg-white px-4 py-2.5 outline-none focus:border-accent"
               />
-              <button className="rounded-full bg-accent px-6 py-2.5 font-semibold text-white hover:bg-accent-dark">
+              <button className="rounded-md bg-accent px-6 py-2.5 font-semibold text-white hover:bg-accent-dark">
                 వెతకండి
               </button>
             </form>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Sans_Telugu, Baloo_Tammudu_2 } from "next/font/google";
+import { Noto_Sans_Telugu, Noto_Serif_Telugu } from "next/font/google";
 import "./globals.css";
 
 const teluguSans = Noto_Sans_Telugu({
@@ -8,11 +8,11 @@ const teluguSans = Noto_Sans_Telugu({
   weight: ["400", "500", "600", "700"],
 });
 
-// Chunky rounded display face (supports Telugu) — headlines, wordmark, section titles.
-const teluguDisplay = Baloo_Tammudu_2({
+// Serif display — editorial authority for headlines, wordmark, section titles.
+const teluguDisplay = Noto_Serif_Telugu({
   variable: "--font-telugu-display",
   subsets: ["telugu", "latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
