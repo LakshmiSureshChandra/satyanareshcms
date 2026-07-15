@@ -23,12 +23,13 @@ export function PostListPage({ kind }: { kind: 'post' | 'page' }) {
   const [s, setS] = useState('')
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
+  const [selected, setSelected] = useState<number[]>([])
 
   const load = useCallback(() => {
     const params = new URLSearchParams({ page: String(page) })
     if (s) params.set('s', s)
     if (status) params.set('status', status)
-    adminApi<List>(`${apiBase}?${params}`).then(setList)
+    adminApi<List>(`${apiBase}?${params}`).then((d) => { setList(d); setSelected([]) })
   }, [apiBase, page, s, status])
 
   useEffect(() => {
@@ -36,9 +37,20 @@ export function PostListPage({ kind }: { kind: 'post' | 'page' }) {
     return () => clearTimeout(t)
   }, [load, s])
 
+  const rows = list?.items ?? []
+  const allChecked = rows.length > 0 && selected.length === rows.length
+  const toggleAll = () => setSelected(allChecked ? [] : rows.map((r) => r.id))
+  const toggle = (id: number) => setSelected((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]))
+
   async function remove(row: Row) {
     if (!confirm(`Move "${row.title}" to the recycle bin?`)) return
     await adminApi(`${apiBase}/${row.id}`, { method: 'DELETE' })
+    load()
+  }
+
+  async function bulkDelete() {
+    if (!confirm(`Move ${selected.length} ${kind === 'post' ? 'post(s)' : 'page(s)'} to the recycle bin?`)) return
+    await adminApi(`${apiBase}/bulk-delete`, { method: 'POST', body: { ids: selected } })
     load()
   }
 
@@ -65,11 +77,22 @@ export function PostListPage({ kind }: { kind: 'post' | 'page' }) {
         </select>
       </div>
 
+      {selected.length > 0 && (
+        <div className="mb-3 flex items-center gap-3 rounded-md bg-stone-200 px-4 py-2 text-sm">
+          <span className="font-medium">{selected.length} selected</span>
+          <button onClick={bulkDelete} className="ml-auto font-semibold text-red-700 hover:underline">Delete selected</button>
+          <button onClick={() => setSelected([])} className="text-stone-600 hover:underline">Clear</button>
+        </div>
+      )}
+
       <div className="overflow-x-auto rounded-xl border border-stone-200 bg-white">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wide text-stone-500">
-              <th className="px-4 py-3">Title</th>
+              <th className="w-10 px-4 py-3">
+                <input type="checkbox" checked={allChecked} onChange={toggleAll} className="h-4 w-4 accent-stone-900" aria-label="Select all" />
+              </th>
+              <th className="px-2 py-3">Title</th>
               {kind === 'post' && <th className="px-3 py-3">Categories</th>}
               <th className="px-3 py-3">Author</th>
               <th className="px-3 py-3">Status</th>
@@ -79,9 +102,12 @@ export function PostListPage({ kind }: { kind: 'post' | 'page' }) {
             </tr>
           </thead>
           <tbody>
-            {list?.items.map((row) => (
-              <tr key={row.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50">
-                <td className="max-w-md px-4 py-3">
+            {rows.map((row) => (
+              <tr key={row.id} className={`border-b border-stone-100 last:border-0 hover:bg-stone-50 ${selected.includes(row.id) ? 'bg-stone-50' : ''}`}>
+                <td className="px-4 py-3">
+                  <input type="checkbox" checked={selected.includes(row.id)} onChange={() => toggle(row.id)} className="h-4 w-4 accent-stone-900" aria-label={`Select ${row.title}`} />
+                </td>
+                <td className="max-w-md px-2 py-3">
                   <Link href={`${uiBase}/${row.id}/edit`} className="line-clamp-1 font-medium hover:underline">{row.title}</Link>
                 </td>
                 {kind === 'post' && <td className="px-3 py-3 text-stone-500">{row.categories.join(', ')}</td>}
@@ -108,8 +134,8 @@ export function PostListPage({ kind }: { kind: 'post' | 'page' }) {
                 </td>
               </tr>
             ))}
-            {list && !list.items.length && (
-              <tr><td colSpan={7} className="px-4 py-10 text-center text-stone-400">Nothing found.</td></tr>
+            {list && !rows.length && (
+              <tr><td colSpan={8} className="px-4 py-10 text-center text-stone-400">Nothing found.</td></tr>
             )}
           </tbody>
         </table>

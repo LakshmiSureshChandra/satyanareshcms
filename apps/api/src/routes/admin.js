@@ -199,6 +199,15 @@ for (const type of ['post', 'page']) {
     revalidate(postPaths(post))
     res.json({ ok: true })
   })
+  // bulk soft-delete (move many to recycle bin)
+  router.post(`${base}/bulk-delete`, async (req, res) => {
+    const ids = (req.body?.ids || []).map(Number).filter(Boolean)
+    if (!ids.length) return res.status(422).json({ error: 'No items selected' })
+    const posts = await db.post.findMany({ where: { id: { in: ids }, type, ...notTrashed } })
+    await db.post.updateMany({ where: { id: { in: posts.map((p) => p.id) } }, data: { deletedAt: new Date() } })
+    revalidate(['/'])
+    res.json({ ok: true, count: posts.length })
+  })
 }
 
 // ---- categories ----

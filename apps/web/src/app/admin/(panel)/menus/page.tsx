@@ -34,31 +34,57 @@ function toTree(items: Item[]): Node[] {
 }
 
 function SortableRow({
-  item, onIndent, onRemove, canIndent,
+  item, onIndent, onRemove, canIndent, editing, onToggleEdit, onChange,
 }: {
   item: Item
   onIndent: (key: number, dir: 1 | -1) => void
   onRemove: (key: number) => void
   canIndent: boolean
+  editing: boolean
+  onToggleEdit: (key: number | null) => void
+  onChange: (key: number, patch: Partial<Item>) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.key })
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, marginLeft: item.depth * 28 }}
-      className={`mb-1.5 flex items-center gap-2 rounded-md border border-stone-200 bg-white px-3 py-2 ${isDragging ? 'z-10 shadow-lg' : ''}`}
+      className={`mb-1.5 rounded-md border border-stone-200 bg-white ${isDragging ? 'z-10 shadow-lg' : ''}`}
     >
-      <button {...attributes} {...listeners} className="cursor-grab text-stone-400 hover:text-stone-700" aria-label="Drag">
-        ⠿
-      </button>
-      <span className="text-sm font-medium">{item.title}</span>
-      <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] uppercase text-stone-500">{item.type}</span>
-      {item.newWindow && <span className="text-[10px] text-stone-400">↗ new tab</span>}
-      <span className="ml-auto flex items-center gap-1 text-stone-400">
-        <button onClick={() => onIndent(item.key, -1)} disabled={item.depth === 0} className="rounded px-1.5 hover:bg-stone-100 disabled:opacity-30" title="Outdent">←</button>
-        <button onClick={() => onIndent(item.key, 1)} disabled={!canIndent} className="rounded px-1.5 hover:bg-stone-100 disabled:opacity-30" title="Indent">→</button>
-        <button onClick={() => onRemove(item.key)} className="rounded px-1.5 text-red-500 hover:bg-red-50" title="Remove">✕</button>
-      </span>
+      <div className="flex items-center gap-2 px-3 py-2">
+        <button {...attributes} {...listeners} className="cursor-grab text-stone-400 hover:text-stone-700" aria-label="Drag">⠿</button>
+        <span className="text-sm font-medium">{item.title}</span>
+        <span className="rounded bg-stone-100 px-1.5 py-0.5 text-[10px] uppercase text-stone-500">{item.type}</span>
+        {item.newWindow && <span className="text-[10px] text-stone-400">↗ new tab</span>}
+        <span className="ml-auto flex items-center gap-1 text-stone-400">
+          <button onClick={() => onToggleEdit(editing ? null : item.key)} className={`rounded px-2 text-xs font-semibold hover:bg-stone-100 ${editing ? 'text-stone-900' : 'text-stone-500'}`} title="Edit">Edit</button>
+          <button onClick={() => onIndent(item.key, -1)} disabled={item.depth === 0} className="rounded px-1.5 hover:bg-stone-100 disabled:opacity-30" title="Outdent">←</button>
+          <button onClick={() => onIndent(item.key, 1)} disabled={!canIndent} className="rounded px-1.5 hover:bg-stone-100 disabled:opacity-30" title="Indent">→</button>
+          <button onClick={() => onRemove(item.key)} className="rounded px-1.5 text-red-500 hover:bg-red-50" title="Remove">✕</button>
+        </span>
+      </div>
+
+      {editing && (
+        <div className="space-y-2.5 border-t border-stone-100 bg-stone-50 px-3 py-3">
+          <div>
+            <label className="admin-label">Label</label>
+            <input value={item.title} onChange={(e) => onChange(item.key, { title: e.target.value })} className="admin-input" />
+          </div>
+          {item.type === 'custom' && (
+            <>
+              <div>
+                <label className="admin-label">URL</label>
+                <input value={item.url} onChange={(e) => onChange(item.key, { url: e.target.value })} placeholder="/contact or https://…" className="admin-input" />
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={item.newWindow} onChange={(e) => onChange(item.key, { newWindow: e.target.checked })} className="h-4 w-4 accent-stone-900" />
+                Open in new tab
+              </label>
+            </>
+          )}
+          <button onClick={() => onToggleEdit(null)} className="rounded-md bg-stone-900 px-4 py-1.5 text-xs font-semibold text-white hover:bg-stone-700">Done</button>
+        </div>
+      )}
     </div>
   )
 }
@@ -67,8 +93,12 @@ export default function MenusPage() {
   const [items, setItems] = useState<Item[]>([])
   const [sources, setSources] = useState<{ posts: Ref[]; pages: Ref[]; categories: Ref[] }>({ posts: [], pages: [], categories: [] })
   const [form, setForm] = useState({ title: '', type: 'custom', url: '', refId: '', newWindow: false })
+  const [editingKey, setEditingKey] = useState<number | null>(null)
   const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
+
+  const updateItem = (key: number, patch: Partial<Item>) =>
+    setItems((list) => list.map((it) => (it.key === key ? { ...it, ...patch } : it)))
 
   useEffect(() => {
     adminApi('/admin/menus').then((data: any) => {
@@ -201,8 +231,11 @@ export default function MenusPage() {
                   key={it.key}
                   item={it}
                   onIndent={indent}
-                  onRemove={(key) => setItems(items.filter((i) => i.key !== key))}
+                  onRemove={(key) => { setItems(items.filter((i) => i.key !== key)); if (editingKey === key) setEditingKey(null) }}
                   canIndent={idx > 0 && it.depth < Math.min(items[idx - 1].depth + 1, 2)}
+                  editing={editingKey === it.key}
+                  onToggleEdit={setEditingKey}
+                  onChange={updateItem}
                 />
               ))}
             </SortableContext>
