@@ -56,9 +56,9 @@ export function Editor({ value, onChange }: { value: string; onChange: (html: st
             else editor.chain().focus().setLink({ href: url }).run()
           }}
         >
-          🔗 Link
+          Link
         </button>
-        <button type="button" className={btn(false)} onClick={() => fileRef.current?.click()}>🖼 Image</button>
+        <button type="button" className={btn(false)} onClick={() => fileRef.current?.click()}>Image</button>
         <button
           type="button"
           className={btn(false)}
@@ -67,7 +67,7 @@ export function Editor({ value, onChange }: { value: string; onChange: (html: st
             if (url) editor.chain().focus().setYoutubeVideo({ src: url }).run()
           }}
         >
-          ▶ YouTube
+          YouTube
         </button>
         <span className="mx-1 h-5 w-px bg-stone-200" />
         <button type="button" className={btn(false)} onClick={() => editor.chain().focus().undo().run()}>↺</button>
