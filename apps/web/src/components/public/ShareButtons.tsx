@@ -16,7 +16,7 @@ export function ShareButtons({ url, title }: { url: string; title: string }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="mr-1 text-sm font-semibold text-ink-soft">షేర్ చేయండి:</span>
+      <span className="mr-1 text-sm font-semibold text-ink-soft">Share:</span>
       {links.map(([label, href, color]) => (
         <a
           key={label}
@@ -37,7 +37,7 @@ export function ShareButtons({ url, title }: { url: string; title: string }) {
         }}
         className="rounded-full border border-line px-4 py-1.5 text-xs font-bold text-ink-soft hover:bg-paper-2"
       >
-        {copied ? 'కాపీ అయింది ✓' : 'లింక్ కాపీ'}
+        {copied ? 'Copied ✓' : 'Copy link'}
       </button>
     </div>
   )

@@ -35,15 +35,15 @@ export function CookieBanner({ gaSnippet }: { gaSnippet: string }) {
     <div className="fixed inset-x-0 bottom-0 z-[60] border-t-2 border-ink bg-paper p-4 shadow-2xl">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 md:flex-row md:justify-between">
         <p className="text-sm text-ink-soft">
-          మేము మీ అనుభవాన్ని మెరుగుపరచడానికి కుకీలను ఉపయోగిస్తాము. Read our{' '}
+          We use cookies to improve your experience. Read our{' '}
           <a href="/page/cookies-policy" className="text-accent underline">Cookies Policy</a>.
         </p>
         <div className="flex gap-2">
           <button onClick={() => choose('rejected')} className="rounded-md border border-line px-4 py-2 text-sm hover:bg-paper-2">
-            తిరస్కరించు
+            Decline
           </button>
           <button onClick={() => choose('accepted')} className="rounded-md bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-dark">
-            అంగీకరించు
+            Accept
           </button>
         </div>
       </div>

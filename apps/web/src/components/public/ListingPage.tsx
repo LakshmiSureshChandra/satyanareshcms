@@ -34,8 +34,8 @@ export async function ListingPage({
         <div className="lg:col-span-2">
           {list.posts.length === 0 ? (
             <div className="rounded-lg border border-dashed border-line py-20 text-center">
-              <p className="headline text-2xl text-ink-soft">వార్తలు కనబడలేదు</p>
-              <p className="mt-1 text-sm text-ink-soft">వేరే పదంతో ప్రయత్నించండి.</p>
+              <p className="headline text-2xl text-ink-soft">No articles found</p>
+              <p className="mt-1 text-sm text-ink-soft">Try a different search term.</p>
             </div>
           ) : (
             <div className="grid gap-8 sm:grid-cols-2">

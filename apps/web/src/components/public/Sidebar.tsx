@@ -10,7 +10,7 @@ export function Sidebar({ categories }: { categories: CategoryNode[] }) {
   return (
     <aside className="space-y-8">
       <div className="rounded-lg border border-line bg-white/60 p-6">
-        <h4 className="section-title text-lg">విభాగాలు</h4>
+        <h4 className="section-title text-lg">Categories</h4>
         <ul className="mt-1 divide-y divide-line">
           {all.map((c) => (
             <li key={c.id}>

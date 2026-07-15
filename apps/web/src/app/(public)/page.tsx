@@ -45,7 +45,7 @@ export default async function HomePage() {
       {/* FEATURED — swipeable rail */}
       {home.featured.length > 0 && (
         <section className="rise-1 rise py-8">
-          <SectionTitle>ప్రత్యేక కథనాలు</SectionTitle>
+          <SectionTitle>Featured Stories</SectionTitle>
           <FeaturedCarousel posts={home.featured} />
         </section>
       )}
@@ -53,7 +53,7 @@ export default async function HomePage() {
       {/* LATEST grid */}
       {home.latest.length > 0 && (
         <section className="rise-2 rise py-8">
-          <SectionTitle>తాజా వార్తలు</SectionTitle>
+          <SectionTitle>Latest News</SectionTitle>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {home.latest.map((p, i) => (
               <PostCard key={p.id} post={p} big={i === 0 && home.latest.length < 4} />
@@ -65,7 +65,7 @@ export default async function HomePage() {
       {/* MORE list */}
       {home.more.length > 0 && (
         <section className="rise-3 rise py-8">
-          <SectionTitle>మరిన్ని వార్తలు</SectionTitle>
+          <SectionTitle>More News</SectionTitle>
           <div className="grid gap-x-10 gap-y-7 rounded-lg border border-line bg-white/50 p-6 md:grid-cols-2 md:p-8">
             {home.more.map((p) => (
               <PostRow key={p.id} post={p} />

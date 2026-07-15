@@ -114,7 +114,7 @@ export function PostForm({ kind, id }: { kind: 'post' | 'page'; id?: number }) {
           {kind === 'post' && (
             <div>
               <label className="admin-label">Tags <span className="font-normal text-stone-400">(comma separated)</span></label>
-              <input value={form.tags} onChange={(e) => set({ tags: e.target.value })} className="admin-input" placeholder="తెలుగు, వార్తలు" />
+              <input value={form.tags} onChange={(e) => set({ tags: e.target.value })} className="admin-input" placeholder="news, business" />
             </div>
           )}
           <div className="grid gap-4 md:grid-cols-2">

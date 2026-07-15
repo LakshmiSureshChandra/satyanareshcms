@@ -102,7 +102,7 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
       <div className="border-b border-line bg-paper-2/60">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-1.5 text-xs font-medium text-ink-soft">
           <span suppressHydrationWarning>
-            {new Date().toLocaleDateString('te-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </span>
           <SocialIcons settings={settings} className="h-4 w-4" />
         </div>
@@ -159,11 +159,11 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
                 autoFocus
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="వార్తలు వెతకండి…"
+                placeholder="Search news…"
                 className="w-full rounded-md border border-line bg-white px-4 py-2.5 outline-none focus:border-accent"
               />
               <button className="rounded-md bg-accent px-6 py-2.5 font-semibold text-white hover:bg-accent-dark">
-                వెతకండి
+                Search
               </button>
             </form>
           </div>

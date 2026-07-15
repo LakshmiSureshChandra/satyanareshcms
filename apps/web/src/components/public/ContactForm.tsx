@@ -27,8 +27,8 @@ export function ContactForm() {
   if (state === 'sent')
     return (
       <div className="mt-8 rounded-md border border-line bg-paper-2 p-8 text-center">
-        <p className="headline text-xl">ధన్యవాదాలు!</p>
-        <p className="mt-2 text-sm text-ink-soft">మీ సందేశం అందింది. త్వరలో స్పందిస్తాము.</p>
+        <p className="headline text-xl">Thank you!</p>
+        <p className="mt-2 text-sm text-ink-soft">Your message has been received. We will get back to you soon.</p>
       </div>
     )
 
@@ -37,23 +37,23 @@ export function ContactForm() {
   return (
     <form onSubmit={submit} className="mt-8 grid gap-4 md:grid-cols-2">
       <div>
-        <label className="mb-1 block text-sm font-semibold">పేరు *</label>
+        <label className="mb-1 block text-sm font-semibold">Name *</label>
         <input name="name" required className={field} />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-semibold">ఇమెయిల్ *</label>
+        <label className="mb-1 block text-sm font-semibold">Email *</label>
         <input name="email" type="email" required className={field} />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-semibold">సంస్థ</label>
+        <label className="mb-1 block text-sm font-semibold">Company</label>
         <input name="company" className={field} />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-semibold">ఫోన్</label>
+        <label className="mb-1 block text-sm font-semibold">Phone</label>
         <input name="phone" className={field} />
       </div>
       <div className="md:col-span-2">
-        <label className="mb-1 block text-sm font-semibold">సందేశం</label>
+        <label className="mb-1 block text-sm font-semibold">Message</label>
         <textarea name="message" rows={5} maxLength={500} className={field} />
       </div>
       {state === 'error' && <p className="text-sm text-red-700 md:col-span-2">{error}</p>}
@@ -62,7 +62,7 @@ export function ContactForm() {
           disabled={state === 'sending'}
           className="rounded-md bg-accent px-10 py-3 font-semibold text-white hover:bg-accent-dark disabled:opacity-50"
         >
-          {state === 'sending' ? 'పంపుతోంది…' : 'పంపండి'}
+          {state === 'sending' ? 'Sending…' : 'Send Message'}
         </button>
       </div>
     </form>

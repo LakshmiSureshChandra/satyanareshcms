@@ -3,7 +3,7 @@ import { api } from '@/lib/api'
 import { ListingPage, type PostList } from '@/components/public/ListingPage'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'వెతకండి' }
+export const metadata: Metadata = { title: 'Search' }
 
 export default async function SearchPage({
   searchParams,
@@ -17,8 +17,8 @@ export default async function SearchPage({
 
   return (
     <ListingPage
-      title="వెతుకులాట ఫలితాలు"
-      subtitle={s ? `"${s}" కోసం ${list.total} ఫలితాలు` : 'వెతకడానికి పై సెర్చ్ ఉపయోగించండి'}
+      title="Search Results"
+      subtitle={s ? ` results for ""` : 'Use the search bar above to find articles'}
       list={list}
       base={`/search?s=${encodeURIComponent(s)}`}
     />

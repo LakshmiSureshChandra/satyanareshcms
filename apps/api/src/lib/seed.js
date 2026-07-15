@@ -1,11 +1,9 @@
 import bcrypt from 'bcryptjs'
-import transliterate from 'any-ascii'
-
-const slug = (t) =>
-  transliterate(t).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
 // Idempotent seed (all upserts) — safe to run repeatedly. Accepts a Prisma client
 // so it can be called from the CLI script OR from server boot (auto-seed if empty).
+// Creates only the essentials: admin login, settings, page shells, base menu.
+// No sample posts or categories — content is authored in the admin panel.
 export async function seedDatabase(db) {
   await db.user.upsert({
     where: { email: 'admin@akganesh.com' },
@@ -19,16 +17,6 @@ export async function seedDatabase(db) {
     },
   })
 
-  const catNames = ['దైవం', 'వ్యాపారం', 'వెండి తెర', 'పుస్తకాలు', 'తాజా వార్తలు', 'ప్రత్యేకం']
-  const cats = {}
-  for (const name of catNames) {
-    cats[name] = await db.category.upsert({
-      where: { slug: slug(name) },
-      update: {},
-      create: { name, slug: slug(name), status: true },
-    })
-  }
-
   const settings = {
     site_name: 'AK Ganesh',
     site_email: 'mail@akganesh.in',
@@ -37,8 +25,10 @@ export async function seedDatabase(db) {
     facebook_link: '', twitter_link: '', linkedin_link: '', instagram_link: '', youtube_link: '',
     copy_rights_info: `© ${new Date().getFullYear()} AKGanesh.com. All rights reserved.`,
     robot_txt: 'User-agent: *\nAllow: /',
-    home_hero_category_id: String(cats['తాజా వార్తలు'].id),
-    home_featured_category_id: String(cats['ప్రత్యేకం'].id),
+    // empty = homepage sections fall back to latest-from-all; pick real
+    // categories later in Admin → Settings
+    home_hero_category_id: '',
+    home_featured_category_id: '',
   }
   for (const [key, value] of Object.entries(settings)) {
     await db.option.upsert({ where: { key }, update: {}, create: { key, value } })
@@ -60,47 +50,11 @@ export async function seedDatabase(db) {
     })
   }
 
-  const samples = [
-    ['తిరుమల శ్రీవారి బ్రహ్మోత్సవాలు ఘనంగా ప్రారంభం', 'దైవం'],
-    ['హైదరాబాద్‌లో కొత్త స్టార్టప్ హబ్ ప్రారంభం', 'వ్యాపారం'],
-    ['టాలీవుడ్ కొత్త చిత్రం రికార్డుల మోత', 'వెండి తెర'],
-    ['ఈ నెల చదవాల్సిన ఐదు తెలుగు పుస్తకాలు', 'పుస్తకాలు'],
-    ['రాష్ట్రంలో భారీ వర్షాలు — అప్రమత్తత అవసరం', 'తాజా వార్తలు'],
-    ['అయోధ్య రామమందిర దర్శన సమయాల్లో మార్పులు', 'దైవం'],
-    ['చిన్న వ్యాపారాలకు కొత్త రుణ పథకం', 'వ్యాపారం'],
-    ['ప్రముఖ దర్శకుడి కొత్త ప్రాజెక్ట్ ప్రకటన', 'వెండి తెర'],
-    ['వేసవిలో ఆరోగ్య జాగ్రత్తలు — నిపుణుల సూచనలు', 'ప్రత్యేకం'],
-    ['విద్యార్థులకు ఉచిత శిక్షణ కార్యక్రమం', 'తాజా వార్తలు'],
-    ['పండుగ సీజన్‌లో బంగారం ధరల పెరుగుదల', 'వ్యాపారం'],
-    ['సాహిత్య అకాడమీ అవార్డుల ప్రకటన', 'పుస్తకాలు'],
-  ]
-  for (let i = 0; i < samples.length; i++) {
-    const [title, catName] = samples[i]
-    const s = `${slug(title)}` || `post-${i}`
-    const post = await db.post.upsert({
-      where: { slug: s },
-      update: {},
-      create: {
-        title, slug: s, type: 'post', status: true,
-        publishedAt: new Date(Date.now() - i * 6 * 3600 * 1000),
-        tags: 'తెలుగు,వార్తలు',
-        content: `<p>${title}. ఇది నమూనా వార్తా కథనం. అడ్మిన్ ప్యానెల్ నుండి ఈ కంటెంట్‌ను మార్చవచ్చు.</p><p>పూర్తి వివరాలు త్వరలో అందుబాటులోకి వస్తాయి.</p>`,
-        metaDescription: `${title} — పూర్తి వివరాలు చదవండి.`,
-        createdBy: 1,
-      },
-    })
-    await db.categoryPost.upsert({
-      where: { postId_categoryId: { postId: post.id, categoryId: cats[catName].id } },
-      update: {},
-      create: { postId: post.id, categoryId: cats[catName].id },
-    })
-  }
-
+  // No sample posts or categories — content is created in the admin panel.
   if ((await db.menu.count()) === 0) {
     const about = await db.post.findUnique({ where: { slug: 'about-us' } })
     const items = [
       { title: 'Home', type: 'custom', url: '/' },
-      ...catNames.slice(0, 4).map((n) => ({ title: n, type: 'category', refId: cats[n].id })),
       { title: 'About', type: 'page', refId: about.id },
       { title: 'Contact', type: 'custom', url: '/contact' },
     ]

@@ -18,7 +18,7 @@ export function Ticker({ posts }: { posts: PostCard[] }) {
   return (
     <div className="flex items-center overflow-hidden border-b border-white/10 bg-ink">
       <span className="z-10 shrink-0 bg-accent px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-white md:px-5">
-        తాజా వార్తలు
+        LATEST
       </span>
       <div className="relative flex-1 overflow-hidden py-2">
         <div className="ticker-track">

@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!cat) return {}
   return {
     title: cat.name,
-    description: cat.description || `${cat.name} — తాజా వార్తలు`,
+    description: cat.description || `${cat.name} — Latest News`,
     alternates: { canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/category/${cat.slug}` },
   }
 }

@@ -21,7 +21,7 @@ export function Footer({ settings, categories }: { settings: Settings; categorie
               <span className="text-gold">.</span>
             </p>
             <p className="mt-3 text-sm leading-relaxed text-paper/60">
-              తాజా వార్తలు, విశ్లేషణలు మరియు ప్రత్యేక కథనాలు — {settings.site_name} లో చదవండి.
+              Latest news, analysis and special stories — read on {settings.site_name}.
             </p>
             <div className="mt-5 [&_a]:rounded-full [&_a]:bg-paper/10 [&_a]:p-2.5 [&_a]:text-paper/80 [&_a:hover]:bg-accent [&_a:hover]:text-white">
               <SocialIcons settings={settings} />
@@ -30,7 +30,7 @@ export function Footer({ settings, categories }: { settings: Settings; categorie
 
           <div className="grid flex-1 grid-cols-2 gap-10 md:max-w-lg">
             <div>
-              <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">విభాగాలు</p>
+              <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">Categories</p>
               <ul className="space-y-2.5 text-sm">
                 {categories.slice(0, 8).map((c) => (
                   <li key={c.id}>
@@ -42,7 +42,7 @@ export function Footer({ settings, categories }: { settings: Settings; categorie
               </ul>
             </div>
             <div>
-              <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">సమాచారం</p>
+              <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">Information</p>
               <ul className="space-y-2.5 text-sm">
                 <li><Link href="/page/about-us" className="text-paper/75 transition-colors hover:text-gold">About Us</Link></li>
                 <li><Link href="/contact" className="text-paper/75 transition-colors hover:text-gold">Contact</Link></li>

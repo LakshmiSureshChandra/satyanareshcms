@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { imageUrl, type PostCard as PostCardType } from '@/lib/api'
 
 export function formatDate(d: string | Date) {
-  return new Date(d).toLocaleDateString('te-IN', { year: 'numeric', month: 'long', day: 'numeric' })
+  return new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 // Editorial kicker: small-caps category label. On images it sits on a white plate.
@@ -30,7 +30,7 @@ export function CardImage({ post, className = 'aspect-[16/10]', rounded = 'round
         <img src={src} alt={post.title} loading="lazy" className={`absolute inset-0 h-full w-full object-cover ${rounded}`} />
       ) : (
         <div className={`absolute inset-0 flex items-center justify-center ${rounded}`}>
-          <span className="headline text-5xl text-ink/8 select-none">తె</span>
+          <span className="headline text-5xl text-ink/8 select-none">A</span>
         </div>
       )}
     </div>

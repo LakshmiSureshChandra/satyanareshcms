@@ -92,7 +92,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
         <article className="lg:col-span-2">
           {/* breadcrumbs */}
           <nav className="mb-5 flex flex-wrap items-center gap-1.5 text-xs font-medium text-ink-soft">
-            <Link href="/" className="hover:text-accent">హోమ్</Link>
+            <Link href="/" className="hover:text-accent">Home</Link>
             {cat?.parent && (
               <>
                 <span>›</span>
@@ -150,7 +150,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
           {post.related.length > 0 && (
             <section className="mt-14">
-              <h2 className="section-title text-2xl">సంబంధిత వార్తలు</h2>
+              <h2 className="section-title text-2xl">Related News</h2>
               <div className="mt-6 grid gap-8 sm:grid-cols-2">
                 {post.related.map((p) => <PostCard key={p.id} post={p} />)}
               </div>
