@@ -8,5 +8,8 @@ export async function POST(req: NextRequest) {
   for (const p of Array.isArray(paths) ? paths : []) {
     if (typeof p === 'string' && p.startsWith('/')) revalidatePath(p)
   }
+  // Menus, settings and categories live in the shared layout — refresh it
+  // site-wide so header/footer changes show on every page.
+  revalidatePath('/', 'layout')
   return NextResponse.json({ ok: true })
 }
