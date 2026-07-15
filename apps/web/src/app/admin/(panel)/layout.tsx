@@ -12,7 +12,6 @@ const NAV: { label: string; href: string; adminOnly?: boolean; icon: string }[] 
   { label: 'Posts', href: '/admin/posts', icon: 'M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM7 7h10M7 11h10M7 15h6' },
   { label: 'Pages', href: '/admin/pages', icon: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6' },
   { label: 'Categories', href: '/admin/categories', icon: 'M4 4h7l2 3h7v11a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z' },
-  { label: 'Enquiries', href: '/admin/enquiries', icon: 'M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zM2 7l10 6 10-6' },
   { label: 'Banners', href: '/admin/banners', icon: 'M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM3 15l5-5 4 4 3-3 6 6' },
   { label: 'Menus', href: '/admin/menus', adminOnly: true, icon: 'M4 6h16M4 12h16M4 18h10' },
   { label: 'Staff', href: '/admin/users', adminOnly: true, icon: 'M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8' },

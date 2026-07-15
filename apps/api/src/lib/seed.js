@@ -31,7 +31,7 @@ export async function seedDatabase(db) {
 
   const settings = {
     site_name: 'AK Ganesh',
-    site_email: 'contact@akganesh.com',
+    site_email: 'mail@akganesh.in',
     site_phone: '',
     google_analytics: '',
     facebook_link: '', twitter_link: '', linkedin_link: '', instagram_link: '', youtube_link: '',

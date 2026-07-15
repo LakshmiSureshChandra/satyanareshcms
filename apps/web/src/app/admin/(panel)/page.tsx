@@ -10,7 +10,6 @@ type Stats = {
   categories: number
   users: number
   totalViews: number
-  newEnquiries: number
   recent: { id: number; title: string; status: boolean; views: number; publishedAt: string | null; createdAt: string }[]
 }
 
@@ -26,7 +25,7 @@ export default function DashboardPage() {
         ['Posts', stats.posts, '/admin/posts'],
         ['Pages', stats.pages, '/admin/pages'],
         ['Categories', stats.categories, '/admin/categories'],
-        ['New Enquiries', stats.newEnquiries, '/admin/enquiries'],
+        ['Staff', stats.users, '/admin/users'],
         ['Total Views', stats.totalViews.toLocaleString(), null],
       ]
     : []

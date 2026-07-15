@@ -195,28 +195,26 @@ router.post('/contact', contactLimiter, async (req, res) => {
     return res.status(422).json({ error: 'Name and a valid email are required' })
   if (message && message.length > 500) return res.status(422).json({ error: 'Message too long (500 chars max)' })
 
-  // persist first — the submission is never lost even if email is unconfigured or fails
-  await db.contactSubmission.create({
-    data: {
-      name, email, company: company || null, phone: phone || null, message: message || null,
-      ipAddress: req.ip,
-    },
-  })
-
   const settings = await getSettings()
   const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
-  // best-effort notification; the DB record above is the source of truth
-  await sendMail({
-    to: settings.site_email || process.env.SMTP_USER,
-    subject: `Contact form: ${esc(name)}`,
-    html: `<table>
-      <tr><td><b>Name</b></td><td>${esc(name)}</td></tr>
-      <tr><td><b>Email</b></td><td>${esc(email)}</td></tr>
-      <tr><td><b>Company</b></td><td>${esc(company)}</td></tr>
-      <tr><td><b>Phone</b></td><td>${esc(phone)}</td></tr>
-      <tr><td><b>Message</b></td><td>${esc(message).replace(/\n/g, '<br>')}</td></tr>
-    </table>`,
-  }).catch(() => {})
+  const recipient = process.env.CONTACT_EMAIL || settings.site_email || 'mail@akganesh.in'
+  try {
+    await sendMail({
+      to: recipient,
+      replyTo: email,
+      subject: `Contact form: ${esc(name)}`,
+      html: `<table>
+        <tr><td><b>Name</b></td><td>${esc(name)}</td></tr>
+        <tr><td><b>Email</b></td><td>${esc(email)}</td></tr>
+        <tr><td><b>Company</b></td><td>${esc(company)}</td></tr>
+        <tr><td><b>Phone</b></td><td>${esc(phone)}</td></tr>
+        <tr><td><b>Message</b></td><td>${esc(message).replace(/\n/g, '<br>')}</td></tr>
+      </table>`,
+    })
+  } catch (e) {
+    console.error('Contact email failed:', e.message)
+    return res.status(500).json({ error: 'Could not send your message. Please try again later.' })
+  }
   res.json({ ok: true })
 })
 

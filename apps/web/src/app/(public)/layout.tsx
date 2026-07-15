@@ -1,7 +1,19 @@
+import type { Metadata } from 'next'
 import { api, imageUrl, type CategoryNode, type MenuItem, type Settings } from '@/lib/api'
 import { Header } from '@/components/public/Header'
 import { Footer } from '@/components/public/Footer'
 import { CookieBanner } from '@/components/public/CookieBanner'
+
+// Favicon comes from admin Settings (fav_icon). No fallback to the framework
+// default — nothing is shown until one is uploaded.
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await api<Settings>('/settings', 300)
+  const icon = imageUrl(settings.fav_icon)
+  return {
+    title: { default: settings.site_name || 'AK Ganesh', template: `%s — ${settings.site_name || 'AK Ganesh'}` },
+    icons: icon ? { icon } : undefined,
+  }
+}
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const [settings, menus, categories] = await Promise.all([

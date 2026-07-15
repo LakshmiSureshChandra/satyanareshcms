@@ -51,39 +51,19 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
 // ---- dashboard ----
 router.get('/dashboard-stats', async (req, res) => {
-  const [posts, pages, categories, users, viewsAgg, newEnquiries, recent] = await Promise.all([
+  const [posts, pages, categories, users, viewsAgg, recent] = await Promise.all([
     db.post.count({ where: { type: 'post', ...notTrashed } }),
     db.post.count({ where: { type: 'page', ...notTrashed } }),
     db.category.count(),
     db.user.count({ where: notTrashed }),
     db.post.aggregate({ _sum: { views: true }, where: { type: 'post', ...notTrashed } }),
-    db.contactSubmission.count({ where: { handled: false } }),
     db.post.findMany({
       where: { type: 'post', ...notTrashed },
       orderBy: { createdAt: 'desc' }, take: 8,
       select: { id: true, title: true, status: true, views: true, publishedAt: true, createdAt: true },
     }),
   ])
-  res.json({ posts, pages, categories, users, totalViews: viewsAgg._sum.views || 0, newEnquiries, recent })
-})
-
-// ---- contact enquiries (admin + manager) ----
-router.get('/enquiries', async (req, res) => {
-  const items = await db.contactSubmission.findMany({ orderBy: [{ handled: 'asc' }, { createdAt: 'desc' }] })
-  res.json(items)
-})
-
-router.patch('/enquiries/:id', async (req, res) => {
-  const item = await db.contactSubmission.update({
-    where: { id: Number(req.params.id) },
-    data: { handled: !!req.body?.handled },
-  })
-  res.json(item)
-})
-
-router.delete('/enquiries/:id', async (req, res) => {
-  await db.contactSubmission.delete({ where: { id: Number(req.params.id) } })
-  res.json({ ok: true })
+  res.json({ posts, pages, categories, users, totalViews: viewsAgg._sum.views || 0, recent })
 })
 
 // ---- posts & pages (shared handlers, type discriminator) ----
