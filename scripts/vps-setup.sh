@@ -21,11 +21,11 @@ JWT_SECRET="${JWT_SECRET:-$(openssl rand -hex 32)}"
 REVALIDATE_TOKEN="${REVALIDATE_TOKEN:-$(openssl rand -hex 24)}"
 export DEBIAN_FRONTEND=noninteractive
 
-# HTTPS for a real domain; plain HTTP (any host, port 80) for a bare IP.
+# HTTPS for a real domain (cert covers apex + www); plain HTTP for a bare IP.
 if echo "$DOMAIN" | grep -qE '^[0-9]{1,3}(\.[0-9]{1,3}){3}$'; then
   PUBLIC_URL="http://${DOMAIN}"; CADDY_SITE=":80"
 else
-  PUBLIC_URL="https://${DOMAIN}"; CADDY_SITE="${DOMAIN}"
+  PUBLIC_URL="https://${DOMAIN}"; CADDY_SITE="${DOMAIN}, www.${DOMAIN}"
 fi
 echo "==> Deploying for: ${PUBLIC_URL}"
 
