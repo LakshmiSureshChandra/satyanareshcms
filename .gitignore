@@ -5,3 +5,5 @@ dist/
 uploads/
 .DS_Store
 .gstack/
+hostinger-build/
+*.tar.gz

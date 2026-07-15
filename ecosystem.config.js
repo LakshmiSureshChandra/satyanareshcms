@@ -1,22 +1,21 @@
-// PM2 process definition for the Hostinger VPS.
+// PM2 process definition for the VPS. Two processes: Express API + Next.js.
 // Usage: pm2 start ecosystem.config.js && pm2 save
 module.exports = {
   apps: [
     {
       name: 'akganesh-api',
       cwd: './apps/api',
-      script: 'src/index.js',
-      node_args: '--env-file=.env',
+      script: 'src/index.js', // ESM; loads its own .env via dotenv, auto-migrates + seeds
       env: { NODE_ENV: 'production', PORT: 4000 },
-      max_memory_restart: '300M',
+      max_memory_restart: '400M',
     },
     {
       name: 'akganesh-web',
       cwd: './apps/web',
-      script: 'node_modules/next/dist/bin/next',
-      args: 'start -p 3000',
-      env: { NODE_ENV: 'production' },
-      max_memory_restart: '500M',
+      script: 'npm', // works with npm workspaces (next is hoisted to root node_modules)
+      args: 'run start',
+      env: { NODE_ENV: 'production', PORT: 3000 },
+      max_memory_restart: '600M',
     },
   ],
 }
