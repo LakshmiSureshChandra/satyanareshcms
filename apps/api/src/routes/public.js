@@ -22,7 +22,7 @@ async function getSettings() {
 const PUBLIC_SETTINGS = [
   'site_name', 'site_logo', 'fav_icon', 'site_email', 'site_phone', 'google_analytics',
   'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
-  'copy_rights_info',
+  'copy_rights_info', 'footer_config',
 ]
 
 router.get('/settings', async (req, res) => {
