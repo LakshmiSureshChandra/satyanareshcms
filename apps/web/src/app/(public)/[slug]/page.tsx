@@ -5,6 +5,7 @@ import { api, imageUrl, NotFoundError, type CategoryNode, type PostCard as PostC
 import { PostCard, formatDate, CategoryTag } from '@/components/public/PostCard'
 import { ShareButtons } from '@/components/public/ShareButtons'
 import { Sidebar } from '@/components/public/Sidebar'
+import { ReadingProgress } from '@/components/public/ReadingProgress'
 
 export const revalidate = 3600
 export const dynamicParams = true
@@ -85,11 +86,12 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     <div className="mx-auto max-w-6xl px-4 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
+      <ReadingProgress />
 
       <div className="grid gap-10 lg:grid-cols-3">
         <article className="lg:col-span-2">
           {/* breadcrumbs */}
-          <nav className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-ink-soft">
+          <nav className="mb-5 flex flex-wrap items-center gap-1.5 text-xs font-medium text-ink-soft">
             <Link href="/" className="hover:text-accent">హోమ్</Link>
             {cat?.parent && (
               <>
@@ -105,32 +107,38 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             )}
           </nav>
 
-          <h1 className="headline text-3xl leading-snug md:text-4xl">{post.title}</h1>
+          <div className="flex flex-wrap gap-1.5">
+            {post.categories.map((c) => <CategoryTag key={c.id} cat={c} />)}
+          </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-y border-line py-3 text-sm text-ink-soft">
+          <h1 className="headline mt-3 text-3xl leading-snug md:text-[2.6rem] md:leading-[1.25]">{post.title}</h1>
+
+          <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-ink-soft">
             {post.author && (
-              <span className="font-semibold text-ink">{post.author.name}</span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/70 py-1 pl-1 pr-3.5 font-semibold text-ink ring-1 ring-line">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink font-display text-xs font-bold text-lime">
+                  {post.author.name.charAt(0)}
+                </span>
+                {post.author.name}
+              </span>
             )}
-            <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
-            <div className="ml-auto flex gap-1.5">
-              {post.categories.map((c) => <CategoryTag key={c.id} cat={c} />)}
-            </div>
+            <time dateTime={post.publishedAt} className="font-medium">{formatDate(post.publishedAt)}</time>
           </div>
 
           {img && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={img} alt={post.title} className="mt-6 w-full rounded-md" />
+            <img src={img} alt={post.title} className="mt-7 w-full rounded-3xl" />
           )}
 
-          <div className="prose-news mt-2" dangerouslySetInnerHTML={{ __html: post.content }} />
+          <div className="prose-news mt-3" dangerouslySetInnerHTML={{ __html: post.content }} />
 
           {post.tags && (
-            <div className="mt-8 flex flex-wrap gap-2 border-t border-line pt-5">
+            <div className="mt-9 flex flex-wrap gap-2">
               {post.tags.split(',').map((t) => t.trim()).filter(Boolean).map((t) => (
                 <Link
                   key={t}
                   href={`/tag/${encodeURIComponent(t)}`}
-                  className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink-soft hover:border-accent hover:text-accent"
+                  className="rounded-full bg-paper-2 px-3.5 py-1.5 text-xs font-bold text-ink-soft transition-colors hover:bg-ink hover:text-lime"
                 >
                   #{t}
                 </Link>
@@ -138,15 +146,13 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             </div>
           )}
 
-          <div className="mt-6 border-t border-line pt-5">
+          <div className="mt-7 rounded-3xl border border-line bg-white/60 p-5">
             <ShareButtons url={url} title={post.title} />
           </div>
 
           {post.related.length > 0 && (
-            <section className="mt-12">
-              <div className="rule-double pt-3">
-                <h2 className="headline text-xl">సంబంధిత వార్తలు<span className="text-accent">.</span></h2>
-              </div>
+            <section className="mt-14">
+              <h2 className="section-title text-2xl">సంబంధిత వార్తలు</h2>
               <div className="mt-6 grid gap-8 sm:grid-cols-2">
                 {post.related.map((p) => <PostCard key={p.id} post={p} />)}
               </div>

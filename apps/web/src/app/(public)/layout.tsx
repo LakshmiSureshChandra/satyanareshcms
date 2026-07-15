@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import { api, imageUrl, type CategoryNode, type MenuItem, type Settings } from '@/lib/api'
+import { api, imageUrl, type CategoryNode, type MenuItem, type PostCard, type Settings } from '@/lib/api'
 import { Header } from '@/components/public/Header'
+import { Ticker } from '@/components/public/Ticker'
 import { Footer } from '@/components/public/Footer'
 import { CookieBanner } from '@/components/public/CookieBanner'
 
@@ -16,15 +17,17 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [settings, menus, categories] = await Promise.all([
+  const [settings, menus, categories, latest] = await Promise.all([
     api<Settings>('/settings', 300),
     api<MenuItem[]>('/menus', 300),
     api<CategoryNode[]>('/categories', 300),
+    api<{ posts: PostCard[] }>('/posts?limit=8', 300),
   ])
 
   return (
     <div className="flex min-h-screen flex-col">
       <Header menus={menus} settings={settings} logoUrl={imageUrl(settings.site_logo)} />
+      <Ticker posts={latest.posts} />
       <main className="flex-1">{children}</main>
       <Footer settings={settings} categories={categories} />
       <CookieBanner gaSnippet={settings.google_analytics || ''} />

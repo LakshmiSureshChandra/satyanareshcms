@@ -32,7 +32,7 @@ export function ContactForm() {
       </div>
     )
 
-  const field = 'w-full rounded-md border border-line bg-white/60 px-4 py-2.5 text-sm outline-none focus:border-accent'
+  const field = 'w-full rounded-2xl border border-line bg-white/70 px-4 py-3 text-sm outline-none transition-colors focus:border-accent focus:bg-white'
 
   return (
     <form onSubmit={submit} className="mt-8 grid gap-4 md:grid-cols-2">
@@ -60,7 +60,7 @@ export function ContactForm() {
       <div className="md:col-span-2">
         <button
           disabled={state === 'sending'}
-          className="rounded-md bg-accent px-8 py-2.5 font-semibold text-white hover:bg-accent-dark disabled:opacity-50"
+          className="rounded-full bg-accent px-10 py-3 font-semibold text-white transition-transform hover:scale-105 hover:bg-accent-dark disabled:opacity-50"
         >
           {state === 'sending' ? 'పంపుతోంది…' : 'పంపండి'}
         </button>

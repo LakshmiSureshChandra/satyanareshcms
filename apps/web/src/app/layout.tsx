@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Sans_Telugu, Noto_Serif_Telugu } from "next/font/google";
+import { Noto_Sans_Telugu, Baloo_Tammudu_2 } from "next/font/google";
 import "./globals.css";
 
 const teluguSans = Noto_Sans_Telugu({
@@ -8,10 +8,11 @@ const teluguSans = Noto_Sans_Telugu({
   weight: ["400", "500", "600", "700"],
 });
 
-const teluguSerif = Noto_Serif_Telugu({
-  variable: "--font-telugu-serif",
+// Chunky rounded display face (supports Telugu) — headlines, wordmark, section titles.
+const teluguDisplay = Baloo_Tammudu_2({
+  variable: "--font-telugu-display",
   subsets: ["telugu", "latin"],
-  weight: ["600", "700", "900"],
+  weight: ["500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -25,7 +26,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="te">
-      <body className={`${teluguSans.variable} ${teluguSerif.variable} antialiased`}>
+      <body className={`${teluguSans.variable} ${teluguDisplay.variable} antialiased`}>
         {children}
       </body>
     </html>

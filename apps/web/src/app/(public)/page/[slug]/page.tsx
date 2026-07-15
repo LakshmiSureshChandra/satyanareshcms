@@ -41,12 +41,10 @@ export default async function StaticPage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <div className="rule-double pt-3">
-        <h1 className="headline text-3xl">{page.title}<span className="text-accent">.</span></h1>
-      </div>
+      <h1 className="section-title text-3xl md:text-4xl">{page.title}</h1>
       {banner && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={banner} alt={page.title} className="mt-6 w-full rounded-md" />
+        <img src={banner} alt={page.title} className="mt-6 w-full rounded-3xl" />
       )}
       <div className="prose-news mt-4" dangerouslySetInnerHTML={{ __html: page.content }} />
     </div>
