@@ -76,9 +76,10 @@ export function Footer({ settings, categories, menu }: { settings: Settings; cat
                       <li key={link.id}>
                         <FLink item={link} />
                         {link.children.length > 0 && (
-                          <ul className="mt-2 space-y-2 border-l border-paper/15 pl-3 text-[13px] text-paper/55">
+                          <ul className="mt-2 ml-1 space-y-1.5 border-l border-paper/15 pl-4 text-[13px]">
                             {link.children.map((sub) => (
-                              <li key={sub.id} className="[&_a]:text-paper/55">
+                              <li key={sub.id} className="flex items-start gap-1.5 [&_a]:text-paper/50 [&_a:hover]:text-gold">
+                                <span aria-hidden className="mt-px text-paper/30">–</span>
                                 <FLink item={sub} />
                               </li>
                             ))}
