@@ -11,13 +11,23 @@ set -euo pipefail
 
 REPO="${REPO:-https://github.com/LakshmiSureshChandra/satyanareshcms.git}"
 APP_DIR="${APP_DIR:-/var/www/akganesh}"
-DOMAIN="${DOMAIN:?Set DOMAIN, e.g. DOMAIN=akganesh.com}"
+# DOMAIN defaults to this server's public IP (serves over HTTP). Pass a real
+# domain later (DOMAIN=akganesh.com) to serve over HTTPS.
+DOMAIN="${DOMAIN:-$(curl -s ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')}"
 DB_NAME="${DB_NAME:-akganesh}"
 DB_USER="${DB_USER:-akganesh}"
 DB_PASSWORD="${DB_PASSWORD:?Set DB_PASSWORD (letters+numbers only)}"
 JWT_SECRET="${JWT_SECRET:-$(openssl rand -hex 32)}"
 REVALIDATE_TOKEN="${REVALIDATE_TOKEN:-$(openssl rand -hex 24)}"
 export DEBIAN_FRONTEND=noninteractive
+
+# HTTPS for a real domain; plain HTTP for a bare IP.
+if echo "$DOMAIN" | grep -qE '^[0-9]{1,3}(\.[0-9]{1,3}){3}$'; then
+  PUBLIC_URL="http://${DOMAIN}"; CADDY_SITE="http://${DOMAIN}"
+else
+  PUBLIC_URL="https://${DOMAIN}"; CADDY_SITE="${DOMAIN}"
+fi
+echo "==> Deploying for: ${PUBLIC_URL}"
 
 echo "==> [1/8] System packages"
 apt-get update -y
@@ -62,13 +72,13 @@ cat > apps/api/.env <<EOF
 DATABASE_URL="mysql://${DB_USER}:${DB_PASSWORD}@127.0.0.1:3306/${DB_NAME}"
 JWT_SECRET="${JWT_SECRET}"
 REVALIDATE_TOKEN="${REVALIDATE_TOKEN}"
-WEB_URL="https://${DOMAIN}"
+WEB_URL="${PUBLIC_URL}"
 PORT=4000
 EOF
 cat > apps/web/.env <<EOF
 API_URL=http://127.0.0.1:4000
 NEXT_PUBLIC_API_URL=
-NEXT_PUBLIC_SITE_URL=https://${DOMAIN}
+NEXT_PUBLIC_SITE_URL=${PUBLIC_URL}
 JWT_SECRET=${JWT_SECRET}
 REVALIDATE_TOKEN=${REVALIDATE_TOKEN}
 EOF
@@ -84,7 +94,7 @@ pm2 startup systemd -u root --hp /root >/dev/null 2>&1 || true
 
 echo "==> [8/8] Caddy reverse proxy + firewall"
 cat > /etc/caddy/Caddyfile <<EOF
-${DOMAIN} {
+${CADDY_SITE} {
 	handle /api/* { reverse_proxy 127.0.0.1:4000 }
 	handle /uploads/* { reverse_proxy 127.0.0.1:4000 }
 	handle { reverse_proxy 127.0.0.1:3000 }
@@ -97,9 +107,7 @@ ufw allow 80,443/tcp >/dev/null 2>&1 || true
 
 echo ""
 echo "=================================================="
-echo " DONE.  Site:  https://${DOMAIN}"
-echo " Admin:  https://${DOMAIN}/admin/login"
+echo " DONE.  Site:  ${PUBLIC_URL}"
+echo " Admin:  ${PUBLIC_URL}/admin/login"
 echo "         admin@akganesh.com / Admin@123  (change it!)"
-echo " (If HTTPS isn't ready yet, your domain's DNS A record"
-echo "  must point to this server; Caddy issues the cert once it does.)"
 echo "=================================================="
