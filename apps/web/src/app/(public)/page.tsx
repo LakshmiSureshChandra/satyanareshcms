@@ -1,14 +1,35 @@
-import { api, type PostCard as PostCardType } from '@/lib/api'
+import { api, imageUrl, type PostCard as PostCardType } from '@/lib/api'
 import { PostCard, PostRow, OverlayCard } from '@/components/public/PostCard'
 import { FeaturedCarousel } from '@/components/public/FeaturedCarousel'
 
 export const revalidate = 300
 
+type Banner = { id: number; name: string; file: string }
 type Home = {
   hero: PostCardType[]
   featured: PostCardType[]
   latest: PostCardType[]
   more: PostCardType[]
+  banners: Banner[]
+}
+
+function Banners({ banners }: { banners: Banner[] }) {
+  if (!banners?.length) return null
+  return (
+    <section className="rise pt-6">
+      <div className={banners.length > 1 ? 'rail' : ''}>
+        {banners.map((b) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={b.id}
+            src={imageUrl(b.file) || ''}
+            alt={b.name}
+            className="w-full rounded-lg border border-line object-cover"
+          />
+        ))}
+      </div>
+    </section>
+  )
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -28,6 +49,8 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4">
+      <Banners banners={home.banners} />
+
       {/* HERO — bento: big overlay lead + stacked side rows */}
       {lead && (
         <section className="rise grid gap-7 py-8 md:grid-cols-3 md:py-10">
