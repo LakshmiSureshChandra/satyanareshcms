@@ -21,9 +21,9 @@ JWT_SECRET="${JWT_SECRET:-$(openssl rand -hex 32)}"
 REVALIDATE_TOKEN="${REVALIDATE_TOKEN:-$(openssl rand -hex 24)}"
 export DEBIAN_FRONTEND=noninteractive
 
-# HTTPS for a real domain; plain HTTP for a bare IP.
+# HTTPS for a real domain; plain HTTP (any host, port 80) for a bare IP.
 if echo "$DOMAIN" | grep -qE '^[0-9]{1,3}(\.[0-9]{1,3}){3}$'; then
-  PUBLIC_URL="http://${DOMAIN}"; CADDY_SITE="http://${DOMAIN}"
+  PUBLIC_URL="http://${DOMAIN}"; CADDY_SITE=":80"
 else
   PUBLIC_URL="https://${DOMAIN}"; CADDY_SITE="${DOMAIN}"
 fi
@@ -95,9 +95,15 @@ pm2 startup systemd -u root --hp /root >/dev/null 2>&1 || true
 echo "==> [8/8] Caddy reverse proxy + firewall"
 cat > /etc/caddy/Caddyfile <<EOF
 ${CADDY_SITE} {
-	handle /api/* { reverse_proxy 127.0.0.1:4000 }
-	handle /uploads/* { reverse_proxy 127.0.0.1:4000 }
-	handle { reverse_proxy 127.0.0.1:3000 }
+	handle /api/* {
+		reverse_proxy 127.0.0.1:4000
+	}
+	handle /uploads/* {
+		reverse_proxy 127.0.0.1:4000
+	}
+	handle {
+		reverse_proxy 127.0.0.1:3000
+	}
 	encode gzip
 }
 EOF
