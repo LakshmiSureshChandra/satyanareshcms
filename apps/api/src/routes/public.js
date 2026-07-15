@@ -30,9 +30,8 @@ router.get('/settings', async (req, res) => {
   res.json(Object.fromEntries(PUBLIC_SETTINGS.map((k) => [k, all[k] ?? ''])))
 })
 
-router.get('/menus', async (req, res) => {
-  const menus = await db.menu.findMany({ orderBy: { order: 'asc' } })
-  // resolve link URL per menu type
+async function resolveMenu(location) {
+  const menus = await db.menu.findMany({ where: { location }, orderBy: { order: 'asc' } })
   const postIds = menus.filter((m) => m.type === 'post' || m.type === 'page').map((m) => m.refId).filter(Boolean)
   const catIds = menus.filter((m) => m.type === 'category').map((m) => m.refId).filter(Boolean)
   const [posts, cats] = await Promise.all([
@@ -53,7 +52,11 @@ router.get('/menus', async (req, res) => {
     menus.filter((m) => m.parentId === parentId).map((m) => ({
       id: m.id, title: m.title, url: link(m), newWindow: m.newWindow, children: build(m.id),
     }))
-  res.json(build(null))
+  return build(null)
+}
+
+router.get('/menus', async (req, res) => {
+  res.json(await resolveMenu(req.query.location === 'footer' ? 'footer' : 'header'))
 })
 
 router.get('/categories', async (req, res) => {
@@ -91,7 +94,7 @@ router.get('/home', async (req, res) => {
       where: { ...pub, type: 'post' },
       orderBy: { publishedAt: 'desc' }, take: 15, select: postCard,
     }),
-    db.media.findMany({ where: notTrashed, orderBy: { id: 'desc' } }),
+    db.media.findMany({ where: notTrashed, orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }] }),
   ])
 
   // "more posts" grid = latest overflow beyond the first 6 (replaces reference's random posts — deterministic, ISR-friendly)

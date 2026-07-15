@@ -266,10 +266,13 @@ router.delete('/categories/:id', async (req, res) => {
   res.json({ ok: true })
 })
 
-// ---- menus (admin only) ----
+// ---- menus (admin only) — location is "header" (nav) or "footer" (columns) ----
+const menuLocation = (req) => (req.query.location === 'footer' ? 'footer' : 'header')
+
 router.get('/menus', adminOnly, async (req, res) => {
+  const location = menuLocation(req)
   const [menus, posts, pages, cats] = await Promise.all([
-    db.menu.findMany({ orderBy: { order: 'asc' } }),
+    db.menu.findMany({ where: { location }, orderBy: { order: 'asc' } }),
     db.post.findMany({ where: { type: 'post', ...notTrashed }, select: { id: true, title: true }, orderBy: { title: 'asc' } }),
     db.post.findMany({ where: { type: 'page', ...notTrashed }, select: { id: true, title: true }, orderBy: { title: 'asc' } }),
     db.category.findMany({ select: { id: true, name: true, parentId: true }, orderBy: { name: 'asc' } }),
@@ -279,11 +282,12 @@ router.get('/menus', adminOnly, async (req, res) => {
   res.json({ tree: build(null), posts, pages, categories: cats })
 })
 
-// PUT replaces the whole tree (simplest contract for a drag-drop builder)
+// PUT replaces the whole tree for one location (simplest drag-drop contract)
 router.put('/menus', adminOnly, async (req, res) => {
+  const location = menuLocation(req)
   const items = req.body?.tree
   if (!Array.isArray(items)) return res.status(422).json({ error: 'Invalid menu tree' })
-  await db.menu.deleteMany({})
+  await db.menu.deleteMany({ where: { location } })
   async function insert(nodes, parentId, depth) {
     if (depth > 3) return
     for (let i = 0; i < nodes.length; i++) {
@@ -294,7 +298,7 @@ router.put('/menus', adminOnly, async (req, res) => {
           title: n.title.trim(), type: n.type,
           url: n.type === 'custom' ? n.url || '#' : null,
           refId: n.type === 'custom' ? null : Number(n.refId) || null,
-          parentId, order: i, newWindow: !!n.newWindow,
+          parentId, order: i, newWindow: !!n.newWindow, location,
         },
       })
       if (n.children?.length) await insert(n.children, created.id, depth + 1)
@@ -379,17 +383,28 @@ router.put('/settings', adminOnly, async (req, res) => {
   res.json({ ok: true })
 })
 
-// ---- banners ----
+// ---- banners (ordered by sortOrder) ----
 router.get('/banners', async (req, res) => {
-  res.json(await db.media.findMany({ where: notTrashed, orderBy: { id: 'desc' } }))
+  res.json(await db.media.findMany({ where: notTrashed, orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }] }))
 })
 
 router.post('/banners', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(422).json({ error: 'No image uploaded' })
   const url = await saveImage(req.file, { maxWidth: 1920 })
-  const banner = await db.media.create({ data: { name: req.file.originalname, file: url } })
+  const max = await db.media.aggregate({ _max: { sortOrder: true }, where: notTrashed })
+  const banner = await db.media.create({
+    data: { name: req.file.originalname, file: url, sortOrder: (max._max.sortOrder ?? 0) + 1 },
+  })
   revalidate(['/'])
   res.json(banner)
+})
+
+// persist a new order: body { ids: [in display order] }
+router.put('/banners/order', async (req, res) => {
+  const ids = (req.body?.ids || []).map(Number).filter(Boolean)
+  await Promise.all(ids.map((id, i) => db.media.update({ where: { id }, data: { sortOrder: i } })))
+  revalidate(['/'])
+  res.json({ ok: true })
 })
 
 router.delete('/banners/:id', async (req, res) => {

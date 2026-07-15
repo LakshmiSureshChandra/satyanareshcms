@@ -1,49 +1,51 @@
 import Link from 'next/link'
-import type { CategoryNode, Settings } from '@/lib/api'
+import type { CategoryNode, MenuItem, Settings } from '@/lib/api'
 import { SocialIcons } from './SocialIcons'
 
-type FooterLink = { label: string; url: string }
-type FooterColumn = { title: string; links: FooterLink[] }
-type FooterConfig = { about?: string; columns: FooterColumn[] }
+const LEGAL: [string, string][] = [
+  ['Privacy Policy', '/page/privacy-policy'],
+  ['Terms & Conditions', '/page/terms-and-conditions'],
+  ['Disclaimer', '/page/disclaimer'],
+  ['Refund Policy', '/page/refund-policy'],
+  ['Cookies Policy', '/page/cookies-policy'],
+]
 
-// Default columns when the admin hasn't configured a footer yet.
-function defaultConfig(categories: CategoryNode[]): FooterConfig {
-  return {
-    columns: [
-      { title: 'Categories', links: categories.slice(0, 6).map((c) => ({ label: c.name, url: `/category/${c.slug}` })) },
-      {
-        title: 'Information',
-        links: [
-          { label: 'About Us', url: '/page/about-us' },
-          { label: 'Contact', url: '/contact' },
-          { label: 'Privacy Policy', url: '/page/privacy-policy' },
-          { label: 'Terms & Conditions', url: '/page/terms-and-conditions' },
-          { label: 'Disclaimer', url: '/page/disclaimer' },
-          { label: 'Refund Policy', url: '/page/refund-policy' },
-          { label: 'Cookies Policy', url: '/page/cookies-policy' },
-        ],
-      },
-    ],
-  }
-}
+const linkClass = 'text-paper/75 transition-colors hover:text-gold'
 
-function FLink({ link }: { link: FooterLink }) {
-  const cls = 'text-paper/75 transition-colors hover:text-gold'
-  const url = link.url?.trim() || '#'
-  if (url.startsWith('/')) return <Link href={url} className={cls}>{link.label}</Link>
+function FLink({ item }: { item: { title: string; url: string; newWindow?: boolean } }) {
+  const url = item.url?.trim() || '#'
+  if (url === '#') return <span className="text-paper/75">{item.title}</span>
+  if (url.startsWith('/')) return <Link href={url} className={linkClass}>{item.title}</Link>
   const external = /^https?:\/\//i.test(url) ? url : `https://${url.replace(/^\/+/, '')}`
-  return <a href={external} target="_blank" rel="noopener noreferrer" className={cls}>{link.label}</a>
+  return <a href={external} target={item.newWindow ? '_blank' : undefined} rel="noopener noreferrer" className={linkClass}>{item.title}</a>
 }
 
-export function Footer({ settings, categories }: { settings: Settings; categories: CategoryNode[] }) {
-  let config: FooterConfig
-  try {
-    const parsed = settings.footer_config ? JSON.parse(settings.footer_config) : null
-    config = parsed?.columns?.length ? parsed : defaultConfig(categories)
-  } catch {
-    config = defaultConfig(categories)
-  }
-  const about = config.about?.trim() || `Latest news, analysis and special stories — read on ${settings.site_name}.`
+// Default columns when no footer menu has been configured in the admin.
+function DefaultColumns({ categories }: { categories: CategoryNode[] }) {
+  return (
+    <>
+      <div>
+        <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">Categories</p>
+        <ul className="space-y-2.5 text-sm">
+          {categories.slice(0, 6).map((c) => (
+            <li key={c.id}><Link href={`/category/${c.slug}`} className={linkClass}>{c.name}</Link></li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">Information</p>
+        <ul className="space-y-2.5 text-sm">
+          <li><Link href="/page/about-us" className={linkClass}>About Us</Link></li>
+          <li><Link href="/contact" className={linkClass}>Contact</Link></li>
+          {LEGAL.map(([label, href]) => <li key={href}><Link href={href} className={linkClass}>{label}</Link></li>)}
+        </ul>
+      </div>
+    </>
+  )
+}
+
+export function Footer({ settings, categories, menu }: { settings: Settings; categories: CategoryNode[]; menu: MenuItem[] }) {
+  const hasMenu = menu?.length > 0
 
   return (
     <footer className="mt-20 border-t-4 border-accent bg-ink text-paper">
@@ -54,23 +56,42 @@ export function Footer({ settings, categories }: { settings: Settings; categorie
               {settings.site_name}
               <span className="text-gold">.</span>
             </p>
-            <p className="mt-3 text-sm leading-relaxed text-paper/60">{about}</p>
+            <p className="mt-3 text-sm leading-relaxed text-paper/60">
+              Latest news, analysis and special stories — read on {settings.site_name}.
+            </p>
             <div className="mt-5 [&_a]:rounded-full [&_a]:bg-paper/10 [&_a]:p-2.5 [&_a]:text-paper/80 [&_a:hover]:bg-accent [&_a:hover]:text-white">
               <SocialIcons settings={settings} />
             </div>
           </div>
 
           <div className="grid flex-1 gap-10 sm:grid-cols-2 md:max-w-xl lg:grid-cols-3">
-            {config.columns.map((col, i) => (
-              <div key={i}>
-                <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">{col.title}</p>
-                <ul className="space-y-2.5 text-sm">
-                  {col.links.map((link, j) => (
-                    <li key={j}><FLink link={link} /></li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            {hasMenu ? (
+              menu.map((col) => (
+                <div key={col.id}>
+                  <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">
+                    {col.url && col.url !== '#' ? <FLink item={col} /> : col.title}
+                  </p>
+                  <ul className="space-y-2.5 text-sm">
+                    {col.children.map((link) => (
+                      <li key={link.id}>
+                        <FLink item={link} />
+                        {link.children.length > 0 && (
+                          <ul className="mt-2 space-y-2 border-l border-paper/15 pl-3 text-[13px] text-paper/55">
+                            {link.children.map((sub) => (
+                              <li key={sub.id} className="[&_a]:text-paper/55">
+                                <FLink item={sub} />
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))
+            ) : (
+              <DefaultColumns categories={categories} />
+            )}
           </div>
         </div>
       </div>

@@ -105,9 +105,11 @@ model Menu {
   parentId  Int?     @map("parent_id")
   order     Int      @default(0)
   newWindow Boolean  @default(false) @map("new_window")
+  location  String   @default("header") // "header" nav or "footer" columns
   parent    Menu?    @relation("tree", fields: [parentId], references: [id], onDelete: Cascade)
   children  Menu[]   @relation("tree")
 
+  @@index([location, order])
   @@map("menus")
 }
 
@@ -122,6 +124,7 @@ model Media {
   id        Int       @id @default(autoincrement())
   name      String
   file      String
+  sortOrder Int       @default(0) @map("sort_order")
   createdAt DateTime  @default(now()) @map("created_at")
   deletedAt DateTime? @map("deleted_at")
 

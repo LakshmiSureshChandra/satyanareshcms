@@ -32,16 +32,36 @@ app.use((err, req, res, next) => {
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
 
-// Apply the schema by running the migration SQL directly through the existing DB
+// Migrations known to have been applied by the pre-tracker deploy. Used to
+// baseline an existing database the first time the tracker runs.
+const BASELINE_MIGRATIONS = ['20260711131901_init', '20260711164707_contact_submissions']
+
+// Apply pending migrations by running their SQL directly through the existing DB
 // connection — NO child process (shared hosting caps process spawns -> EAGAIN).
-// Idempotent: skips entirely once the `users` table exists.
+// Tracks applied migrations in `_migrations` so new ones apply on existing DBs too.
 async function runMigrations() {
   if (process.env.SKIP_MIGRATE === 'true') return
   try {
-    const exists = await db.$queryRawUnsafe(
-      "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'users'"
+    await db.$executeRawUnsafe(
+      'CREATE TABLE IF NOT EXISTS `_migrations` (`name` VARCHAR(191) NOT NULL, `applied_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3), PRIMARY KEY (`name`))'
     )
-    if (Number(exists[0].c) > 0) { console.log('Schema present.'); return }
+    const rows = await db.$queryRawUnsafe('SELECT name FROM `_migrations`')
+    const applied = new Set(rows.map((r) => r.name))
+
+    // Existing DB from before the tracker: mark the original migrations as applied
+    // so we don't try to re-create tables that already exist.
+    if (applied.size === 0) {
+      const u = await db.$queryRawUnsafe(
+        "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'users'"
+      )
+      if (Number(u[0].c) > 0) {
+        for (const name of BASELINE_MIGRATIONS) {
+          await db.$executeRawUnsafe('INSERT IGNORE INTO `_migrations` (name) VALUES (?)', name)
+          applied.add(name)
+        }
+        console.log('Baselined existing database.')
+      }
+    }
 
     const here = path.dirname(fileURLToPath(import.meta.url))
     const migDir = path.resolve(here, '../prisma/migrations')
@@ -51,15 +71,17 @@ async function runMigrations() {
       .sort()
 
     for (const d of dirs) {
+      if (applied.has(d)) continue
       const sql = fs.readFileSync(path.join(migDir, d, 'migration.sql'), 'utf8')
       const statements = sql
         .split(';')
-        .map((s) => s.replace(/^\s*--.*$/gm, '').trim()) // strip comment-only lines
+        .map((s) => s.replace(/^\s*--.*$/gm, '').trim())
         .filter(Boolean)
       for (const stmt of statements) await db.$executeRawUnsafe(stmt)
+      await db.$executeRawUnsafe('INSERT INTO `_migrations` (name) VALUES (?)', d)
       console.log('Applied migration', d)
     }
-    console.log('Schema created.')
+    console.log('Migrations up to date.')
   } catch (e) {
     console.error('Migration step:', e.message)
   }

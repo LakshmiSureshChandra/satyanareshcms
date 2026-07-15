@@ -17,9 +17,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [settings, menus, categories, latest] = await Promise.all([
+  const [settings, menus, footerMenu, categories, latest] = await Promise.all([
     api<Settings>('/settings', 300),
     api<MenuItem[]>('/menus', 300),
+    api<MenuItem[]>('/menus?location=footer', 300),
     api<CategoryNode[]>('/categories', 300),
     api<{ posts: PostCard[] }>('/posts?limit=8', 300),
   ])
@@ -29,7 +30,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <Header menus={menus} settings={settings} logoUrl={imageUrl(settings.site_logo)} />
       <Ticker posts={latest.posts} />
       <main className="flex-1">{children}</main>
-      <Footer settings={settings} categories={categories} />
+      <Footer settings={settings} categories={categories} menu={footerMenu} />
       <CookieBanner gaSnippet={settings.google_analytics || ''} />
     </div>
   )
