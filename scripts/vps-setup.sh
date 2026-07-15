@@ -13,7 +13,7 @@ REPO="${REPO:-https://github.com/LakshmiSureshChandra/satyanareshcms.git}"
 APP_DIR="${APP_DIR:-/var/www/akganesh}"
 # DOMAIN defaults to this server's public IP (serves over HTTP). Pass a real
 # domain later (DOMAIN=akganesh.com) to serve over HTTPS.
-DOMAIN="${DOMAIN:-$(curl -s ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')}"
+DOMAIN="${DOMAIN:-$(curl -s4 ifconfig.me 2>/dev/null || curl -s4 https://api.ipify.org 2>/dev/null || hostname -I | tr ' ' '\n' | grep -E '^[0-9]+\.' | head -1)}"
 DB_NAME="${DB_NAME:-akganesh}"
 DB_USER="${DB_USER:-akganesh}"
 DB_PASSWORD="${DB_PASSWORD:?Set DB_PASSWORD (letters+numbers only)}"
