@@ -1,14 +1,6 @@
 import Link from 'next/link'
-import type { CategoryNode, MenuItem, Settings } from '@/lib/api'
+import type { MenuItem, Settings } from '@/lib/api'
 import { SocialIcons } from './SocialIcons'
-
-const LEGAL: [string, string][] = [
-  ['Privacy Policy', '/page/privacy-policy'],
-  ['Terms & Conditions', '/page/terms-and-conditions'],
-  ['Disclaimer', '/page/disclaimer'],
-  ['Refund Policy', '/page/refund-policy'],
-  ['Cookies Policy', '/page/cookies-policy'],
-]
 
 const linkClass = 'text-paper/75 transition-colors hover:text-gold'
 
@@ -20,31 +12,7 @@ function FLink({ item }: { item: { title: string; url: string; newWindow?: boole
   return <a href={external} target={item.newWindow ? '_blank' : undefined} rel="noopener noreferrer" className={linkClass}>{item.title}</a>
 }
 
-// Default columns when no footer menu has been configured in the admin.
-function DefaultColumns({ categories }: { categories: CategoryNode[] }) {
-  return (
-    <>
-      <div>
-        <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">Categories</p>
-        <ul className="space-y-2.5 text-sm">
-          {categories.slice(0, 6).map((c) => (
-            <li key={c.id}><Link href={`/category/${c.slug}`} className={linkClass}>{c.name}</Link></li>
-          ))}
-        </ul>
-      </div>
-      <div>
-        <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">Information</p>
-        <ul className="space-y-2.5 text-sm">
-          <li><Link href="/page/about-us" className={linkClass}>About Us</Link></li>
-          <li><Link href="/contact" className={linkClass}>Contact</Link></li>
-          {LEGAL.map(([label, href]) => <li key={href}><Link href={href} className={linkClass}>{label}</Link></li>)}
-        </ul>
-      </div>
-    </>
-  )
-}
-
-export function Footer({ settings, categories, menu }: { settings: Settings; categories: CategoryNode[]; menu: MenuItem[] }) {
+export function Footer({ settings, menu }: { settings: Settings; menu: MenuItem[] }) {
   const hasMenu = menu?.length > 0
 
   return (
@@ -64,9 +32,9 @@ export function Footer({ settings, categories, menu }: { settings: Settings; cat
             </div>
           </div>
 
-          <div className="grid flex-1 gap-10 sm:grid-cols-2 md:max-w-xl lg:grid-cols-3">
-            {hasMenu ? (
-              menu.map((col) => (
+          {hasMenu && (
+            <div className="grid flex-1 gap-10 sm:grid-cols-2 md:max-w-xl lg:grid-cols-3">
+              {menu.map((col) => (
                 <div key={col.id}>
                   <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">
                     {col.url && col.url !== '#' ? <FLink item={col} /> : col.title}
@@ -89,11 +57,9 @@ export function Footer({ settings, categories, menu }: { settings: Settings; cat
                     ))}
                   </ul>
                 </div>
-              ))
-            ) : (
-              <DefaultColumns categories={categories} />
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div className="border-t border-paper/10">

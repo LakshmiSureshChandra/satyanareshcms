@@ -204,9 +204,9 @@ export function MenuBuilder({
             <label className="admin-label">Type</label>
             <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value, refId: '' })} className="admin-input">
               <option value="custom">Custom Link{location === 'footer' ? ' / Heading' : ''}</option>
-              <option value="category">Category</option>
+              {location !== 'footer' && <option value="category">Category</option>}
               <option value="page">Page</option>
-              <option value="post">Post</option>
+              {location !== 'footer' && <option value="post">Post</option>}
             </select>
           </div>
           {form.type === 'custom' ? (
