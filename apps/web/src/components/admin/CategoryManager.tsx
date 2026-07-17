@@ -18,7 +18,7 @@ type Cat = {
 
 const EMPTY = { name: '', description: '', parentId: '', bannerImage: null as string | null, status: true }
 
-export default function CategoriesPage() {
+export function CategoryManager() {
   const [cats, setCats] = useState<Cat[]>([])
   const [editing, setEditing] = useState<number | 'new' | null>(null)
   const [form, setForm] = useState(EMPTY)

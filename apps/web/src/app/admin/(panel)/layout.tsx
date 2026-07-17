@@ -10,7 +10,6 @@ type Me = { id: number; name: string; role: 'admin' | 'manager' }
 const NAV: { label: string; href: string; adminOnly?: boolean; icon: string }[] = [
   { label: 'Dashboard', href: '/admin', icon: 'M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10' },
   { label: 'Posts', href: '/admin/posts', icon: 'M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zM7 7h10M7 11h10M7 15h6' },
-  { label: 'Categories', href: '/admin/categories', icon: 'M4 4h7l2 3h7v11a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z' },
   { label: 'Pages', href: '/admin/pages', icon: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6' },
   { label: 'Staff', href: '/admin/users', adminOnly: true, icon: 'M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8' },
   { label: 'Menus', href: '/admin/menus', adminOnly: true, icon: 'M4 6h16M4 12h16M4 18h10' },

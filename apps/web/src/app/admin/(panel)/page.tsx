@@ -24,7 +24,7 @@ export default function DashboardPage() {
     ? [
         ['Posts', stats.posts, '/admin/posts'],
         ['Pages', stats.pages, '/admin/pages'],
-        ['Categories', stats.categories, '/admin/categories'],
+        ['Categories', stats.categories, '/admin/posts'],
         ['Staff', stats.users, '/admin/users'],
         ['Total Views', stats.totalViews.toLocaleString(), null],
       ]
