@@ -43,13 +43,13 @@ export function PostListPage({ kind }: { kind: 'post' | 'page' }) {
   const toggle = (id: number) => setSelected((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]))
 
   async function remove(row: Row) {
-    if (!confirm(`Move "${row.title}" to the recycle bin?`)) return
+    if (!confirm(`Move "${row.title}" to trash?`)) return
     await adminApi(`${apiBase}/${row.id}`, { method: 'DELETE' })
     load()
   }
 
   async function bulkDelete() {
-    if (!confirm(`Move ${selected.length} ${kind === 'post' ? 'post(s)' : 'page(s)'} to the recycle bin?`)) return
+    if (!confirm(`Move ${selected.length} ${kind === 'post' ? 'post(s)' : 'page(s)'} to trash?`)) return
     await adminApi(`${apiBase}/bulk-delete`, { method: 'POST', body: { ids: selected } })
     load()
   }

@@ -42,7 +42,7 @@ export default function UsersPage() {
   }
 
   async function remove(u: User) {
-    if (!confirm(`Move staff member "${u.name}" to the recycle bin?`)) return
+    if (!confirm(`Move staff member "${u.name}" to trash?`)) return
     try {
       await adminApi(`/admin/users/${u.id}`, { method: 'DELETE' })
       load()

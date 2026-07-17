@@ -36,7 +36,7 @@ export default function TrashPage() {
 
   return (
     <div>
-      <h1 className="mb-5 text-xl font-bold">Recycle Bin</h1>
+      <h1 className="mb-5 text-xl font-bold">Trash</h1>
 
       <div className="mb-4 flex gap-1 border-b border-stone-200">
         {TYPES.map((t) => (
@@ -74,7 +74,7 @@ export default function TrashPage() {
                 </td>
               </tr>
             ))}
-            {!items.length && <tr><td className="px-4 py-10 text-center text-stone-400">Recycle bin is empty.</td></tr>}
+            {!items.length && <tr><td className="px-4 py-10 text-center text-stone-400">Trash is empty.</td></tr>}
           </tbody>
         </table>
       </div>

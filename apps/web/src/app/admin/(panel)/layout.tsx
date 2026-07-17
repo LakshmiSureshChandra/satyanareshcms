@@ -17,7 +17,7 @@ const NAV: { label: string; href: string; adminOnly?: boolean; icon: string }[] 
   { label: 'Social Links', href: '/admin/social', adminOnly: true, icon: 'M18 8a3 3 0 10-2.83-4H15a3 3 0 000 6c.35 0 .68-.07 1-.18l-6.02 3.51a3 3 0 100 3.34L16 20.18A3 3 0 1015 17a3 3 0 00-1 .18l-6.02-3.51a3 3 0 000-3.34L14 6.82c.32.11.65.18 1 .18z' },
   { label: 'SEO', href: '/admin/seo', adminOnly: true, icon: 'M11 4a7 7 0 105.6 11.2l4.15 4.15a1 1 0 001.4-1.4l-4.14-4.15A7 7 0 0011 4zM6 11a5 5 0 1110 0 5 5 0 01-10 0z' },
   { label: 'Settings', href: '/admin/settings', adminOnly: true, icon: 'M12 15a3 3 0 100-6 3 3 0 000 6zM19 12a7 7 0 01-.1 1.2l2 1.6-2 3.4-2.4-1a7 7 0 01-2 1.2L14 21h-4l-.4-2.6a7 7 0 01-2-1.2l-2.4 1-2-3.4 2-1.6A7 7 0 015 12a7 7 0 01.1-1.2l-2-1.6 2-3.4 2.4 1a7 7 0 012-1.2L10 3h4l.4 2.6a7 7 0 012 1.2l2.4-1 2 3.4-2 1.6c.1.4.2.8.2 1.2z' },
-  { label: 'Recycle Bin', href: '/admin/trash', adminOnly: true, icon: 'M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6' },
+  { label: 'Trash', href: '/admin/trash', adminOnly: true, icon: 'M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
