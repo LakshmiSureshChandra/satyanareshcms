@@ -5,6 +5,13 @@ export function formatDate(d: string | Date) {
   return new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
+// Date + time — used on the article byline where the exact publish time matters.
+export function formatDateTime(d: string | Date) {
+  return new Date(d).toLocaleString('en-IN', {
+    year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
+  })
+}
+
 // Editorial kicker: small-caps category label. On images it sits on a white plate.
 export function CategoryTag({ cat, onImage = false }: { cat: { id: number; name: string; slug: string }; onImage?: boolean }) {
   return (

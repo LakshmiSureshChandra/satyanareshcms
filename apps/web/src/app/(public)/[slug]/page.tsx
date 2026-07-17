@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { api, imageUrl, NotFoundError, type CategoryNode, type PostCard as PostCardType, type Settings } from '@/lib/api'
-import { PostCard, formatDate, CategoryTag } from '@/components/public/PostCard'
+import { PostCard, formatDateTime, CategoryTag } from '@/components/public/PostCard'
 import { ShareButtons } from '@/components/public/ShareButtons'
 import { Sidebar } from '@/components/public/Sidebar'
 import { ReadingProgress } from '@/components/public/ReadingProgress'
@@ -120,7 +120,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 <span className="text-line">|</span>
               </>
             )}
-            <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
+            <time dateTime={post.publishedAt}>{formatDateTime(post.publishedAt)}</time>
           </div>
 
           {img && (

@@ -132,7 +132,7 @@ export function PostForm({ kind, id }: { kind: 'post' | 'page'; id?: number }) {
         {/* side column */}
         <div className="space-y-4">
           <div>
-            <label className="admin-label">Publish Date</label>
+            <label className="admin-label">Publish Date &amp; Time</label>
             <input
               type="datetime-local"
               value={form.publishedAt}
