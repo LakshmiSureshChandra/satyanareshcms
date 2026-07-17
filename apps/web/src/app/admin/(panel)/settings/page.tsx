@@ -10,11 +10,6 @@ const TEXT_FIELDS: [string, string][] = [
   ['site_name', 'Site Name'],
   ['site_email', 'Site Email'],
   ['site_phone', 'Site Phone'],
-  ['facebook_link', 'Facebook URL'],
-  ['twitter_link', 'X / Twitter URL'],
-  ['instagram_link', 'Instagram URL'],
-  ['youtube_link', 'YouTube URL'],
-  ['linkedin_link', 'LinkedIn URL'],
   ['copy_rights_info', 'Copyright Line'],
 ]
 
