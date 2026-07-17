@@ -185,9 +185,9 @@ export function MenuBuilder({
   }
 
   const refList = form.type === 'category' ? sources.categories : form.type === 'page' ? sources.pages : sources.posts
-  const addBtnLabel = location === 'footer' ? '+ Add to footer' : '+ Add to menu'
-  const addTitle = location === 'footer' ? 'Add Footer Item' : 'Add Menu Item'
-  const emptyMsg = location === 'footer' ? 'Footer is empty — add columns and links from the left.' : 'Menu is empty — add items from the left.'
+  const addBtnLabel = location === 'footer' ? '+ Add to footer menu' : '+ Add to menu'
+  const addTitle = location === 'footer' ? 'Add Footer Menu Item' : 'Add Menu Item'
+  const emptyMsg = location === 'footer' ? 'Footer menu is empty — add columns and links from the left.' : 'Menu is empty — add items from the left.'
 
   if (status === 'loading') {
     return <p className="text-sm text-stone-500">Loading…</p>

@@ -5,7 +5,7 @@ import { MenuBuilder } from '@/components/admin/MenuBuilder'
 
 const TABS: { key: 'header' | 'footer'; label: string }[] = [
   { key: 'header', label: 'Header Menu' },
-  { key: 'footer', label: 'Footer' },
+  { key: 'footer', label: 'Footer Menu' },
 ]
 
 export default function MenusPage() {
@@ -28,7 +28,7 @@ export default function MenusPage() {
       {tab === 'header' ? (
         <MenuBuilder key="header" location="header" title="Header Menu" saveLabel="Save Menu" />
       ) : (
-        <MenuBuilder key="footer" location="footer" title="Footer" saveLabel="Save Footer" />
+        <MenuBuilder key="footer" location="footer" title="Footer Menu" saveLabel="Save Footer Menu" />
       )}
     </div>
   )
