@@ -5,14 +5,27 @@ import { Ticker } from '@/components/public/Ticker'
 import { Footer } from '@/components/public/Footer'
 import { CookieBanner } from '@/components/public/CookieBanner'
 
-// Favicon comes from admin Settings (fav_icon). No fallback to the framework
-// default — nothing is shown until one is uploaded.
+// Site-wide SEO defaults from Admin → SEO. Any page can still override these
+// (e.g. a post's own meta title/description/image) — Next merges child
+// metadata over these, so this only fills in what a page doesn't set itself.
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await api<Settings>('/settings', 300)
   const icon = imageUrl(settings.fav_icon)
+  const ogImage = imageUrl(settings.og_image)
   return {
     title: { default: settings.site_name || 'AK Ganesh', template: `%s — ${settings.site_name || 'AK Ganesh'}` },
+    description: settings.default_meta_description || undefined,
     icons: icon ? { icon } : undefined,
+    verification: settings.google_site_verification ? { google: settings.google_site_verification } : undefined,
+    openGraph: {
+      siteName: settings.site_name || undefined,
+      type: 'website',
+      images: ogImage ? [{ url: ogImage }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      images: ogImage ? [ogImage] : undefined,
+    },
   }
 }
 

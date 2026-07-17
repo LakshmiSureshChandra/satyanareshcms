@@ -79,15 +79,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div>
-          <label className="admin-label">Google Analytics snippet <span className="font-normal text-stone-400">(pasted as-is into the site, gated by cookie consent)</span></label>
-          <textarea value={form.google_analytics || ''} onChange={(e) => set('google_analytics', e.target.value)} rows={4} className="admin-input font-mono text-xs" />
-        </div>
-
-        <div>
-          <label className="admin-label">robots.txt</label>
-          <textarea value={form.robot_txt || ''} onChange={(e) => set('robot_txt', e.target.value)} rows={3} className="admin-input font-mono text-xs" />
-        </div>
       </div>
     </form>
   )
