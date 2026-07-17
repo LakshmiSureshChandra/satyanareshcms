@@ -1,6 +1,7 @@
-import { api, imageUrl, type PostCard as PostCardType } from '@/lib/api'
+import { api, type PostCard as PostCardType } from '@/lib/api'
 import { PostCard, PostRow, OverlayCard } from '@/components/public/PostCard'
 import { FeaturedCarousel } from '@/components/public/FeaturedCarousel'
+import { HeroSlider } from '@/components/public/HeroSlider'
 
 export const revalidate = 300
 
@@ -11,25 +12,6 @@ type Home = {
   latest: PostCardType[]
   more: PostCardType[]
   banners: Banner[]
-}
-
-function Banners({ banners }: { banners: Banner[] }) {
-  if (!banners?.length) return null
-  return (
-    <section className="rise pt-6">
-      <div className={banners.length > 1 ? 'rail' : ''}>
-        {banners.map((b) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={b.id}
-            src={imageUrl(b.file) || ''}
-            alt={b.name}
-            className="w-full rounded-lg border border-line object-cover"
-          />
-        ))}
-      </div>
-    </section>
-  )
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -48,54 +30,56 @@ export default async function HomePage() {
   ].slice(0, 4)
 
   return (
-    <div className="mx-auto max-w-6xl px-4">
-      <Banners banners={home.banners} />
+    <>
+      <HeroSlider banners={home.banners} />
 
-      {/* HERO — bento: big overlay lead + stacked side rows */}
-      {lead && (
-        <section className="rise grid gap-7 py-8 md:grid-cols-3 md:py-10">
-          <div className="md:col-span-2">
-            <OverlayCard post={lead} />
-          </div>
-          <div className="flex flex-col justify-between gap-5 rounded-lg border border-line bg-white/50 p-5">
-            {side.map((p) => (
-              <PostRow key={p.id} post={p} />
-            ))}
-          </div>
-        </section>
-      )}
+      <div className="mx-auto max-w-6xl px-4">
+        {/* HERO — bento: big overlay lead + stacked side rows */}
+        {lead && (
+          <section className="rise grid gap-7 py-8 md:grid-cols-3 md:py-10">
+            <div className="md:col-span-2">
+              <OverlayCard post={lead} />
+            </div>
+            <div className="flex flex-col justify-between gap-5 rounded-lg border border-line bg-white/50 p-5">
+              {side.map((p) => (
+                <PostRow key={p.id} post={p} />
+              ))}
+            </div>
+          </section>
+        )}
 
-      {/* FEATURED — swipeable rail */}
-      {home.featured.length > 0 && (
-        <section className="rise-1 rise py-8">
-          <SectionTitle>Featured Stories</SectionTitle>
-          <FeaturedCarousel posts={home.featured} />
-        </section>
-      )}
+        {/* FEATURED — swipeable rail */}
+        {home.featured.length > 0 && (
+          <section className="rise-1 rise py-8">
+            <SectionTitle>Featured Stories</SectionTitle>
+            <FeaturedCarousel posts={home.featured} />
+          </section>
+        )}
 
-      {/* LATEST grid */}
-      {home.latest.length > 0 && (
-        <section className="rise-2 rise py-8">
-          <SectionTitle>Latest News</SectionTitle>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {home.latest.map((p, i) => (
-              <PostCard key={p.id} post={p} big={i === 0 && home.latest.length < 4} />
-            ))}
-          </div>
-        </section>
-      )}
+        {/* LATEST grid */}
+        {home.latest.length > 0 && (
+          <section className="rise-2 rise py-8">
+            <SectionTitle>Latest News</SectionTitle>
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {home.latest.map((p, i) => (
+                <PostCard key={p.id} post={p} big={i === 0 && home.latest.length < 4} />
+              ))}
+            </div>
+          </section>
+        )}
 
-      {/* MORE list */}
-      {home.more.length > 0 && (
-        <section className="rise-3 rise py-8">
-          <SectionTitle>More News</SectionTitle>
-          <div className="grid gap-x-10 gap-y-7 rounded-lg border border-line bg-white/50 p-6 md:grid-cols-2 md:p-8">
-            {home.more.map((p) => (
-              <PostRow key={p.id} post={p} />
-            ))}
-          </div>
-        </section>
-      )}
-    </div>
+        {/* MORE list */}
+        {home.more.length > 0 && (
+          <section className="rise-3 rise py-8">
+            <SectionTitle>More News</SectionTitle>
+            <div className="grid gap-x-10 gap-y-7 rounded-lg border border-line bg-white/50 p-6 md:grid-cols-2 md:p-8">
+              {home.more.map((p) => (
+                <PostRow key={p.id} post={p} />
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    </>
   )
 }
