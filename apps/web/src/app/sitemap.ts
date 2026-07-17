@@ -7,6 +7,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const data = await api<{
     posts: { slug: string; type: 'post' | 'page'; updatedAt: string }[]
     categories: { slug: string; updatedAt: string }[]
+    galleryAlbums: { slug: string; updatedAt: string }[]
   }>('/sitemap-data', 3600)
 
   return [
@@ -20,6 +21,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE}/category/${c.slug}`,
       lastModified: new Date(c.updatedAt),
       priority: 0.6,
+    })),
+    ...data.galleryAlbums.map((a) => ({
+      url: `${SITE}/gallery/${a.slug}`,
+      lastModified: new Date(a.updatedAt),
+      priority: 0.5,
     })),
   ]
 }

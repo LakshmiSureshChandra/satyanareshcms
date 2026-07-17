@@ -24,6 +24,7 @@ const PUBLIC_SETTINGS = [
   'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
   'copy_rights_info', 'footer_config',
   'default_meta_description', 'google_site_verification', 'og_image',
+  'gallery_enabled',
 ]
 
 router.get('/settings', async (req, res) => {
@@ -176,15 +177,49 @@ router.get('/categories/:slug', async (req, res) => {
 })
 
 router.get('/sitemap-data', async (req, res) => {
-  const [posts, cats] = await Promise.all([
+  const settings = await getSettings()
+  const [posts, cats, albums] = await Promise.all([
     db.post.findMany({
       where: publishedNow(),
       select: { slug: true, type: true, updatedAt: true },
       orderBy: { publishedAt: 'desc' },
     }),
     db.category.findMany({ where: { status: true }, select: { slug: true, updatedAt: true } }),
+    settings.gallery_enabled === 'true'
+      ? db.galleryAlbum.findMany({ where: publishedNow(), select: { slug: true, updatedAt: true } })
+      : [],
   ])
-  res.json({ posts, categories: cats })
+  res.json({ posts, categories: cats, galleryAlbums: albums })
+})
+
+// ---- gallery (public) ----
+const albumCard = { id: true, title: true, slug: true, coverImage: true, publishedAt: true, _count: { select: { photos: true } } }
+const flattenAlbum = (a) => ({ ...a, photoCount: a._count.photos, _count: undefined })
+
+router.get('/gallery', async (req, res) => {
+  const settings = await getSettings()
+  if (settings.gallery_enabled !== 'true') return res.status(404).json({ error: 'Not found' })
+  const page = Math.max(1, Number(req.query.page) || 1)
+  const limit = 12
+  const where = publishedNow()
+  const [total, albums] = await Promise.all([
+    db.galleryAlbum.count({ where }),
+    db.galleryAlbum.findMany({
+      where, orderBy: { publishedAt: 'desc' }, skip: (page - 1) * limit, take: limit, select: albumCard,
+    }),
+  ])
+  res.json({ albums: albums.map(flattenAlbum), total, page, pages: Math.ceil(total / limit) })
+})
+
+router.get('/gallery/:slug', async (req, res) => {
+  const settings = await getSettings()
+  if (settings.gallery_enabled !== 'true') return res.status(404).json({ error: 'Not found' })
+  const album = await db.galleryAlbum.findFirst({
+    where: { slug: req.params.slug, ...publishedNow() },
+    include: { photos: { orderBy: { sortOrder: 'asc' } } },
+  })
+  if (!album) return res.status(404).json({ error: 'Not found' })
+  res.json(album)
 })
 
 router.get('/robots', async (req, res) => {

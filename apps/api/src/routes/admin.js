@@ -413,12 +413,127 @@ router.delete('/banners/:id', async (req, res) => {
   res.json({ ok: true })
 })
 
+// ---- gallery albums (admin + manager) ----
+router.get('/gallery', async (req, res) => {
+  const page = Math.max(1, Number(req.query.page) || 1)
+  const limit = 20
+  const where = { ...notTrashed }
+  if (req.query.s) where.title = { contains: String(req.query.s) }
+  const [total, items] = await Promise.all([
+    db.galleryAlbum.count({ where }),
+    db.galleryAlbum.findMany({
+      where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit,
+      select: { id: true, title: true, slug: true, coverImage: true, status: true, publishedAt: true, _count: { select: { photos: true } } },
+    }),
+  ])
+  res.json({ items: items.map((a) => ({ ...a, photoCount: a._count.photos })), total, page, pages: Math.ceil(total / limit) })
+})
+
+router.get('/gallery/:id', async (req, res) => {
+  const album = await db.galleryAlbum.findFirst({
+    where: { id: Number(req.params.id), ...notTrashed },
+    include: { photos: { orderBy: { sortOrder: 'asc' } } },
+  })
+  if (!album) return res.status(404).json({ error: 'Not found' })
+  res.json(album)
+})
+
+function validateAlbum(b) {
+  if (!b.title?.trim()) return 'Title is required'
+  return null
+}
+
+router.post('/gallery', async (req, res) => {
+  const err = validateAlbum(req.body)
+  if (err) return res.status(422).json({ error: err })
+  const b = req.body
+  const album = await db.galleryAlbum.create({
+    data: {
+      title: b.title.trim(),
+      slug: await uniqueSlug('galleryAlbum', b.slug?.trim() || b.title),
+      coverImage: b.coverImage || null,
+      status: !!b.status,
+      publishedAt: b.publishedAt ? new Date(b.publishedAt) : new Date(),
+      createdBy: req.user.id,
+    },
+  })
+  revalidate(['/', '/gallery'])
+  res.json(album)
+})
+
+router.put('/gallery/:id', async (req, res) => {
+  const id = Number(req.params.id)
+  const existing = await db.galleryAlbum.findFirst({ where: { id, ...notTrashed } })
+  if (!existing) return res.status(404).json({ error: 'Not found' })
+  const err = validateAlbum(req.body)
+  if (err) return res.status(422).json({ error: err })
+  const b = req.body
+  let coverImage = existing.coverImage
+  if (b.removeCover) { removeFile(coverImage); coverImage = null }
+  if (b.coverImage && b.coverImage !== coverImage) { if (coverImage) removeFile(coverImage); coverImage = b.coverImage }
+  const album = await db.galleryAlbum.update({
+    where: { id },
+    data: {
+      title: b.title.trim(),
+      slug: b.slug?.trim() ? await uniqueSlug('galleryAlbum', b.slug, id) : existing.slug,
+      coverImage,
+      status: !!b.status,
+      publishedAt: b.publishedAt ? new Date(b.publishedAt) : existing.publishedAt,
+    },
+  })
+  revalidate(['/', '/gallery', `/gallery/${existing.slug}`, `/gallery/${album.slug}`])
+  res.json(album)
+})
+
+router.delete('/gallery/:id', async (req, res) => {
+  const album = await db.galleryAlbum.findFirst({ where: { id: Number(req.params.id), ...notTrashed } })
+  if (!album) return res.status(404).json({ error: 'Not found' })
+  await db.galleryAlbum.update({ where: { id: album.id }, data: { deletedAt: new Date() } })
+  revalidate(['/', '/gallery', `/gallery/${album.slug}`])
+  res.json({ ok: true })
+})
+
+// photos within an album — sub-resource, not individually trashed
+router.post('/gallery/:id/photos', upload.single('file'), async (req, res) => {
+  const albumId = Number(req.params.id)
+  const album = await db.galleryAlbum.findFirst({ where: { id: albumId, ...notTrashed } })
+  if (!album) return res.status(404).json({ error: 'Not found' })
+  if (!req.file) return res.status(422).json({ error: 'No image uploaded' })
+  const url = await saveImage(req.file, { maxWidth: 2000 })
+  const max = await db.galleryPhoto.aggregate({ _max: { sortOrder: true }, where: { albumId } })
+  const photo = await db.galleryPhoto.create({
+    data: { albumId, file: url, sortOrder: (max._max.sortOrder ?? 0) + 1 },
+  })
+  revalidate([`/gallery/${album.slug}`])
+  res.json(photo)
+})
+
+router.put('/gallery/:id/photos/order', async (req, res) => {
+  const albumId = Number(req.params.id)
+  const ids = (req.body?.ids || []).map(Number).filter(Boolean)
+  await Promise.all(ids.map((id, i) => db.galleryPhoto.update({ where: { id }, data: { sortOrder: i } })))
+  const album = await db.galleryAlbum.findUnique({ where: { id: albumId } })
+  if (album) revalidate([`/gallery/${album.slug}`])
+  res.json({ ok: true })
+})
+
+router.delete('/gallery/:id/photos/:photoId', async (req, res) => {
+  const photo = await db.galleryPhoto.findFirst({ where: { id: Number(req.params.photoId), albumId: Number(req.params.id) } })
+  if (!photo) return res.status(404).json({ error: 'Not found' })
+  removeFile(photo.file)
+  await db.galleryPhoto.delete({ where: { id: photo.id } })
+  const album = await db.galleryAlbum.findUnique({ where: { id: Number(req.params.id) } })
+  if (album) revalidate([`/gallery/${album.slug}`])
+  res.json({ ok: true })
+})
+
 // ---- recycle bin (admin only) ----
 const TRASH = {
   posts: { model: 'post', where: { type: 'post' } },
   pages: { model: 'post', where: { type: 'page' } },
   users: { model: 'user', where: {} },
   banners: { model: 'media', where: {} },
+  gallery: { model: 'galleryAlbum', where: {} },
 }
 
 router.get('/trash/:type', adminOnly, async (req, res) => {
@@ -447,7 +562,11 @@ router.delete('/trash/:type', adminOnly, async (req, res) => {
   const ids = (req.body?.ids || []).map(Number)
   if (!ids.length) return res.status(422).json({ error: 'No items selected' })
   const items = await db[t.model].findMany({ where: { id: { in: ids }, ...t.where, deletedAt: { not: null } } })
-  for (const item of items) removeFile(item.bannerImage || item.file)
+  if (req.params.type === 'gallery') {
+    const photos = await db.galleryPhoto.findMany({ where: { albumId: { in: items.map((i) => i.id) } } })
+    for (const p of photos) removeFile(p.file)
+  }
+  for (const item of items) removeFile(item.bannerImage || item.coverImage || item.file)
   await db[t.model].deleteMany({ where: { id: { in: items.map((i) => i.id) } } })
   res.json({ ok: true })
 })

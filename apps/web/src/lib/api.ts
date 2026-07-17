@@ -48,3 +48,16 @@ export type CategoryNode = {
 }
 
 export type Settings = Record<string, string>
+
+export type GalleryAlbumCard = {
+  id: number
+  title: string
+  slug: string
+  coverImage: string | null
+  publishedAt: string
+  photoCount: number
+}
+
+export type GalleryAlbum = GalleryAlbumCard & {
+  photos: { id: number; file: string; caption: string | null }[]
+}

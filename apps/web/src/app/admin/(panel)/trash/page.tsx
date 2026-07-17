@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { adminApi } from '@/lib/admin-api'
 
-const TYPES = ['posts', 'pages', 'users', 'banners'] as const
+const TYPES = ['posts', 'pages', 'gallery', 'users', 'banners'] as const
 type TrashType = (typeof TYPES)[number]
-const TYPE_LABELS: Record<TrashType, string> = { posts: 'Posts', pages: 'Pages', users: 'Users', banners: 'Sliders' }
+const TYPE_LABELS: Record<TrashType, string> = { posts: 'Posts', pages: 'Pages', gallery: 'Gallery', users: 'Users', banners: 'Sliders' }
 
 export default function TrashPage() {
   const [type, setType] = useState<TrashType>('posts')
