@@ -109,17 +109,27 @@ export function MenuBuilder({
   const [editingKey, setEditingKey] = useState<number | null>(null)
   const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
+  // 'loading' | 'ready' | 'error' — Save is only allowed once the real data has
+  // loaded, so a network blip can never look like "empty" and get saved over
+  // the actual menu/footer.
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
 
   const q = `?location=${location}`
   const updateItem = (key: number, patch: Partial<Item>) =>
     setItems((list) => list.map((it) => (it.key === key ? { ...it, ...patch } : it)))
 
-  useEffect(() => {
-    adminApi(`/admin/menus${q}`).then((data: any) => {
-      setItems(flatten(data.tree))
-      setSources({ posts: data.posts, pages: data.pages, categories: data.categories })
-    })
-  }, [q])
+  function load() {
+    setStatus('loading')
+    adminApi(`/admin/menus${q}`)
+      .then((data: any) => {
+        setItems(flatten(data.tree))
+        setSources({ posts: data.posts, pages: data.pages, categories: data.categories })
+        setStatus('ready')
+      })
+      .catch(() => setStatus('error'))
+  }
+
+  useEffect(load, [q])
 
   function addItem(e: React.FormEvent) {
     e.preventDefault()
@@ -178,6 +188,25 @@ export function MenuBuilder({
   const addBtnLabel = location === 'footer' ? '+ Add to footer' : '+ Add to menu'
   const addTitle = location === 'footer' ? 'Add Footer Item' : 'Add Menu Item'
   const emptyMsg = location === 'footer' ? 'Footer is empty — add columns and links from the left.' : 'Menu is empty — add items from the left.'
+
+  if (status === 'loading') {
+    return <p className="text-sm text-stone-500">Loading…</p>
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+        <p className="text-sm font-semibold text-red-800">Couldn&apos;t load {title.toLowerCase()}.</p>
+        <p className="mt-1 text-sm text-red-700">
+          This is a network or server problem — nothing has been changed. Saving is disabled until this loads
+          successfully, so your existing {location === 'footer' ? 'footer' : 'menu'} is safe.
+        </p>
+        <button onClick={load} className="mt-4 rounded-md bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800">
+          Retry
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div>

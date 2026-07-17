@@ -19,6 +19,7 @@ export async function adminApi<T = any>(
   const res = await fetch(`${API}/api${path}`, {
     method: opts.method || 'GET',
     credentials: 'include',
+    cache: 'no-store', // admin data must never be served stale/cached
     headers: opts.formData ? undefined : opts.body ? { 'content-type': 'application/json' } : undefined,
     body: opts.formData || (opts.body ? JSON.stringify(opts.body) : undefined),
   })
