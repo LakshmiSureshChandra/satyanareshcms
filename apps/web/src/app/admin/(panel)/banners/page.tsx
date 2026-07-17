@@ -23,7 +23,7 @@ export default function BannersPage() {
   }
 
   async function remove(b: Banner) {
-    if (!confirm(`Delete banner "${b.name}"?`)) return
+    if (!confirm(`Delete slider "${b.name}"?`)) return
     await adminApi(`/admin/banners/${b.id}`, { method: 'DELETE' })
     load()
   }
@@ -41,14 +41,14 @@ export default function BannersPage() {
   return (
     <div>
       <div className="mb-5 flex items-center justify-between">
-        <h1 className="text-xl font-bold">Homepage Banners</h1>
+        <h1 className="text-xl font-bold">Homepage Sliders</h1>
         <button onClick={() => fileRef.current?.click()} disabled={busy} className="rounded-md bg-stone-900 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-700 disabled:opacity-50">
-          {busy ? 'Uploading…' : '+ Upload Banner'}
+          {busy ? 'Uploading…' : '+ Upload Slider'}
         </button>
         <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = '' }} />
       </div>
 
-      {banners.length > 1 && <p className="mb-3 text-xs text-stone-500">Use the arrows to set the order banners appear on the homepage.</p>}
+      {banners.length > 1 && <p className="mb-3 text-xs text-stone-500">Use the arrows to set the order sliders appear on the homepage.</p>}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {banners.map((b, i) => (
@@ -65,7 +65,7 @@ export default function BannersPage() {
             </div>
           </div>
         ))}
-        {!banners.length && <p className="col-span-full py-10 text-center text-sm text-stone-400">No banners uploaded.</p>}
+        {!banners.length && <p className="col-span-full py-10 text-center text-sm text-stone-400">No sliders uploaded.</p>}
       </div>
     </div>
   )

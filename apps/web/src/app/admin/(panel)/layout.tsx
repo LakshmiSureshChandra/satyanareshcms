@@ -13,7 +13,7 @@ const NAV: { label: string; href: string; adminOnly?: boolean; icon: string }[] 
   { label: 'Pages', href: '/admin/pages', icon: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6' },
   { label: 'Staff', href: '/admin/users', adminOnly: true, icon: 'M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8' },
   { label: 'Menus', href: '/admin/menus', adminOnly: true, icon: 'M4 6h16M4 12h16M4 18h10' },
-  { label: 'Banners', href: '/admin/banners', icon: 'M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM3 15l5-5 4 4 3-3 6 6' },
+  { label: 'Sliders', href: '/admin/banners', icon: 'M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM3 15l5-5 4 4 3-3 6 6' },
   { label: 'Settings', href: '/admin/settings', adminOnly: true, icon: 'M12 15a3 3 0 100-6 3 3 0 000 6zM19 12a7 7 0 01-.1 1.2l2 1.6-2 3.4-2.4-1a7 7 0 01-2 1.2L14 21h-4l-.4-2.6a7 7 0 01-2-1.2l-2.4 1-2-3.4 2-1.6A7 7 0 015 12a7 7 0 01.1-1.2l-2-1.6 2-3.4 2.4 1a7 7 0 012-1.2L10 3h4l.4 2.6a7 7 0 012 1.2l2.4-1 2 3.4-2 1.6c.1.4.2.8.2 1.2z' },
   { label: 'Recycle Bin', href: '/admin/trash', adminOnly: true, icon: 'M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6' },
 ]

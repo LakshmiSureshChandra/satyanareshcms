@@ -5,6 +5,7 @@ import { adminApi } from '@/lib/admin-api'
 
 const TYPES = ['posts', 'pages', 'users', 'banners'] as const
 type TrashType = (typeof TYPES)[number]
+const TYPE_LABELS: Record<TrashType, string> = { posts: 'Posts', pages: 'Pages', users: 'Users', banners: 'Sliders' }
 
 export default function TrashPage() {
   const [type, setType] = useState<TrashType>('posts')
@@ -42,9 +43,9 @@ export default function TrashPage() {
           <button
             key={t}
             onClick={() => setType(t)}
-            className={`px-4 py-2 text-sm font-medium capitalize ${type === t ? 'border-b-2 border-stone-900 text-stone-900' : 'text-stone-500 hover:text-stone-800'}`}
+            className={`px-4 py-2 text-sm font-medium ${type === t ? 'border-b-2 border-stone-900 text-stone-900' : 'text-stone-500 hover:text-stone-800'}`}
           >
-            {t}
+            {TYPE_LABELS[t]}
           </button>
         ))}
       </div>
