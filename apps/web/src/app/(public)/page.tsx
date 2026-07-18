@@ -54,18 +54,26 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* FEATURED — swipeable rail, poll widget rides along as a narrow side card */}
-        <section className="rise-1 rise grid gap-7 py-8 md:grid-cols-3">
-          {home.featured.length > 0 && (
+        {/* FEATURED — swipeable rail, poll widget rides along as a narrow side card
+            when there's featured content to sit beside; otherwise the poll gets its
+            own centered row so it never leaves a blank grid column next to it */}
+        {home.featured.length > 0 ? (
+          <section className="rise-1 rise grid gap-7 py-8 md:grid-cols-3">
             <div className="md:col-span-2">
               <SectionTitle>Featured Stories</SectionTitle>
               <FeaturedCarousel posts={home.featured} />
             </div>
-          )}
-          <div className={home.featured.length > 0 ? '' : 'md:col-span-1 md:col-start-3'}>
-            <PollWidget />
-          </div>
-        </section>
+            <div>
+              <PollWidget />
+            </div>
+          </section>
+        ) : (
+          <section className="rise-1 rise py-8">
+            <div className="mx-auto max-w-md">
+              <PollWidget />
+            </div>
+          </section>
+        )}
 
         {/* LATEST grid */}
         {home.latest.length > 0 && (

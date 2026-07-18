@@ -1,66 +1,95 @@
 // One-time demo-content population — run manually, exactly once:
 //   node apps/api/scripts/seed-demo-content.mjs
 //
-// Guarded by the `demo_content_seeded` option: once it runs, it marks itself
-// done and every future run (even after the admin deletes everything it
-// created) is a no-op. It is never invoked automatically by the app.
+// Guarded by the `demo_content_seeded` option (stores the SEED_VERSION below):
+// once a version has run, every future run of that same version is a no-op,
+// even after the admin deletes everything it created. It is never invoked
+// automatically by the app. Bumping SEED_VERSION lets this file's content be
+// corrected once (as happened here — v1 was wrongly seeded in Telugu) without
+// ever silently re-running for everyone else.
 import { db } from '../src/lib/db.js'
 import { uniqueSlug } from '../src/lib/slug.js'
 
 const MARKER = 'demo_content_seeded'
+const SEED_VERSION = 'v2-en-ca'
+
+// v1 (Telugu, wrong — superseded) content, removed if still present before reseeding
+const V1_CATEGORY_NAMES = ['క్రీడలు', 'సినిమా', 'విద్య', 'ఆరోగ్యం']
+const V1_POST_TITLES = [
+  'స్థానిక క్రికెట్ టోర్నమెంట్ విజయవంతంగా ముగింపు', 'యువజన క్రీడా పోటీలకు నమోదు ప్రారంభం', 'పాఠశాలల మధ్య క్రీడోత్సవం ఘనంగా నిర్వహణ',
+  'చిన్న వ్యాపారులకు కొత్త రుణ పథకం ప్రకటన', 'స్థానిక మార్కెట్లో ధరల స్థిరత్వం', 'డిజిటల్ చెల్లింపులపై చిన్న వ్యాపారుల్లో అవగాహన సదస్సు',
+  'కొత్త తెలుగు చిత్రం చిత్రీకరణ ప్రారంభం', 'స్థానిక చిత్రోత్సవంలో పలు లఘు చిత్రాల ప్రదర్శన', 'సినీ నటుల భేటీలో సాంకేతిక వర్గాలకు అభినందనలు',
+  'ప్రభుత్వ పాఠశాలల్లో డిజిటల్ తరగతుల విస్తరణ', 'విద్యార్థుల కోసం ఉచిత నైపుణ్య శిక్షణ కార్యక్రమం', 'పాఠశాల విద్యార్థుల కోసం గ్రంథాలయ వారోత్సవాలు',
+  'ఉచిత ఆరోగ్య పరీక్షల శిబిరం నిర్వహణ', 'వర్షాకాలంలో తీసుకోవాల్సిన జాగ్రత్తలపై అవగాహన', 'రక్తదాన శిబిరానికి విశేష స్పందన',
+]
+const V1_GALLERY_CATEGORY_NAMES = ['వేడుకలు', 'కార్యక్రమాలు']
+const V1_GALLERY_ALBUM_TITLES = ['వార్షిక వేడుక 2026', 'స్థాపన దినోత్సవం', 'అవగాహన సదస్సు', 'సామాజిక సేవా కార్యక్రమం']
+const V1_POLL_TITLES = [
+  'మా వెబ్‌సైట్ కొత్త డిజైన్ మీకు ఎలా అనిపించింది?', 'మీరు రోజూ మా వెబ్‌సైట్‌ను సందర్శిస్తారా?', 'మీకు ఏ విభాగం వార్తలు ఎక్కువ ఇష్టం?',
+]
+
+async function removeV1IfPresent() {
+  await db.post.deleteMany({ where: { title: { in: V1_POST_TITLES } } })
+  await db.category.deleteMany({ where: { name: { in: V1_CATEGORY_NAMES } } })
+  await db.galleryAlbum.deleteMany({ where: { title: { in: V1_GALLERY_ALBUM_TITLES } } })
+  await db.galleryCategory.deleteMany({ where: { name: { in: V1_GALLERY_CATEGORY_NAMES } } })
+  await db.poll.deleteMany({ where: { title: { in: V1_POLL_TITLES } } })
+  console.log('Removed old (v1, Telugu) demo content.')
+}
 
 async function main() {
   const marker = await db.option.findUnique({ where: { key: MARKER } })
-  if (marker?.value === 'true') {
+  if (marker?.value === SEED_VERSION) {
     console.log('Demo content already seeded — nothing to do.')
     return
   }
+  if (marker?.value) await removeV1IfPresent()
 
   const admin = await db.user.findFirst({ where: { role: 'admin' }, orderBy: { id: 'asc' } })
   if (!admin) throw new Error('No admin user found — cannot attribute demo posts.')
 
   const daysAgo = (n) => new Date(Date.now() - n * 24 * 3600 * 1000)
 
-  // ---- categories + posts ----
+  // ---- categories + posts (English, CA-firm relevant) ----
   const CATEGORIES = [
     {
-      name: 'క్రీడలు',
+      name: 'Tax Updates',
       posts: [
-        { title: 'స్థానిక క్రికెట్ టోర్నమెంట్ విజయవంతంగా ముగింపు', days: 2, body: 'నగరంలో నిర్వహించిన స్థానిక క్రికెట్ టోర్నమెంట్ ఘనంగా ముగిసింది. వివిధ జట్ల మధ్య జరిగిన పోటీలు ప్రేక్షకులను ఆకట్టుకున్నాయి. విజేత జట్టుకు నిర్వాహకులు ప్రత్యేక అభినందనలు తెలిపారు.\n\nఈ టోర్నమెంట్‌లో యువ ఆటగాళ్లు తమ ప్రతిభను ప్రదర్శించే అవకాశం లభించిందని నిర్వాహకులు తెలిపారు. వచ్చే ఏడాది మరింత పెద్ద స్థాయిలో నిర్వహించాలని యోచిస్తున్నట్లు వెల్లడించారు.' },
-        { title: 'యువజన క్రీడా పోటీలకు నమోదు ప్రారంభం', days: 9, body: 'జిల్లా స్థాయి యువజన క్రీడా పోటీలకు నమోదు ప్రక్రియ ప్రారంభమైంది. ఆసక్తి గల యువకులు నిర్ణీత గడువులోపు దరఖాస్తు చేసుకోవాలని అధికారులు కోరారు.\n\nఅథ్లెటిక్స్, బ్యాడ్మింటన్, వాలీబాల్ వంటి క్రీడాంశాల్లో పోటీలు నిర్వహించనున్నారు. విజేతలకు నగదు బహుమతులతో పాటు ప్రశంసాపత్రాలు అందజేస్తారు.' },
-        { title: 'పాఠశాలల మధ్య క్రీడోత్సవం ఘనంగా నిర్వహణ', days: 16, body: 'నగర పరిధిలోని వివిధ పాఠశాలల విద్యార్థుల మధ్య వార్షిక క్రీడోత్సవం ఘనంగా జరిగింది. పరుగు పందేలు, ఖో-ఖో, కబడ్డీ వంటి క్రీడాంశాల్లో విద్యార్థులు ఉత్సాహంగా పాల్గొన్నారు.\n\nవిజేతలైన విద్యార్థులకు పతకాలు, సర్టిఫికెట్లు అందజేశారు. ఇలాంటి కార్యక్రమాలు విద్యార్థుల్లో క్రీడాస్ఫూర్తిని పెంచుతాయని నిర్వాహకులు పేర్కొన్నారు.' },
+        { title: 'Key Changes in Income Tax Filing This Year', days: 2, body: 'The latest changes to income tax filing procedures bring several updates that taxpayers should be aware of before the deadline. Revised forms and simplified disclosure requirements aim to make the process more straightforward for individuals and businesses alike.\n\nTaxpayers are advised to review their documentation early and consult with their advisor to ensure all applicable deductions and exemptions are correctly claimed.' },
+        { title: 'Understanding Advance Tax Payment Deadlines', days: 9, body: 'Advance tax payments help spread the tax liability across the financial year rather than as a single burden at year-end. Missing a scheduled installment can attract interest under the applicable provisions.\n\nBusinesses and professionals with tax liability above the prescribed threshold should plan their cash flow around these quarterly deadlines to avoid penalties.' },
+        { title: 'Common Mistakes to Avoid While Filing Tax Returns', days: 16, body: 'Simple errors such as mismatched PAN details, incorrect bank account information, or overlooked income sources are among the most frequent reasons for return processing delays.\n\nA careful review before submission, along with reconciliation against Form 26AS and AIS, helps avoid unnecessary notices and rework later in the year.' },
       ],
     },
     {
-      name: 'వ్యాపారం',
+      name: 'GST Compliance',
       posts: [
-        { title: 'చిన్న వ్యాపారులకు కొత్త రుణ పథకం ప్రకటన', days: 3, body: 'స్థానిక చిన్న, మధ్య తరహా వ్యాపారులను ప్రోత్సహించేందుకు కొత్త రుణ పథకాన్ని ప్రకటించారు. తక్కువ వడ్డీ రేటుతో రుణాలు అందించనున్నట్లు అధికారులు తెలిపారు.\n\nఈ పథకం ద్వారా వ్యాపారులు తమ వ్యాపారాన్ని విస్తరించుకునేందుకు అవకాశం లభిస్తుందని భావిస్తున్నారు. దరఖాస్తు ప్రక్రియ వచ్చే వారం నుంచి ప్రారంభం కానుంది.' },
-        { title: 'స్థానిక మార్కెట్లో ధరల స్థిరత్వం', days: 11, body: 'గత కొద్ది వారాలుగా నిత్యావసర వస్తువుల ధరలు స్థిరంగా ఉన్నాయని వ్యాపారులు తెలిపారు. దీనివల్ల వినియోగదారులకు ఊరట లభించినట్లు అయింది.\n\nరాబోయే పండుగ సీజన్‌లో డిమాండ్ పెరిగే అవకాశం ఉందని, అయినప్పటికీ ధరలు అదుపులో ఉంచేందుకు చర్యలు తీసుకుంటున్నట్లు అధికారులు వెల్లడించారు.' },
-        { title: 'డిజిటల్ చెల్లింపులపై చిన్న వ్యాపారుల్లో అవగాహన సదస్సు', days: 20, body: 'డిజిటల్ చెల్లింపు విధానాలపై చిన్న వ్యాపారులకు అవగాహన కల్పించేందుకు ప్రత్యేక సదస్సు నిర్వహించారు. క్యూఆర్ కోడ్ చెల్లింపులు, ఆన్‌లైన్ లావాదేవీల భద్రతపై నిపుణులు వివరించారు.\n\nఈ సదస్సుకు పెద్ద సంఖ్యలో వ్యాపారులు హాజరై, తమ సందేహాలను నివృత్తి చేసుకున్నారు.' },
+        { title: 'Monthly GST Return Filing — What Businesses Need to Know', days: 3, body: 'Timely filing of monthly GST returns remains essential for maintaining a clean compliance record and uninterrupted input tax credit claims. Late filings can lead to interest and restrictions on credit availability.\n\nBusinesses are encouraged to reconcile their purchase and sales registers regularly rather than waiting until the filing deadline.' },
+        { title: 'Input Tax Credit Reconciliation Best Practices', days: 11, body: 'Reconciling input tax credit claimed in returns against supplier filings helps identify mismatches early, reducing the risk of credit reversal during assessments.\n\nMaintaining organized purchase records and following up with vendors on filing delays are simple steps that go a long way in smooth compliance.' },
+        { title: 'E-Invoicing Requirements for Growing Businesses', days: 20, body: 'As turnover thresholds for mandatory e-invoicing continue to be revised, more businesses fall within its scope each year. Early adoption of compliant billing systems avoids last-minute disruptions.\n\nBusinesses nearing the threshold should evaluate their invoicing software and internal processes well in advance of any applicability date.' },
       ],
     },
     {
-      name: 'సినిమా',
+      name: 'Audit & Assurance',
       posts: [
-        { title: 'కొత్త తెలుగు చిత్రం చిత్రీకరణ ప్రారంభం', days: 1, body: 'ఓ కొత్త తెలుగు చిత్రం చిత్రీకరణ ఘనంగా ప్రారంభమైంది. ఈ సందర్భంగా చిత్రబృందం మీడియాతో మాట్లాడుతూ కథా నేపథ్యంపై ఆసక్తికర విషయాలు పంచుకుంది.\n\nఈ చిత్రం వచ్చే ఏడాది ప్రేక్షకుల ముందుకు రానుందని నిర్మాతలు తెలిపారు.' },
-        { title: 'స్థానిక చిత్రోత్సవంలో పలు లఘు చిత్రాల ప్రదర్శన', days: 8, body: 'నగరంలో నిర్వహించిన లఘు చిత్రోత్సవంలో యువ దర్శకుల చిత్రాలు ప్రదర్శించారు. వైవిధ్యభరితమైన కథాంశాలతో ఈ చిత్రాలు ప్రేక్షకుల ప్రశంసలు అందుకున్నాయి.\n\nఉత్తమ లఘు చిత్రంగా ఎంపికైన చిత్రానికి ప్రత్యేక పురస్కారం అందజేశారు.' },
-        { title: 'సినీ నటుల భేటీలో సాంకేతిక వర్గాలకు అభినందనలు', days: 14, body: 'ఇటీవల జరిగిన ఒక సినీ కార్యక్రమంలో సాంకేతిక వర్గాల కృషిని ప్రముఖులు అభినందించారు. చిత్ర నిర్మాణంలో సాంకేతిక నిపుణుల పాత్ర కీలకమని పేర్కొన్నారు.\n\nఈ కార్యక్రమంలో పలువురు సినీ ప్రముఖులు పాల్గొన్నారు.' },
+        { title: 'Preparing Your Business for the Annual Statutory Audit', days: 1, body: 'A well-organized set of books, supporting vouchers, and reconciled bank statements can significantly shorten audit timelines. Early preparation reduces last-minute back-and-forth between the audit team and management.\n\nBusinesses are encouraged to close their monthly books consistently through the year rather than catching up at year-end.' },
+        { title: 'The Role of Internal Controls in Reducing Audit Findings', days: 8, body: 'Strong internal controls around approvals, documentation, and segregation of duties reduce the likelihood of material misstatements being flagged during audit.\n\nPeriodic internal reviews, even informal ones, help management catch and correct issues before the statutory audit begins.' },
+        { title: 'Understanding Different Types of Assurance Engagements', days: 14, body: 'Beyond the standard statutory audit, businesses may require limited reviews, certifications, or special-purpose assurance reports depending on regulatory or lender requirements.\n\nUnderstanding which engagement applies to a given situation helps avoid delays when such reports are requested at short notice.' },
       ],
     },
     {
-      name: 'విద్య',
+      name: 'Corporate Compliance',
       posts: [
-        { title: 'ప్రభుత్వ పాఠశాలల్లో డిజిటల్ తరగతుల విస్తరణ', days: 4, body: 'ప్రభుత్వ పాఠశాలల్లో డిజిటల్ తరగతి గదులను మరింత విస్తరించనున్నట్లు విద్యాశాఖ ప్రకటించింది. దీనివల్ల విద్యార్థులకు నాణ్యమైన బోధన అందించేందుకు వీలుంటుందని అధికారులు తెలిపారు.\n\nఈ ఏడాది చివరికల్లా అన్ని పాఠశాలల్లో ఈ సదుపాయం అందుబాటులోకి తీసుకురానున్నట్లు వెల్లడించారు.' },
-        { title: 'విద్యార్థుల కోసం ఉచిత నైపుణ్య శిక్షణ కార్యక్రమం', days: 12, body: 'నిరుద్యోగ యువతకు ఉపాధి అవకాశాలు మెరుగుపరిచేందుకు ఉచిత నైపుణ్య శిక్షణ కార్యక్రమాన్ని ప్రారంభించారు. కంప్యూటర్ కోర్సులు, కమ్యూనికేషన్ నైపుణ్యాలపై శిక్షణ ఇవ్వనున్నారు.\n\nఆసక్తి గల యువత స్థానిక కార్యాలయంలో పేర్లు నమోదు చేసుకోవచ్చని అధికారులు తెలిపారు.' },
-        { title: 'పాఠశాల విద్యార్థుల కోసం గ్రంథాలయ వారోత్సవాలు', days: 18, body: 'చదవడం పట్ల ఆసక్తిని పెంచేందుకు పాఠశాలల్లో గ్రంథాలయ వారోత్సవాలు నిర్వహించారు. ఈ సందర్భంగా వ్యాస రచన, పుస్తక సమీక్ష పోటీలు ఏర్పాటు చేశారు.\n\nవిజేతలైన విద్యార్థులకు పుస్తకాలను బహుమతిగా అందజేశారు.' },
+        { title: 'Annual ROC Filing Checklist for Private Companies', days: 4, body: 'Annual filings with the Registrar of Companies involve several forms and disclosures, each with its own deadline. Missing any one of them can attract additional fees and, in some cases, penalties for the company and its directors.\n\nMaintaining a compliance calendar helps ensure nothing is overlooked during a busy financial year-end.' },
+        { title: 'Director KYC and Other Recurring Compliance Requirements', days: 12, body: 'Beyond annual filings, directors and companies have several recurring obligations, including periodic KYC updates, that are easy to miss without a reminder system in place.\n\nSetting up calendar reminders well ahead of statutory deadlines is a simple way to stay compliant throughout the year.' },
+        { title: 'Board Meeting and Resolution Documentation Best Practices', days: 18, body: 'Proper documentation of board meetings and resolutions is not just a formality — it becomes essential during due diligence, audits, or regulatory scrutiny.\n\nMaintaining organized minute books and resolution registers from the outset saves considerable effort later.' },
       ],
     },
     {
-      name: 'ఆరోగ్యం',
+      name: 'Financial Planning',
       posts: [
-        { title: 'ఉచిత ఆరోగ్య పరీక్షల శిబిరం నిర్వహణ', days: 5, body: 'స్థానిక ఆసుపత్రి ఆధ్వర్యంలో ఉచిత ఆరోగ్య పరీక్షల శిబిరం నిర్వహించారు. రక్తపోటు, మధుమేహం వంటి పరీక్షలు ఉచితంగా నిర్వహించి, అవసరమైన వారికి వైద్య సలహాలు అందించారు.\n\nఈ శిబిరానికి పెద్ద సంఖ్యలో స్థానికులు హాజరయ్యారు.' },
-        { title: 'వర్షాకాలంలో తీసుకోవాల్సిన జాగ్రత్తలపై అవగాహన', days: 13, body: 'వర్షాకాలంలో వ్యాపించే వ్యాధులపై ప్రజల్లో అవగాహన కల్పించేందుకు వైద్య శిబిరం నిర్వహించారు. పరిశుభ్రమైన నీరు తాగడం, పరిసరాల పరిశుభ్రత పాటించడంపై నిపుణులు సూచనలు ఇచ్చారు.\n\nఏదైనా అనారోగ్య లక్షణాలు కనిపిస్తే వెంటనే వైద్యులను సంప్రదించాలని కోరారు.' },
-        { title: 'రక్తదాన శిబిరానికి విశేష స్పందన', days: 21, body: 'స్థానికంగా నిర్వహించిన రక్తదాన శిబిరానికి యువత నుంచి విశేష స్పందన లభించింది. పెద్ద సంఖ్యలో వాలంటీర్లు రక్తదానం చేసి, స్ఫూర్తిదాయకంగా నిలిచారు.\n\nసేకరించిన రక్తాన్ని స్థానిక బ్లడ్ బ్యాంకుకు అందజేసినట్లు నిర్వాహకులు తెలిపారు.' },
+        { title: 'Building a Tax-Efficient Investment Strategy', days: 5, body: 'A well-structured investment plan considers not just returns but also the tax implications of each instrument. Balancing growth, liquidity, and tax efficiency requires periodic review as regulations change.\n\nConsulting with an advisor annually helps ensure the strategy remains aligned with current tax provisions.' },
+        { title: 'Retirement Planning for Business Owners and Professionals', days: 13, body: 'Unlike salaried individuals with structured retirement benefits, business owners and professionals need to build their own retirement corpus deliberately.\n\nA mix of long-term instruments, reviewed periodically alongside business cash flow, forms the basis of a sound retirement plan.' },
+        { title: 'Cash Flow Management Tips for Small Businesses', days: 21, body: 'Healthy cash flow, rather than just profitability on paper, is often what determines whether a small business can meet its short-term obligations comfortably.\n\nRegular cash flow forecasting, even a simple monthly projection, helps businesses anticipate and plan for lean periods.' },
       ],
     },
   ]
@@ -95,8 +124,8 @@ async function main() {
 
   // ---- gallery: categories + albums (no photos — added manually later) ----
   const GALLERY = [
-    { name: 'వేడుకలు', albums: ['వార్షిక వేడుక 2026', 'స్థాపన దినోత్సవం'] },
-    { name: 'కార్యక్రమాలు', albums: ['అవగాహన సదస్సు', 'సామాజిక సేవా కార్యక్రమం'] },
+    { name: 'Firm Events', albums: ['Annual Day 2026', 'Office Anniversary Celebration'] },
+    { name: 'Seminars & Workshops', albums: ['Tax Awareness Seminar', 'GST Workshop for Clients'] },
   ]
   for (const g of GALLERY) {
     let category = await db.galleryCategory.findFirst({ where: { name: g.name } })
@@ -126,31 +155,31 @@ async function main() {
   // ---- polls (one live, two archived, with plausible pre-set vote counts) ----
   const POLLS = [
     {
-      title: 'మా వెబ్‌సైట్ కొత్త డిజైన్ మీకు ఎలా అనిపించింది?',
+      title: 'How would you rate our new website design?',
       status: true,
       options: [
-        ['చాలా బాగుంది', 42],
-        ['బాగుంది', 27],
-        ['మెరుగుపరచాలి', 9],
+        ['Excellent', 42],
+        ['Good', 27],
+        ['Needs improvement', 9],
       ],
     },
     {
-      title: 'మీరు రోజూ మా వెబ్‌సైట్‌ను సందర్శిస్తారా?',
+      title: 'Do you visit our website regularly for updates?',
       status: false,
       options: [
-        ['అవును', 58],
-        ['కొన్నిసార్లు', 31],
-        ['లేదు', 6],
+        ['Yes', 58],
+        ['Sometimes', 31],
+        ['No', 6],
       ],
     },
     {
-      title: 'మీకు ఏ విభాగం వార్తలు ఎక్కువ ఇష్టం?',
+      title: 'Which service are you most interested in?',
       status: false,
       options: [
-        ['క్రీడలు', 22],
-        ['సినిమా', 35],
-        ['విద్య', 14],
-        ['ఆరోగ్యం', 11],
+        ['Tax Filing', 22],
+        ['GST Compliance', 35],
+        ['Audit & Assurance', 14],
+        ['Business Advisory', 11],
       ],
     },
   ]
@@ -169,8 +198,8 @@ async function main() {
 
   await db.option.upsert({
     where: { key: MARKER },
-    create: { key: MARKER, value: 'true' },
-    update: { value: 'true' },
+    create: { key: MARKER, value: SEED_VERSION },
+    update: { value: SEED_VERSION },
   })
   console.log('Done — demo content seeded and marked so this never runs again.')
 }
