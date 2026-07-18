@@ -4,6 +4,7 @@ import { Header } from '@/components/public/Header'
 import { Ticker } from '@/components/public/Ticker'
 import { Footer } from '@/components/public/Footer'
 import { CookieBanner } from '@/components/public/CookieBanner'
+import { InstallPwaPrompt } from '@/components/public/InstallPwaPrompt'
 
 // Site-wide SEO defaults from Admin → SEO. Any page can still override these
 // (e.g. a post's own meta title/description/image) — Next merges child
@@ -44,6 +45,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <main className="flex-1">{children}</main>
       <Footer settings={settings} menu={footerMenu} />
       <CookieBanner gaSnippet={settings.google_analytics || ''} />
+      <InstallPwaPrompt />
     </div>
   )
 }

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { adminApi, apiOrigin, ApiError } from '@/lib/admin-api'
 import { ImagePicker } from '@/components/admin/ImagePicker'
 
-type Photo = { id: number; file: string }
+type Photo = { id: number; file: string; caption: string | null }
+type Category = { id: number; name: string }
 
 export function GalleryAlbumForm({ id }: { id?: number }) {
   const router = useRouter()
@@ -14,15 +15,20 @@ export function GalleryAlbumForm({ id }: { id?: number }) {
   const [error, setError] = useState('')
   const [photoBusy, setPhotoBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const [categories, setCategories] = useState<Category[]>([])
 
   const [form, setForm] = useState({
     title: '', slug: '', coverImage: null as string | null,
     publishedAt: new Date().toISOString().slice(0, 16),
-    status: false,
+    status: false, categoryId: '',
   })
   const [photos, setPhotos] = useState<Photo[]>([])
 
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }))
+
+  useEffect(() => {
+    adminApi<Category[]>('/admin/gallery/categories').then(setCategories)
+  }, [])
 
   const loadAlbum = () => {
     if (!id) return
@@ -30,7 +36,7 @@ export function GalleryAlbumForm({ id }: { id?: number }) {
       setForm({
         title: a.title, slug: a.slug, coverImage: a.coverImage,
         publishedAt: a.publishedAt ? new Date(a.publishedAt).toISOString().slice(0, 16) : '',
-        status: a.status,
+        status: a.status, categoryId: a.categoryId ? String(a.categoryId) : '',
       })
       setPhotos(a.photos)
       setLoading(false)
@@ -83,6 +89,15 @@ export function GalleryAlbumForm({ id }: { id?: number }) {
     await adminApi(`/admin/gallery/${id}/photos/order`, { method: 'PUT', body: { ids: next.map((p) => p.id) } })
   }
 
+  function editCaption(photoId: number, caption: string) {
+    setPhotos((p) => p.map((ph) => (ph.id === photoId ? { ...ph, caption } : ph)))
+  }
+
+  async function saveCaption(photoId: number, caption: string) {
+    if (!id) return
+    await adminApi(`/admin/gallery/${id}/photos/${photoId}`, { method: 'PUT', body: { caption } })
+  }
+
   if (loading) return <p className="text-sm text-stone-500">Loading…</p>
 
   return (
@@ -102,12 +117,24 @@ export function GalleryAlbumForm({ id }: { id?: number }) {
         </div>
 
         {error && <p className="mb-4 rounded-md bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>}
+        {!categories.length && (
+          <p className="mb-4 rounded-md bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+            No gallery categories yet — create one from the Gallery → Categories tab before saving an album.
+          </p>
+        )}
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-4">
             <div>
               <label className="admin-label">Title *</label>
               <input value={form.title} onChange={(e) => set({ title: e.target.value })} required className="admin-input" />
+            </div>
+            <div>
+              <label className="admin-label">Category *</label>
+              <select value={form.categoryId} onChange={(e) => set({ categoryId: e.target.value })} required className="admin-input">
+                <option value="">— choose —</option>
+                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
             </div>
             <div>
               <label className="admin-label">Slug <span className="font-normal text-stone-400">(auto if empty)</span></label>
@@ -148,14 +175,26 @@ export function GalleryAlbumForm({ id }: { id?: number }) {
             />
           </div>
 
-          <p className="mb-3 text-xs text-stone-500">These appear one below the other on the album page, in this order.</p>
+          <p className="mb-3 text-xs text-stone-500">
+            These appear one below the other on the album page, in this order. The caption on each photo shows underneath it and is also used as the photo&apos;s alt/meta text.
+          </p>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {photos.map((p, i) => (
               <div key={p.id} className="overflow-hidden rounded-xl border border-stone-200 bg-white">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`${apiOrigin}${p.file}`} alt="" className="aspect-square w-full object-cover" />
-                <div className="flex items-center gap-1 px-2 py-1.5">
+                <img src={`${apiOrigin}${p.file}`} alt={p.caption || ''} className="aspect-square w-full object-cover" />
+                <div className="p-2">
+                  <input
+                    value={p.caption || ''}
+                    onChange={(e) => editCaption(p.id, e.target.value)}
+                    onBlur={(e) => saveCaption(p.id, e.target.value)}
+                    placeholder="Caption (optional)"
+                    maxLength={191}
+                    className="admin-input text-xs"
+                  />
+                </div>
+                <div className="flex items-center gap-1 px-2 pb-2">
                   <button type="button" onClick={() => movePhoto(i, -1)} disabled={i === 0} className="rounded px-1.5 text-stone-400 hover:bg-stone-100 disabled:opacity-30">↑</button>
                   <button type="button" onClick={() => movePhoto(i, 1)} disabled={i === photos.length - 1} className="rounded px-1.5 text-stone-400 hover:bg-stone-100 disabled:opacity-30">↓</button>
                   <button type="button" onClick={() => removePhoto(p.id)} className="ml-auto text-xs text-red-600 hover:underline">Remove</button>

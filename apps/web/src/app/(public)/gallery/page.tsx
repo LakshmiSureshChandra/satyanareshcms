@@ -1,23 +1,15 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import type { Metadata } from 'next'
-import { api, NotFoundError, type GalleryAlbumCard } from '@/lib/api'
-import { AlbumCard } from '@/components/public/GalleryAlbumCard'
-import { Pagination } from '@/components/public/Pagination'
+import { api, imageUrl, NotFoundError, type GalleryCategoryCard } from '@/lib/api'
 
 export const revalidate = 300
 export const metadata: Metadata = { title: 'Gallery' }
 
-type AlbumList = { albums: GalleryAlbumCard[]; total: number; page: number; pages: number }
-
-export default async function GalleryPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>
-}) {
-  const { page = '1' } = await searchParams
-  let list: AlbumList
+export default async function GalleryPage() {
+  let categories: GalleryCategoryCard[]
   try {
-    list = await api<AlbumList>(`/gallery?page=${page}`, 300)
+    categories = await api<GalleryCategoryCard[]>('/gallery', 300)
   } catch (e) {
     if (e instanceof NotFoundError) notFound()
     throw e
@@ -33,16 +25,41 @@ export default async function GalleryPage({
       </div>
 
       <div className="mt-9">
-        {list.albums.length === 0 ? (
+        {categories.length === 0 ? (
           <div className="rounded-lg border border-dashed border-line py-20 text-center">
             <p className="headline text-2xl text-ink-soft">No albums yet</p>
           </div>
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {list.albums.map((a) => <AlbumCard key={a.id} album={a} />)}
+            {categories.map((c) => {
+              const src = imageUrl(c.coverImage)
+              return (
+                <article key={c.id} className="card-zoom group">
+                  <Link href={`/gallery/${c.slug}`} className="block">
+                    <div className="card-img relative aspect-[4/3] w-full rounded-md bg-paper-2">
+                      {src ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={src} alt={c.name} loading="lazy" className="absolute inset-0 h-full w-full rounded-md object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-md">
+                          <span className="headline text-5xl text-ink/8 select-none">G</span>
+                        </div>
+                      )}
+                      <span className="absolute bottom-2 right-2 rounded bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white">
+                        {c.albumCount} album{c.albumCount === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                  </Link>
+                  <div className="pt-3.5">
+                    <Link href={`/gallery/${c.slug}`}>
+                      <h3 className="headline text-lg leading-snug transition-colors group-hover:text-accent">{c.name}</h3>
+                    </Link>
+                  </div>
+                </article>
+              )
+            })}
           </div>
         )}
-        <Pagination page={list.page} pages={list.pages} base="/gallery" />
       </div>
     </div>
   )

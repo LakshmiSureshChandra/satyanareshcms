@@ -2,11 +2,12 @@ import Link from 'next/link'
 import { imageUrl, type GalleryAlbumCard } from '@/lib/api'
 import { formatDate } from './PostCard'
 
-export function AlbumCard({ album }: { album: GalleryAlbumCard }) {
+export function AlbumCard({ album, categorySlug }: { album: GalleryAlbumCard; categorySlug: string }) {
   const src = imageUrl(album.coverImage)
+  const href = `/gallery/${categorySlug}/${album.slug}`
   return (
     <article className="card-zoom group">
-      <Link href={`/gallery/${album.slug}`} className="block">
+      <Link href={href} className="block">
         <div className="card-img relative aspect-[4/3] w-full rounded-md bg-paper-2">
           {src ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -22,7 +23,7 @@ export function AlbumCard({ album }: { album: GalleryAlbumCard }) {
         </div>
       </Link>
       <div className="pt-3.5">
-        <Link href={`/gallery/${album.slug}`}>
+        <Link href={href}>
           <h3 className="headline text-lg leading-snug transition-colors group-hover:text-accent">{album.title}</h3>
         </Link>
         <time className="mt-1.5 block text-xs text-ink-soft">{formatDate(album.publishedAt)}</time>

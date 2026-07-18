@@ -1,7 +1,9 @@
-import { api, type PostCard as PostCardType } from '@/lib/api'
-import { PostCard, PostRow, OverlayCard } from '@/components/public/PostCard'
+import Link from 'next/link'
+import { api, type PostCard as PostCardType, type PollListItem } from '@/lib/api'
+import { PostCard, PostRow, OverlayCard, formatDate } from '@/components/public/PostCard'
 import { FeaturedCarousel } from '@/components/public/FeaturedCarousel'
 import { HeroSlider } from '@/components/public/HeroSlider'
+import { PollWidget } from '@/components/public/PollWidget'
 
 export const revalidate = 300
 
@@ -13,6 +15,7 @@ type Home = {
   more: PostCardType[]
   banners: Banner[]
 }
+type PollList = { polls: PollListItem[] }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
@@ -21,7 +24,10 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 }
 
 export default async function HomePage() {
-  const home = await api<Home>('/home', 300)
+  const [home, pollArchive] = await Promise.all([
+    api<Home>('/home', 300),
+    api<PollList>('/polls?page=1', 300),
+  ])
   const [lead, ...heroRest] = home.hero
   // side column always gets 4 items — backfill from latest when the hero category is small
   const side = [
@@ -48,13 +54,18 @@ export default async function HomePage() {
           </section>
         )}
 
-        {/* FEATURED — swipeable rail */}
-        {home.featured.length > 0 && (
-          <section className="rise-1 rise py-8">
-            <SectionTitle>Featured Stories</SectionTitle>
-            <FeaturedCarousel posts={home.featured} />
-          </section>
-        )}
+        {/* FEATURED — swipeable rail, poll widget rides along as a narrow side card */}
+        <section className="rise-1 rise grid gap-7 py-8 md:grid-cols-3">
+          {home.featured.length > 0 && (
+            <div className="md:col-span-2">
+              <SectionTitle>Featured Stories</SectionTitle>
+              <FeaturedCarousel posts={home.featured} />
+            </div>
+          )}
+          <div className={home.featured.length > 0 ? '' : 'md:col-span-1 md:col-start-3'}>
+            <PollWidget />
+          </div>
+        </section>
 
         {/* LATEST grid */}
         {home.latest.length > 0 && (
@@ -75,6 +86,28 @@ export default async function HomePage() {
             <div className="grid gap-x-10 gap-y-7 rounded-lg border border-line bg-white/50 p-6 md:grid-cols-2 md:p-8">
               {home.more.map((p) => (
                 <PostRow key={p.id} post={p} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* POLL ARCHIVE — compact strip, not a full section */}
+        {pollArchive.polls.length > 0 && (
+          <section className="rise-3 rise border-t border-line py-6">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-xs font-bold uppercase tracking-wide text-ink-soft">Poll Archive</h2>
+              <Link href="/polls" className="text-xs font-semibold text-accent hover:underline">View All →</Link>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {pollArchive.polls.slice(0, 4).map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/polls/${p.id}`}
+                  className="flex items-center justify-between gap-3 rounded-md border border-line bg-white px-3.5 py-2.5 text-xs hover:bg-paper-2"
+                >
+                  <span className="truncate font-medium">{p.title}</span>
+                  <span className="shrink-0 text-ink-soft">{formatDate(p.createdAt)}</span>
+                </Link>
               ))}
             </div>
           </section>

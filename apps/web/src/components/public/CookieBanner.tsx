@@ -29,6 +29,7 @@ export function CookieBanner({ gaSnippet }: { gaSnippet: string }) {
   const choose = (value: string) => {
     localStorage.setItem('cookie-consent', value)
     setConsent(value)
+    window.dispatchEvent(new Event('cookie-consent-resolved')) // lets other fixed bottom bars (install prompt) know it's safe to appear
   }
 
   return (

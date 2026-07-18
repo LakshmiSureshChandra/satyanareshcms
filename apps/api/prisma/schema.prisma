@@ -131,21 +131,37 @@ model Media {
   @@map("media")
 }
 
+model GalleryCategory {
+  id        Int            @id @default(autoincrement())
+  name      String
+  slug      String         @unique
+  status    Boolean        @default(true)
+  sortOrder Int            @default(0) @map("sort_order")
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+  albums    GalleryAlbum[]
+
+  @@map("gallery_categories")
+}
+
 model GalleryAlbum {
-  id          Int             @id @default(autoincrement())
+  id          Int              @id @default(autoincrement())
   title       String
-  slug        String          @unique
-  coverImage  String?         @map("cover_image")
-  status      Boolean         @default(false)
-  publishedAt DateTime?       @map("published_at")
-  sortOrder   Int             @default(0) @map("sort_order")
-  createdBy   Int?            @map("created_by")
-  createdAt   DateTime        @default(now()) @map("created_at")
-  updatedAt   DateTime        @updatedAt @map("updated_at")
-  deletedAt   DateTime?       @map("deleted_at")
+  slug        String           @unique
+  coverImage  String?          @map("cover_image")
+  status      Boolean          @default(false)
+  publishedAt DateTime?        @map("published_at")
+  sortOrder   Int              @default(0) @map("sort_order")
+  categoryId  Int?             @map("category_id")
+  createdBy   Int?             @map("created_by")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  deletedAt   DateTime?        @map("deleted_at")
+  category    GalleryCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   photos      GalleryPhoto[]
 
   @@index([status, publishedAt])
+  @@index([categoryId])
   @@map("gallery_albums")
 }
 
@@ -160,6 +176,31 @@ model GalleryPhoto {
 
   @@index([albumId, sortOrder])
   @@map("gallery_photos")
+}
+
+model Poll {
+  id        Int          @id @default(autoincrement())
+  title     String
+  status    Boolean      @default(false)
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+  deletedAt DateTime?    @map("deleted_at")
+  options   PollOption[]
+
+  @@index([status])
+  @@map("polls")
+}
+
+model PollOption {
+  id        Int    @id @default(autoincrement())
+  pollId    Int    @map("poll_id")
+  text      String
+  votes     Int    @default(0)
+  sortOrder Int    @default(0) @map("sort_order")
+  poll      Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  @@index([pollId])
+  @@map("poll_options")
 }
 
 model ContactSubmission {

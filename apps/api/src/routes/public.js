@@ -2,6 +2,7 @@ import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
 import { db, notTrashed, publishedNow } from '../lib/db.js'
 import { sendMail } from '../lib/mailer.js'
+import { revalidate } from '../lib/revalidate.js'
 
 const router = Router()
 
@@ -178,48 +179,156 @@ router.get('/categories/:slug', async (req, res) => {
 
 router.get('/sitemap-data', async (req, res) => {
   const settings = await getSettings()
-  const [posts, cats, albums] = await Promise.all([
+  const galleryOn = settings.gallery_enabled === 'true'
+  const [posts, cats, galleryAlbums] = await Promise.all([
     db.post.findMany({
       where: publishedNow(),
       select: { slug: true, type: true, updatedAt: true },
       orderBy: { publishedAt: 'desc' },
     }),
     db.category.findMany({ where: { status: true }, select: { slug: true, updatedAt: true } }),
-    settings.gallery_enabled === 'true'
-      ? db.galleryAlbum.findMany({ where: publishedNow(), select: { slug: true, updatedAt: true } })
+    galleryOn
+      ? db.galleryAlbum.findMany({
+          where: { ...publishedNow(), category: { status: true } },
+          select: { slug: true, updatedAt: true, category: { select: { slug: true } } },
+        })
       : [],
   ])
-  res.json({ posts, categories: cats, galleryAlbums: albums })
+  res.json({
+    posts, categories: cats,
+    galleryAlbums: galleryAlbums.filter((a) => a.category).map((a) => ({ slug: `${a.category.slug}/${a.slug}`, updatedAt: a.updatedAt })),
+  })
 })
 
-// ---- gallery (public) ----
+// ---- gallery (public): Gallery -> Category -> Album -> paginated Photos ----
 const albumCard = { id: true, title: true, slug: true, coverImage: true, publishedAt: true, _count: { select: { photos: true } } }
 const flattenAlbum = (a) => ({ ...a, photoCount: a._count.photos, _count: undefined })
+const PHOTOS_PER_PAGE = 20
 
-router.get('/gallery', async (req, res) => {
+async function galleryEnabled() {
   const settings = await getSettings()
-  if (settings.gallery_enabled !== 'true') return res.status(404).json({ error: 'Not found' })
-  const page = Math.max(1, Number(req.query.page) || 1)
-  const limit = 12
-  const where = publishedNow()
-  const [total, albums] = await Promise.all([
-    db.galleryAlbum.count({ where }),
-    db.galleryAlbum.findMany({
-      where, orderBy: { publishedAt: 'desc' }, skip: (page - 1) * limit, take: limit, select: albumCard,
-    }),
-  ])
-  res.json({ albums: albums.map(flattenAlbum), total, page, pages: Math.ceil(total / limit) })
+  return settings.gallery_enabled === 'true'
+}
+
+// categories that have at least one published album
+router.get('/gallery', async (req, res) => {
+  if (!(await galleryEnabled())) return res.status(404).json({ error: 'Not found' })
+  const categories = await db.galleryCategory.findMany({
+    where: { status: true, albums: { some: publishedNow() } },
+    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    select: {
+      id: true, name: true, slug: true,
+      albums: { where: publishedNow(), select: { coverImage: true }, orderBy: { publishedAt: 'desc' }, take: 1 },
+      _count: { select: { albums: { where: publishedNow() } } },
+    },
+  })
+  res.json(categories.map((c) => ({
+    id: c.id, name: c.name, slug: c.slug,
+    coverImage: c.albums[0]?.coverImage || null,
+    albumCount: c._count.albums,
+  })))
 })
 
-router.get('/gallery/:slug', async (req, res) => {
-  const settings = await getSettings()
-  if (settings.gallery_enabled !== 'true') return res.status(404).json({ error: 'Not found' })
+router.get('/gallery/:categorySlug', async (req, res) => {
+  if (!(await galleryEnabled())) return res.status(404).json({ error: 'Not found' })
+  const category = await db.galleryCategory.findFirst({ where: { slug: req.params.categorySlug, status: true } })
+  if (!category) return res.status(404).json({ error: 'Not found' })
+  const page = Math.max(1, Number(req.query.page) || 1)
+  const limit = 12
+  const where = { categoryId: category.id, ...publishedNow() }
+  const [total, albums] = await Promise.all([
+    db.galleryAlbum.count({ where }),
+    db.galleryAlbum.findMany({ where, orderBy: { publishedAt: 'desc' }, skip: (page - 1) * limit, take: limit, select: albumCard }),
+  ])
+  res.json({ category: { name: category.name, slug: category.slug }, albums: albums.map(flattenAlbum), total, page, pages: Math.ceil(total / limit) })
+})
+
+router.get('/gallery/:categorySlug/:albumSlug', async (req, res) => {
+  if (!(await galleryEnabled())) return res.status(404).json({ error: 'Not found' })
   const album = await db.galleryAlbum.findFirst({
-    where: { slug: req.params.slug, ...publishedNow() },
-    include: { photos: { orderBy: { sortOrder: 'asc' } } },
+    where: { slug: req.params.albumSlug, ...publishedNow(), category: { slug: req.params.categorySlug, status: true } },
+    include: { category: { select: { name: true, slug: true } } },
   })
   if (!album) return res.status(404).json({ error: 'Not found' })
-  res.json(album)
+  const page = Math.max(1, Number(req.query.page) || 1)
+  const [totalPhotos, photos] = await Promise.all([
+    db.galleryPhoto.count({ where: { albumId: album.id } }),
+    db.galleryPhoto.findMany({
+      where: { albumId: album.id }, orderBy: { sortOrder: 'asc' },
+      skip: (page - 1) * PHOTOS_PER_PAGE, take: PHOTOS_PER_PAGE,
+    }),
+  ])
+  res.json({ ...album, photos, photoPage: page, photoPages: Math.ceil(totalPhotos / PHOTOS_PER_PAGE), totalPhotos })
+})
+
+// ---- polls: one active poll voted on publicly, archived ones viewable read-only ----
+const VOTE_COOKIE = 'voted_polls'
+const voteCookieOpts = {
+  httpOnly: true,
+  sameSite: 'lax',
+  secure: (process.env.WEB_URL || '').startsWith('https'),
+  maxAge: 365 * 24 * 3600 * 1000,
+  path: '/',
+}
+
+function votedIds(req) {
+  return String(req.cookies?.[VOTE_COOKIE] || '').split(',').filter(Boolean).map(Number)
+}
+
+function flattenPoll(poll, hasVoted) {
+  const totalVotes = poll.options.reduce((sum, o) => sum + o.votes, 0)
+  return { id: poll.id, title: poll.title, totalVotes, hasVoted, options: poll.options.map((o) => ({ id: o.id, text: o.text, votes: o.votes })) }
+}
+
+router.get('/polls/active', async (req, res) => {
+  const poll = await db.poll.findFirst({
+    where: { status: true, ...notTrashed },
+    include: { options: { orderBy: { sortOrder: 'asc' } } },
+  })
+  if (!poll) return res.status(404).json({ error: 'Not found' })
+  res.json(flattenPoll(poll, votedIds(req).includes(poll.id)))
+})
+
+router.post('/polls/:id/vote', async (req, res) => {
+  const id = Number(req.params.id)
+  const poll = await db.poll.findFirst({ where: { id, status: true, ...notTrashed }, include: { options: true } })
+  if (!poll) return res.status(404).json({ error: 'Not found' })
+  if (votedIds(req).includes(id)) return res.status(409).json({ error: 'You have already voted in this poll' })
+  const optionId = Number(req.body?.optionId)
+  if (!poll.options.some((o) => o.id === optionId)) return res.status(422).json({ error: 'Invalid option' })
+  await db.pollOption.update({ where: { id: optionId }, data: { votes: { increment: 1 } } })
+  const updated = await db.poll.findUnique({ where: { id }, include: { options: { orderBy: { sortOrder: 'asc' } } } })
+  res.cookie(VOTE_COOKIE, [...votedIds(req), id].join(','), voteCookieOpts)
+  revalidate(['/'])
+  res.json(flattenPoll(updated, true))
+})
+
+router.get('/polls', async (req, res) => {
+  const page = Math.max(1, Number(req.query.page) || 1)
+  const limit = 10
+  const where = { status: false, ...notTrashed }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(req.query.date || '')) {
+    const start = new Date(`${req.query.date}T00:00:00`)
+    const end = new Date(start.getTime() + 24 * 3600 * 1000)
+    where.createdAt = { gte: start, lt: end }
+  } else if (/^\d{4}-\d{2}$/.test(req.query.month || '')) {
+    const [y, m] = req.query.month.split('-').map(Number)
+    where.createdAt = { gte: new Date(y, m - 1, 1), lt: new Date(y, m, 1) }
+  }
+  const [total, polls] = await Promise.all([
+    db.poll.count({ where }),
+    db.poll.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit, select: { id: true, title: true, createdAt: true } }),
+  ])
+  res.json({ polls, total, page, pages: Math.ceil(total / limit) })
+})
+
+router.get('/polls/:id', async (req, res) => {
+  const poll = await db.poll.findFirst({
+    where: { id: Number(req.params.id), ...notTrashed },
+    include: { options: { orderBy: { sortOrder: 'asc' } } },
+  })
+  if (!poll) return res.status(404).json({ error: 'Not found' })
+  res.json(flattenPoll(poll, votedIds(req).includes(poll.id)))
 })
 
 router.get('/robots', async (req, res) => {

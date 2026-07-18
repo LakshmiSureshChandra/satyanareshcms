@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Telugu, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   title: "AK Ganesh",
   description: "News and stories",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "AK Ganesh" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#8e1f22",
 };
 
 export default function RootLayout({

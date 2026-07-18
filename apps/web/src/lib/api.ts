@@ -49,6 +49,14 @@ export type CategoryNode = {
 
 export type Settings = Record<string, string>
 
+export type GalleryCategoryCard = {
+  id: number
+  name: string
+  slug: string
+  coverImage: string | null
+  albumCount: number
+}
+
 export type GalleryAlbumCard = {
   id: number
   title: string
@@ -59,5 +67,19 @@ export type GalleryAlbumCard = {
 }
 
 export type GalleryAlbum = GalleryAlbumCard & {
+  category: { name: string; slug: string }
   photos: { id: number; file: string; caption: string | null }[]
+  photoPage: number
+  photoPages: number
+  totalPhotos: number
 }
+
+export type PollOptionData = { id: number; text: string; votes: number }
+export type Poll = {
+  id: number
+  title: string
+  totalVotes: number
+  hasVoted: boolean
+  options: PollOptionData[]
+}
+export type PollListItem = { id: number; title: string; createdAt: string }

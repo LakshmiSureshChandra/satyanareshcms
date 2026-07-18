@@ -413,20 +413,72 @@ router.delete('/banners/:id', async (req, res) => {
   res.json({ ok: true })
 })
 
-// ---- gallery albums (admin + manager) ----
+// ---- gallery: categories -> albums -> photos (admin + manager) ----
+// resolve the public URL(s) for an album, for cache revalidation
+async function albumPaths(album) {
+  if (!album?.categoryId) return ['/gallery']
+  const cat = await db.galleryCategory.findUnique({ where: { id: album.categoryId } })
+  return cat ? ['/gallery', `/gallery/${cat.slug}`, `/gallery/${cat.slug}/${album.slug}`] : ['/gallery']
+}
+
+// -- categories (route BEFORE /gallery/:id so "categories" isn't read as an id) --
+router.get('/gallery/categories', async (req, res) => {
+  const cats = await db.galleryCategory.findMany({
+    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    include: { _count: { select: { albums: true } } },
+  })
+  res.json(cats.map((c) => ({ ...c, albumCount: c._count.albums, _count: undefined })))
+})
+
+router.post('/gallery/categories', async (req, res) => {
+  const { name, status } = req.body || {}
+  if (!name?.trim()) return res.status(422).json({ error: 'Name is required' })
+  const max = await db.galleryCategory.aggregate({ _max: { sortOrder: true } })
+  const cat = await db.galleryCategory.create({
+    data: { name: name.trim(), slug: await uniqueSlug('galleryCategory', name), status: status !== false, sortOrder: (max._max.sortOrder ?? 0) + 1 },
+  })
+  revalidate(['/gallery'])
+  res.json(cat)
+})
+
+router.put('/gallery/categories/:id', async (req, res) => {
+  const id = Number(req.params.id)
+  const existing = await db.galleryCategory.findUnique({ where: { id } })
+  if (!existing) return res.status(404).json({ error: 'Not found' })
+  const { name, status } = req.body || {}
+  if (!name?.trim()) return res.status(422).json({ error: 'Name is required' })
+  const cat = await db.galleryCategory.update({ where: { id }, data: { name: name.trim(), status: status !== false } })
+  revalidate(['/gallery', `/gallery/${existing.slug}`, `/gallery/${cat.slug}`])
+  res.json(cat)
+})
+
+router.delete('/gallery/categories/:id', async (req, res) => {
+  const cat = await db.galleryCategory.findUnique({ where: { id: Number(req.params.id) } })
+  if (!cat) return res.status(404).json({ error: 'Not found' })
+  await db.galleryCategory.delete({ where: { id: cat.id } }) // albums keep existing (category set to null via FK)
+  revalidate(['/gallery', `/gallery/${cat.slug}`])
+  res.json({ ok: true })
+})
+
+// -- albums --
 router.get('/gallery', async (req, res) => {
   const page = Math.max(1, Number(req.query.page) || 1)
   const limit = 20
   const where = { ...notTrashed }
   if (req.query.s) where.title = { contains: String(req.query.s) }
+  if (req.query.category) where.categoryId = Number(req.query.category)
   const [total, items] = await Promise.all([
     db.galleryAlbum.count({ where }),
     db.galleryAlbum.findMany({
       where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit,
-      select: { id: true, title: true, slug: true, coverImage: true, status: true, publishedAt: true, _count: { select: { photos: true } } },
+      select: {
+        id: true, title: true, slug: true, coverImage: true, status: true, publishedAt: true,
+        category: { select: { id: true, name: true } },
+        _count: { select: { photos: true } },
+      },
     }),
   ])
-  res.json({ items: items.map((a) => ({ ...a, photoCount: a._count.photos })), total, page, pages: Math.ceil(total / limit) })
+  res.json({ items: items.map((a) => ({ ...a, photoCount: a._count.photos, _count: undefined })), total, page, pages: Math.ceil(total / limit) })
 })
 
 router.get('/gallery/:id', async (req, res) => {
@@ -440,6 +492,7 @@ router.get('/gallery/:id', async (req, res) => {
 
 function validateAlbum(b) {
   if (!b.title?.trim()) return 'Title is required'
+  if (!b.categoryId) return 'Category is required'
   return null
 }
 
@@ -447,6 +500,8 @@ router.post('/gallery', async (req, res) => {
   const err = validateAlbum(req.body)
   if (err) return res.status(422).json({ error: err })
   const b = req.body
+  const category = await db.galleryCategory.findUnique({ where: { id: Number(b.categoryId) } })
+  if (!category) return res.status(422).json({ error: 'Selected category no longer exists' })
   const album = await db.galleryAlbum.create({
     data: {
       title: b.title.trim(),
@@ -454,10 +509,11 @@ router.post('/gallery', async (req, res) => {
       coverImage: b.coverImage || null,
       status: !!b.status,
       publishedAt: b.publishedAt ? new Date(b.publishedAt) : new Date(),
+      categoryId: category.id,
       createdBy: req.user.id,
     },
   })
-  revalidate(['/', '/gallery'])
+  revalidate(await albumPaths(album))
   res.json(album)
 })
 
@@ -468,6 +524,8 @@ router.put('/gallery/:id', async (req, res) => {
   const err = validateAlbum(req.body)
   if (err) return res.status(422).json({ error: err })
   const b = req.body
+  const category = await db.galleryCategory.findUnique({ where: { id: Number(b.categoryId) } })
+  if (!category) return res.status(422).json({ error: 'Selected category no longer exists' })
   let coverImage = existing.coverImage
   if (b.removeCover) { removeFile(coverImage); coverImage = null }
   if (b.coverImage && b.coverImage !== coverImage) { if (coverImage) removeFile(coverImage); coverImage = b.coverImage }
@@ -479,9 +537,10 @@ router.put('/gallery/:id', async (req, res) => {
       coverImage,
       status: !!b.status,
       publishedAt: b.publishedAt ? new Date(b.publishedAt) : existing.publishedAt,
+      categoryId: category.id,
     },
   })
-  revalidate(['/', '/gallery', `/gallery/${existing.slug}`, `/gallery/${album.slug}`])
+  revalidate([...(await albumPaths(existing)), ...(await albumPaths(album))])
   res.json(album)
 })
 
@@ -489,11 +548,11 @@ router.delete('/gallery/:id', async (req, res) => {
   const album = await db.galleryAlbum.findFirst({ where: { id: Number(req.params.id), ...notTrashed } })
   if (!album) return res.status(404).json({ error: 'Not found' })
   await db.galleryAlbum.update({ where: { id: album.id }, data: { deletedAt: new Date() } })
-  revalidate(['/', '/gallery', `/gallery/${album.slug}`])
+  revalidate(await albumPaths(album))
   res.json({ ok: true })
 })
 
-// photos within an album — sub-resource, not individually trashed
+// -- photos within an album — sub-resource, not individually trashed --
 router.post('/gallery/:id/photos', upload.single('file'), async (req, res) => {
   const albumId = Number(req.params.id)
   const album = await db.galleryAlbum.findFirst({ where: { id: albumId, ...notTrashed } })
@@ -504,7 +563,7 @@ router.post('/gallery/:id/photos', upload.single('file'), async (req, res) => {
   const photo = await db.galleryPhoto.create({
     data: { albumId, file: url, sortOrder: (max._max.sortOrder ?? 0) + 1 },
   })
-  revalidate([`/gallery/${album.slug}`])
+  revalidate(await albumPaths(album))
   res.json(photo)
 })
 
@@ -513,8 +572,19 @@ router.put('/gallery/:id/photos/order', async (req, res) => {
   const ids = (req.body?.ids || []).map(Number).filter(Boolean)
   await Promise.all(ids.map((id, i) => db.galleryPhoto.update({ where: { id }, data: { sortOrder: i } })))
   const album = await db.galleryAlbum.findUnique({ where: { id: albumId } })
-  if (album) revalidate([`/gallery/${album.slug}`])
+  if (album) revalidate(await albumPaths(album))
   res.json({ ok: true })
+})
+
+// caption shown below the photo on the public page, and used as its alt/meta text
+router.put('/gallery/:id/photos/:photoId', async (req, res) => {
+  const photo = await db.galleryPhoto.findFirst({ where: { id: Number(req.params.photoId), albumId: Number(req.params.id) } })
+  if (!photo) return res.status(404).json({ error: 'Not found' })
+  const caption = String(req.body?.caption ?? '').slice(0, 191)
+  const updated = await db.galleryPhoto.update({ where: { id: photo.id }, data: { caption: caption || null } })
+  const album = await db.galleryAlbum.findUnique({ where: { id: Number(req.params.id) } })
+  if (album) revalidate(await albumPaths(album))
+  res.json(updated)
 })
 
 router.delete('/gallery/:id/photos/:photoId', async (req, res) => {
@@ -523,7 +593,107 @@ router.delete('/gallery/:id/photos/:photoId', async (req, res) => {
   removeFile(photo.file)
   await db.galleryPhoto.delete({ where: { id: photo.id } })
   const album = await db.galleryAlbum.findUnique({ where: { id: Number(req.params.id) } })
-  if (album) revalidate([`/gallery/${album.slug}`])
+  if (album) revalidate(await albumPaths(album))
+  res.json({ ok: true })
+})
+
+// ---- polls: one active/published poll voted on publicly, rest archived read-only ----
+router.get('/polls', async (req, res) => {
+  const polls = await db.poll.findMany({
+    where: notTrashed,
+    orderBy: { createdAt: 'desc' },
+    include: { options: { orderBy: { sortOrder: 'asc' } } },
+  })
+  res.json(polls)
+})
+
+router.get('/polls/:id', async (req, res) => {
+  const poll = await db.poll.findFirst({
+    where: { id: Number(req.params.id), ...notTrashed },
+    include: { options: { orderBy: { sortOrder: 'asc' } } },
+  })
+  if (!poll) return res.status(404).json({ error: 'Not found' })
+  res.json(poll)
+})
+
+function validatePoll(b) {
+  if (!b.title?.trim()) return 'Title is required'
+  const options = (b.options || []).map((o) => String(o).trim()).filter(Boolean)
+  if (options.length < 2) return 'Add at least 2 options'
+  return null
+}
+
+// setting a poll live means only one poll can ever be voted on at a time —
+// every other poll is archived in the same transaction
+async function archiveOthers(tx, exceptId) {
+  await tx.poll.updateMany({ where: { id: { not: exceptId }, status: true }, data: { status: false } })
+}
+
+router.post('/polls', async (req, res) => {
+  const err = validatePoll(req.body)
+  if (err) return res.status(422).json({ error: err })
+  const b = req.body
+  const options = b.options.map((o) => String(o).trim()).filter(Boolean)
+  const poll = await db.$transaction(async (tx) => {
+    const created = await tx.poll.create({
+      data: {
+        title: b.title.trim(),
+        status: !!b.status,
+        options: { create: options.map((text, i) => ({ text, sortOrder: i })) },
+      },
+      include: { options: true },
+    })
+    if (created.status) await archiveOthers(tx, created.id)
+    return created
+  })
+  revalidate(['/', '/polls'])
+  res.json(poll)
+})
+
+router.put('/polls/:id', async (req, res) => {
+  const id = Number(req.params.id)
+  const existing = await db.poll.findFirst({ where: { id, ...notTrashed } })
+  if (!existing) return res.status(404).json({ error: 'Not found' })
+  if (existing.status) return res.status(422).json({ error: 'Archive this poll before editing it — it is currently live and being voted on.' })
+  const err = validatePoll(req.body)
+  if (err) return res.status(422).json({ error: err })
+  const b = req.body
+  const options = b.options.map((o) => String(o).trim()).filter(Boolean)
+  const poll = await db.$transaction(async (tx) => {
+    // ponytail: options are replaced wholesale on edit (vote counts reset) — editing is
+    // only reachable for already-archived polls, so this is a rare correction, not live data loss
+    await tx.pollOption.deleteMany({ where: { pollId: id } })
+    const updated = await tx.poll.update({
+      where: { id },
+      data: {
+        title: b.title.trim(),
+        status: !!b.status,
+        options: { create: options.map((text, i) => ({ text, sortOrder: i })) },
+      },
+      include: { options: true },
+    })
+    if (updated.status) await archiveOthers(tx, id)
+    return updated
+  })
+  revalidate(['/', '/polls'])
+  res.json(poll)
+})
+
+// archive the live poll directly, without going through the full edit flow (which is locked while live)
+router.put('/polls/:id/archive', async (req, res) => {
+  const poll = await db.poll.findFirst({ where: { id: Number(req.params.id), ...notTrashed } })
+  if (!poll) return res.status(404).json({ error: 'Not found' })
+  if (!poll.status) return res.status(422).json({ error: 'Already archived' })
+  const updated = await db.poll.update({ where: { id: poll.id }, data: { status: false } })
+  revalidate(['/', '/polls'])
+  res.json(updated)
+})
+
+router.delete('/polls/:id', async (req, res) => {
+  const poll = await db.poll.findFirst({ where: { id: Number(req.params.id), ...notTrashed } })
+  if (!poll) return res.status(404).json({ error: 'Not found' })
+  await db.poll.update({ where: { id: poll.id }, data: { deletedAt: new Date() } })
+  revalidate(['/', '/polls'])
   res.json({ ok: true })
 })
 
@@ -534,6 +704,7 @@ const TRASH = {
   users: { model: 'user', where: {} },
   banners: { model: 'media', where: {} },
   gallery: { model: 'galleryAlbum', where: {} },
+  polls: { model: 'poll', where: {} },
 }
 
 router.get('/trash/:type', adminOnly, async (req, res) => {
