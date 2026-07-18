@@ -2,6 +2,7 @@ import { api, type CategoryNode, type PostCard as PostCardType } from '@/lib/api
 import { PostCard } from './PostCard'
 import { Pagination } from './Pagination'
 import { Sidebar } from './Sidebar'
+import { Breadcrumbs, type Crumb } from './Breadcrumbs'
 
 export type PostList = { posts: PostCardType[]; total: number; page: number; pages: number }
 
@@ -11,16 +12,20 @@ export async function ListingPage({
   subtitle,
   list,
   base,
+  crumbs = [],
 }: {
   title: string
   subtitle?: string
   list: PostList
   base: string
+  crumbs?: Crumb[]
 }) {
   const categories = await api<CategoryNode[]>('/categories', 300)
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
+      <Breadcrumbs items={[...crumbs, { label: title }]} />
+
       {/* page banner */}
       <div className="rise rounded-lg bg-ink px-6 py-8 text-paper md:px-10 md:py-10">
         <h1 className="headline text-3xl md:text-5xl">

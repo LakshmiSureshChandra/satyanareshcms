@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { api, imageUrl, NotFoundError } from '@/lib/api'
+import { Breadcrumbs } from '@/components/public/Breadcrumbs'
 
 export const revalidate = 3600
 
@@ -41,6 +42,8 @@ export default async function StaticPage({ params }: { params: Promise<{ slug: s
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
+      <Breadcrumbs items={[{ label: page.title }]} />
+
       <h1 className="section-title text-3xl md:text-4xl">{page.title}</h1>
       {banner && (
         // eslint-disable-next-line @next/next/no-img-element

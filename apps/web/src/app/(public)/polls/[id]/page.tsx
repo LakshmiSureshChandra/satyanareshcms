@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { api, NotFoundError, type Poll } from '@/lib/api'
+import { Breadcrumbs } from '@/components/public/Breadcrumbs'
 
 export const revalidate = 3600
 
@@ -27,6 +28,8 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
+      <Breadcrumbs items={[{ label: 'Completed Polls', href: '/polls' }, { label: poll.title }]} />
+
       <div className="mb-6 flex items-center justify-between">
         <h1 className="headline text-2xl md:text-3xl">Polls</h1>
         <Link href="/polls" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark">

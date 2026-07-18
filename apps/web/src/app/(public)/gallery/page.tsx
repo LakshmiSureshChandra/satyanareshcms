@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { api, imageUrl, NotFoundError, type GalleryCategoryCard } from '@/lib/api'
+import { Breadcrumbs } from '@/components/public/Breadcrumbs'
 
 export const revalidate = 300
 export const metadata: Metadata = { title: 'Gallery' }
@@ -17,6 +18,8 @@ export default async function GalleryPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
+      <Breadcrumbs items={[{ label: 'Gallery' }]} />
+
       <div className="rise rounded-lg bg-ink px-6 py-8 text-paper md:px-10 md:py-10">
         <h1 className="headline text-3xl md:text-5xl">
           Gallery

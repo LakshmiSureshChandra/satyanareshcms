@@ -1,9 +1,9 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { api, imageUrl, NotFoundError, type GalleryAlbum } from '@/lib/api'
 import { formatDate } from '@/components/public/PostCard'
 import { Pagination } from '@/components/public/Pagination'
+import { Breadcrumbs } from '@/components/public/Breadcrumbs'
 
 export const revalidate = 3600
 
@@ -50,13 +50,13 @@ export default async function AlbumPage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <nav className="mb-5 flex items-center gap-1.5 text-xs font-medium text-ink-soft">
-        <Link href="/" className="hover:text-accent">Home</Link>
-        <span>›</span>
-        <Link href="/gallery" className="hover:text-accent">Gallery</Link>
-        <span>›</span>
-        <Link href={`/gallery/${a.category.slug}`} className="hover:text-accent">{a.category.name}</Link>
-      </nav>
+      <Breadcrumbs
+        items={[
+          { label: 'Gallery', href: '/gallery' },
+          { label: a.category.name, href: `/gallery/${a.category.slug}` },
+          { label: a.title },
+        ]}
+      />
 
       <h1 className="headline text-3xl leading-snug md:text-4xl">{a.title}</h1>
       <div className="mt-3 flex items-center gap-3 border-y border-line py-3 text-sm text-ink-soft">

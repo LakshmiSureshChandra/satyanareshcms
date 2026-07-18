@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { api, type PollListItem } from '@/lib/api'
 import { Pagination } from '@/components/public/Pagination'
 import { formatDate } from '@/components/public/PostCard'
+import { Breadcrumbs } from '@/components/public/Breadcrumbs'
 
 export const revalidate = 300
 export const metadata: Metadata = { title: 'Completed Polls' }
@@ -33,6 +34,8 @@ export default async function PollsArchivePage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
+      <Breadcrumbs items={[{ label: 'Completed Polls' }]} />
+
       <div className="rise rounded-lg bg-ink px-6 py-8 text-paper md:px-10 md:py-10">
         <h1 className="headline text-3xl md:text-5xl">
           Completed Polls

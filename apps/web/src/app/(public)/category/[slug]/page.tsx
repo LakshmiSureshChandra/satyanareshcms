@@ -5,7 +5,7 @@ import { ListingPage, type PostList } from '@/components/public/ListingPage'
 
 export const revalidate = 3600
 
-type Cat = { name: string; slug: string; description: string | null }
+type Cat = { name: string; slug: string; description: string | null; parent: { name: string; slug: string } | null }
 
 async function getCategory(slug: string) {
   try {
@@ -46,6 +46,7 @@ export default async function CategoryPage({
       subtitle={cat.description || undefined}
       list={list}
       base={`/category/${slug}`}
+      crumbs={cat.parent ? [{ label: cat.parent.name, href: `/category/${cat.parent.slug}` }] : []}
     />
   )
 }

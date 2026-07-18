@@ -6,6 +6,7 @@ import { PostCard, formatDateTime, CategoryTag } from '@/components/public/PostC
 import { ShareButtons } from '@/components/public/ShareButtons'
 import { Sidebar } from '@/components/public/Sidebar'
 import { ReadingProgress } from '@/components/public/ReadingProgress'
+import { Breadcrumbs } from '@/components/public/Breadcrumbs'
 
 export const revalidate = 3600
 export const dynamicParams = true
@@ -72,40 +73,20 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     description: post.metaDescription || undefined,
     mainEntityOfPage: url,
   }
-  const breadcrumbLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE },
-      ...(cat ? [{ '@type': 'ListItem', position: 2, name: cat.name, item: `${SITE}/category/${cat.slug}` }] : []),
-      { '@type': 'ListItem', position: cat ? 3 : 2, name: post.title, item: url },
-    ],
-  }
-
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <ReadingProgress />
 
       <div className="grid gap-10 lg:grid-cols-3">
         <article className="lg:col-span-2">
-          {/* breadcrumbs */}
-          <nav className="mb-5 flex flex-wrap items-center gap-1.5 text-xs font-medium text-ink-soft">
-            <Link href="/" className="hover:text-accent">Home</Link>
-            {cat?.parent && (
-              <>
-                <span>›</span>
-                <Link href={`/category/${cat.parent.slug}`} className="hover:text-accent">{cat.parent.name}</Link>
-              </>
-            )}
-            {cat && (
-              <>
-                <span>›</span>
-                <Link href={`/category/${cat.slug}`} className="hover:text-accent">{cat.name}</Link>
-              </>
-            )}
-          </nav>
+          <Breadcrumbs
+            items={[
+              ...(cat?.parent ? [{ label: cat.parent.name, href: `/category/${cat.parent.slug}` }] : []),
+              ...(cat ? [{ label: cat.name, href: `/category/${cat.slug}` }] : []),
+              { label: post.title },
+            ]}
+          />
 
           <div className="flex flex-wrap gap-1.5">
             {post.categories.map((c) => <CategoryTag key={c.id} cat={c} />)}

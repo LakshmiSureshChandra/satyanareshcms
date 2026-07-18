@@ -1,9 +1,9 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { api, NotFoundError, type GalleryAlbumCard } from '@/lib/api'
 import { AlbumCard } from '@/components/public/GalleryAlbumCard'
 import { Pagination } from '@/components/public/Pagination'
+import { Breadcrumbs } from '@/components/public/Breadcrumbs'
 
 export const revalidate = 300
 
@@ -45,11 +45,7 @@ export default async function GalleryCategoryPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <nav className="mb-5 flex items-center gap-1.5 text-xs font-medium text-ink-soft">
-        <Link href="/" className="hover:text-accent">Home</Link>
-        <span>›</span>
-        <Link href="/gallery" className="hover:text-accent">Gallery</Link>
-      </nav>
+      <Breadcrumbs items={[{ label: 'Gallery', href: '/gallery' }, { label: list.category.name }]} />
 
       <div className="rise rounded-lg bg-ink px-6 py-8 text-paper md:px-10 md:py-10">
         <h1 className="headline text-3xl md:text-5xl">
