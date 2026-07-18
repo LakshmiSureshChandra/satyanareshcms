@@ -19,7 +19,7 @@ function Bar({ label, votes, total }: { label: string; votes: number; total: num
   )
 }
 
-export function PollWidget() {
+export function PollWidget({ showArchiveLink = true }: { showArchiveLink?: boolean } = {}) {
   const [poll, setPoll] = useState<Poll | null | undefined>(undefined)
   const [selected, setSelected] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
@@ -87,9 +87,11 @@ export function PollWidget() {
         </div>
       )}
 
-      <Link href="/polls" className="mt-3 inline-block text-xs font-medium text-accent hover:underline">
-        View previous polls →
-      </Link>
+      {showArchiveLink && (
+        <Link href="/polls" className="mt-3 inline-block text-xs font-medium text-accent hover:underline">
+          View previous polls →
+        </Link>
+      )}
     </div>
   )
 }

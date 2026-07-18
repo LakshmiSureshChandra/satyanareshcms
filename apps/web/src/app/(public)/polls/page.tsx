@@ -4,6 +4,7 @@ import { api, type PollListItem } from '@/lib/api'
 import { Pagination } from '@/components/public/Pagination'
 import { formatDate } from '@/components/public/PostCard'
 import { Breadcrumbs } from '@/components/public/Breadcrumbs'
+import { PollWidget } from '@/components/public/PollWidget'
 
 export const revalidate = 300
 export const metadata: Metadata = { title: 'Completed Polls' }
@@ -41,6 +42,10 @@ export default async function PollsArchivePage({
           Completed Polls
           <span className="text-gold">.</span>
         </h1>
+      </div>
+
+      <div className="mt-6">
+        <PollWidget showArchiveLink={false} />
       </div>
 
       <form className="mt-6 flex flex-wrap items-end gap-3 rounded-lg border border-line bg-paper-2 p-4">
