@@ -75,7 +75,6 @@ model Category {
   slug        String     @unique
   description String?    @db.Text
   parentId    Int?       @map("parent_id")
-  bannerImage String?    @map("banner_image")
   status      Boolean    @default(true)
   createdAt   DateTime   @default(now()) @map("created_at")
   updatedAt   DateTime   @updatedAt @map("updated_at")
@@ -132,14 +131,18 @@ model Media {
 }
 
 model GalleryCategory {
-  id        Int            @id @default(autoincrement())
-  name      String
-  slug      String         @unique
-  status    Boolean        @default(true)
-  sortOrder Int            @default(0) @map("sort_order")
-  createdAt DateTime       @default(now()) @map("created_at")
-  updatedAt DateTime       @updatedAt @map("updated_at")
-  albums    GalleryAlbum[]
+  id          Int              @id @default(autoincrement())
+  name        String
+  slug        String           @unique
+  description String?          @db.Text
+  status      Boolean          @default(true)
+  sortOrder   Int              @default(0) @map("sort_order")
+  parentId    Int?             @map("parent_id")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  parent      GalleryCategory? @relation("tree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    GalleryCategory[] @relation("tree")
+  albums      GalleryAlbum[]
 
   @@map("gallery_categories")
 }

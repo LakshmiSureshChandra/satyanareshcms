@@ -49,12 +49,15 @@ export type CategoryNode = {
 
 export type Settings = Record<string, string>
 
+export type GalleryCategoryChild = { id: number; name: string; slug: string }
+
 export type GalleryCategoryCard = {
   id: number
   name: string
   slug: string
   coverImage: string | null
   albumCount: number
+  children: GalleryCategoryChild[]
 }
 
 export type GalleryAlbumCard = {
@@ -64,10 +67,11 @@ export type GalleryAlbumCard = {
   coverImage: string | null
   publishedAt: string
   photoCount: number
+  category: { id: number; name: string; slug: string }
 }
 
-export type GalleryAlbum = GalleryAlbumCard & {
-  category: { name: string; slug: string }
+export type GalleryAlbum = Omit<GalleryAlbumCard, 'category'> & {
+  category: { name: string; slug: string; parent: { name: string; slug: string } | null }
   photos: { id: number; file: string; caption: string | null }[]
   photoPage: number
   photoPages: number

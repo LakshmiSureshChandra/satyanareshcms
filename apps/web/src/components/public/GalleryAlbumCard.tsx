@@ -2,9 +2,12 @@ import Link from 'next/link'
 import { imageUrl, type GalleryAlbumCard } from '@/lib/api'
 import { formatDate } from './PostCard'
 
-export function AlbumCard({ album, categorySlug }: { album: GalleryAlbumCard; categorySlug: string }) {
+// showCategory: set when the card appears on a page that mixes albums from
+// several (sub)categories — e.g. a parent category page rolling up its
+// children's albums — so each card can reveal which one it actually belongs to.
+export function AlbumCard({ album, showCategory = false }: { album: GalleryAlbumCard; showCategory?: boolean }) {
   const src = imageUrl(album.coverImage)
-  const href = `/gallery/${categorySlug}/${album.slug}`
+  const href = `/gallery/${album.category.slug}/${album.slug}`
   return (
     <article className="card-zoom group">
       <Link href={href} className="block">
@@ -23,6 +26,9 @@ export function AlbumCard({ album, categorySlug }: { album: GalleryAlbumCard; ca
         </div>
       </Link>
       <div className="pt-3.5">
+        {showCategory && (
+          <Link href={`/gallery/${album.category.slug}`} className="kicker hover:underline">{album.category.name}</Link>
+        )}
         <Link href={href}>
           <h3 className="headline text-lg leading-snug transition-colors group-hover:text-accent">{album.title}</h3>
         </Link>

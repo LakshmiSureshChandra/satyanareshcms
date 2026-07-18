@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { adminApi, ApiError } from '@/lib/admin-api'
-import { ImagePicker } from '@/components/admin/ImagePicker'
 
 type Cat = {
   id: number
@@ -10,13 +9,12 @@ type Cat = {
   slug: string
   description: string | null
   parentId: number | null
-  bannerImage: string | null
   status: boolean
   parent?: { name: string } | null
   _count?: { posts: number }
 }
 
-const EMPTY = { name: '', description: '', parentId: '', bannerImage: null as string | null, status: true }
+const EMPTY = { name: '', description: '', parentId: '', status: true }
 
 export function CategoryManager() {
   const [cats, setCats] = useState<Cat[]>([])
@@ -31,7 +29,7 @@ export function CategoryManager() {
     setError('')
     if (c) {
       setEditing(c.id)
-      setForm({ name: c.name, description: c.description || '', parentId: c.parentId ? String(c.parentId) : '', bannerImage: c.bannerImage, status: c.status })
+      setForm({ name: c.name, description: c.description || '', parentId: c.parentId ? String(c.parentId) : '', status: c.status })
     } else {
       setEditing('new')
       setForm(EMPTY)
@@ -41,7 +39,7 @@ export function CategoryManager() {
   async function save(e: React.FormEvent) {
     e.preventDefault()
     try {
-      const body = { ...form, parentId: form.parentId || null, removeBanner: !form.bannerImage }
+      const body = { ...form, parentId: form.parentId || null }
       await adminApi(editing === 'new' ? '/admin/categories' : `/admin/categories/${editing}`, {
         method: editing === 'new' ? 'POST' : 'PUT',
         body,
@@ -125,7 +123,6 @@ export function CategoryManager() {
                 ))}
               </select>
             </div>
-            <ImagePicker value={form.bannerImage} onChange={(bannerImage) => setForm({ ...form, bannerImage })} />
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={form.status} onChange={(e) => setForm({ ...form, status: e.target.checked })} className="h-4 w-4 accent-stone-900" />
               Active

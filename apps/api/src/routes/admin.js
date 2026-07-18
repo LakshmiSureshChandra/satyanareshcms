@@ -220,7 +220,7 @@ router.get('/categories', async (req, res) => {
 })
 
 router.post('/categories', async (req, res) => {
-  const { name, description, parentId, bannerImage, status } = req.body || {}
+  const { name, description, parentId, status } = req.body || {}
   if (!name?.trim()) return res.status(422).json({ error: 'Name is required' })
   const cat = await db.category.create({
     data: {
@@ -228,7 +228,6 @@ router.post('/categories', async (req, res) => {
       slug: await uniqueSlug('category', name),
       description: description || null,
       parentId: parentId ? Number(parentId) : null,
-      bannerImage: bannerImage || null,
       status: status !== false,
     },
   })
@@ -240,18 +239,15 @@ router.put('/categories/:id', async (req, res) => {
   const id = Number(req.params.id)
   const existing = await db.category.findUnique({ where: { id } })
   if (!existing) return res.status(404).json({ error: 'Not found' })
-  const { name, description, parentId, bannerImage, removeBanner, status } = req.body || {}
+  const { name, description, parentId, status } = req.body || {}
   if (!name?.trim()) return res.status(422).json({ error: 'Name is required' })
   if (Number(parentId) === id) return res.status(422).json({ error: 'A category cannot be its own parent' })
-  let banner = existing.bannerImage
-  if (removeBanner) { removeFile(banner); banner = null }
-  if (bannerImage && bannerImage !== banner) { if (banner) removeFile(banner); banner = bannerImage }
   const cat = await db.category.update({
     where: { id },
     data: {
       name: name.trim(), description: description || null,
       parentId: parentId ? Number(parentId) : null,
-      bannerImage: banner, status: status !== false,
+      status: status !== false,
     },
   })
   revalidate(['/', `/category/${cat.slug}`])
@@ -425,17 +421,24 @@ async function albumPaths(album) {
 router.get('/gallery/categories', async (req, res) => {
   const cats = await db.galleryCategory.findMany({
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-    include: { _count: { select: { albums: true } } },
+    include: { parent: { select: { name: true } }, _count: { select: { albums: true } } },
   })
   res.json(cats.map((c) => ({ ...c, albumCount: c._count.albums, _count: undefined })))
 })
 
 router.post('/gallery/categories', async (req, res) => {
-  const { name, status } = req.body || {}
+  const { name, description, status, parentId } = req.body || {}
   if (!name?.trim()) return res.status(422).json({ error: 'Name is required' })
   const max = await db.galleryCategory.aggregate({ _max: { sortOrder: true } })
   const cat = await db.galleryCategory.create({
-    data: { name: name.trim(), slug: await uniqueSlug('galleryCategory', name), status: status !== false, sortOrder: (max._max.sortOrder ?? 0) + 1 },
+    data: {
+      name: name.trim(),
+      slug: await uniqueSlug('galleryCategory', name),
+      description: description || null,
+      status: status !== false,
+      parentId: parentId ? Number(parentId) : null,
+      sortOrder: (max._max.sortOrder ?? 0) + 1,
+    },
   })
   revalidate(['/gallery'])
   res.json(cat)
@@ -445,9 +448,13 @@ router.put('/gallery/categories/:id', async (req, res) => {
   const id = Number(req.params.id)
   const existing = await db.galleryCategory.findUnique({ where: { id } })
   if (!existing) return res.status(404).json({ error: 'Not found' })
-  const { name, status } = req.body || {}
+  const { name, description, status, parentId } = req.body || {}
   if (!name?.trim()) return res.status(422).json({ error: 'Name is required' })
-  const cat = await db.galleryCategory.update({ where: { id }, data: { name: name.trim(), status: status !== false } })
+  if (Number(parentId) === id) return res.status(422).json({ error: 'A category cannot be its own parent' })
+  const cat = await db.galleryCategory.update({
+    where: { id },
+    data: { name: name.trim(), description: description || null, status: status !== false, parentId: parentId ? Number(parentId) : null },
+  })
   revalidate(['/gallery', `/gallery/${existing.slug}`, `/gallery/${cat.slug}`])
   res.json(cat)
 })

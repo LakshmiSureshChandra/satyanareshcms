@@ -14,6 +14,31 @@ const postCard = {
 
 const flatten = (p) => ({ ...p, categories: p.categories.map((c) => c.category) })
 
+// all ids in a category's subtree (itself + every descendant, any depth)
+async function categoryAndDescendantIds(rootId) {
+  const all = await db.category.findMany({ select: { id: true, parentId: true } })
+  const ids = [rootId]
+  let frontier = [rootId]
+  while (frontier.length) {
+    frontier = all.filter((c) => frontier.includes(c.parentId)).map((c) => c.id)
+    ids.push(...frontier)
+  }
+  return ids
+}
+
+// when browsing a category page, a post tagged with both the category and one
+// of its subcategories should show the subcategory badge (the more specific,
+// more useful reference) rather than whichever category happens to be first
+function preferSubcategoryBadge(posts, viewedId, subtreeIds) {
+  const subtreeSet = new Set(subtreeIds)
+  return posts.map((p) => {
+    const specific = p.categories.find((c) => subtreeSet.has(c.id) && c.id !== viewedId)
+    const preferred = specific || p.categories.find((c) => subtreeSet.has(c.id)) || p.categories[0]
+    if (!preferred) return p
+    return { ...p, categories: [preferred, ...p.categories.filter((c) => c !== preferred)] }
+  })
+}
+
 async function getSettings() {
   const rows = await db.option.findMany()
   return Object.fromEntries(rows.map((r) => [r.key, r.value]))
@@ -116,10 +141,13 @@ router.get('/posts', async (req, res) => {
   const limit = Math.min(50, Number(req.query.limit) || 12)
   const where = { ...publishedNow(), type: 'post' }
 
+  let cat = null
+  let subtreeIds = null
   if (category) {
-    const cat = await db.category.findUnique({ where: { slug: String(category) } })
+    cat = await db.category.findUnique({ where: { slug: String(category) } })
     if (!cat) return res.status(404).json({ error: 'Category not found' })
-    where.categories = { some: { categoryId: cat.id } }
+    subtreeIds = await categoryAndDescendantIds(cat.id)
+    where.categories = { some: { categoryId: { in: subtreeIds } } }
   }
   if (tag) where.tags = { contains: String(tag) }
   if (q) where.OR = [{ title: { contains: String(q) } }, { content: { contains: String(q) } }]
@@ -131,7 +159,9 @@ router.get('/posts', async (req, res) => {
       skip: (page - 1) * limit, take: limit, select: postCard,
     }),
   ])
-  res.json({ posts: posts.map(flatten), total, page, pages: Math.ceil(total / limit) })
+  let flattened = posts.map(flatten)
+  if (cat) flattened = preferSubcategoryBadge(flattened, cat.id, subtreeIds)
+  res.json({ posts: flattened, total, page, pages: Math.ceil(total / limit) })
 })
 
 router.get('/posts/:slug', async (req, res) => {
@@ -210,44 +240,74 @@ async function galleryEnabled() {
   return settings.gallery_enabled === 'true'
 }
 
-// categories that have at least one published album
+// all ids in a gallery category's subtree (itself + every descendant, any depth)
+async function galleryCategoryAndDescendantIds(rootId) {
+  const all = await db.galleryCategory.findMany({ select: { id: true, parentId: true } })
+  const ids = [rootId]
+  let frontier = [rootId]
+  while (frontier.length) {
+    frontier = all.filter((c) => frontier.includes(c.parentId)).map((c) => c.id)
+    ids.push(...frontier)
+  }
+  return ids
+}
+
+// top-level categories (parentId null) that have at least one published album
+// in their own subtree — album count/cover roll up from child categories too
 router.get('/gallery', async (req, res) => {
   if (!(await galleryEnabled())) return res.status(404).json({ error: 'Not found' })
-  const categories = await db.galleryCategory.findMany({
-    where: { status: true, albums: { some: publishedNow() } },
+  const topLevel = await db.galleryCategory.findMany({
+    where: { status: true, parentId: null },
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
-    select: {
-      id: true, name: true, slug: true,
-      albums: { where: publishedNow(), select: { coverImage: true }, orderBy: { publishedAt: 'desc' }, take: 1 },
-      _count: { select: { albums: { where: publishedNow() } } },
-    },
+    select: { id: true, name: true, slug: true },
   })
-  res.json(categories.map((c) => ({
-    id: c.id, name: c.name, slug: c.slug,
-    coverImage: c.albums[0]?.coverImage || null,
-    albumCount: c._count.albums,
-  })))
+  const result = []
+  for (const c of topLevel) {
+    const subtreeIds = await galleryCategoryAndDescendantIds(c.id)
+    const where = { categoryId: { in: subtreeIds }, ...publishedNow() }
+    const [albumCount, cover, children] = await Promise.all([
+      db.galleryAlbum.count({ where }),
+      db.galleryAlbum.findFirst({ where, orderBy: { publishedAt: 'desc' }, select: { coverImage: true } }),
+      db.galleryCategory.findMany({ where: { parentId: c.id, status: true }, select: { id: true, name: true, slug: true } }),
+    ])
+    if (albumCount === 0) continue
+    result.push({ id: c.id, name: c.name, slug: c.slug, coverImage: cover?.coverImage || null, albumCount, children })
+  }
+  res.json(result)
 })
 
 router.get('/gallery/:categorySlug', async (req, res) => {
   if (!(await galleryEnabled())) return res.status(404).json({ error: 'Not found' })
-  const category = await db.galleryCategory.findFirst({ where: { slug: req.params.categorySlug, status: true } })
+  const category = await db.galleryCategory.findFirst({
+    where: { slug: req.params.categorySlug, status: true },
+    include: { parent: { select: { name: true, slug: true } } },
+  })
   if (!category) return res.status(404).json({ error: 'Not found' })
   const page = Math.max(1, Number(req.query.page) || 1)
   const limit = 12
-  const where = { categoryId: category.id, ...publishedNow() }
-  const [total, albums] = await Promise.all([
+  const subtreeIds = await galleryCategoryAndDescendantIds(category.id)
+  const where = { categoryId: { in: subtreeIds }, ...publishedNow() }
+  const [total, albums, children] = await Promise.all([
     db.galleryAlbum.count({ where }),
-    db.galleryAlbum.findMany({ where, orderBy: { publishedAt: 'desc' }, skip: (page - 1) * limit, take: limit, select: albumCard }),
+    db.galleryAlbum.findMany({
+      where, orderBy: { publishedAt: 'desc' }, skip: (page - 1) * limit, take: limit,
+      select: { ...albumCard, category: { select: { id: true, name: true, slug: true } } },
+    }),
+    db.galleryCategory.findMany({ where: { parentId: category.id, status: true }, select: { id: true, name: true, slug: true } }),
   ])
-  res.json({ category: { name: category.name, slug: category.slug }, albums: albums.map(flattenAlbum), total, page, pages: Math.ceil(total / limit) })
+  res.json({
+    category: { name: category.name, slug: category.slug, description: category.description, parent: category.parent },
+    children,
+    albums: albums.map(flattenAlbum),
+    total, page, pages: Math.ceil(total / limit),
+  })
 })
 
 router.get('/gallery/:categorySlug/:albumSlug', async (req, res) => {
   if (!(await galleryEnabled())) return res.status(404).json({ error: 'Not found' })
   const album = await db.galleryAlbum.findFirst({
     where: { slug: req.params.albumSlug, ...publishedNow(), category: { slug: req.params.categorySlug, status: true } },
-    include: { category: { select: { name: true, slug: true } } },
+    include: { category: { select: { name: true, slug: true, parent: { select: { name: true, slug: true } } } } },
   })
   if (!album) return res.status(404).json({ error: 'Not found' })
   const page = Math.max(1, Number(req.query.page) || 1)

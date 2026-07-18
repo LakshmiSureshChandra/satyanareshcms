@@ -53,6 +53,7 @@ export default async function AlbumPage({
       <Breadcrumbs
         items={[
           { label: 'Gallery', href: '/gallery' },
+          ...(a.category.parent ? [{ label: a.category.parent.name, href: `/gallery/${a.category.parent.slug}` }] : []),
           { label: a.category.name, href: `/gallery/${a.category.slug}` },
           { label: a.title },
         ]}

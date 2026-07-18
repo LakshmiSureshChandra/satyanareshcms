@@ -3,9 +3,18 @@
 import { useEffect, useState } from 'react'
 import { adminApi, ApiError } from '@/lib/admin-api'
 
-type Cat = { id: number; name: string; slug: string; status: boolean; albumCount: number }
+type Cat = {
+  id: number
+  name: string
+  slug: string
+  description: string | null
+  status: boolean
+  albumCount: number
+  parentId: number | null
+  parent?: { name: string } | null
+}
 
-const EMPTY = { name: '', status: true }
+const EMPTY = { name: '', description: '', status: true, parentId: '' }
 
 export function GalleryCategoryManager() {
   const [cats, setCats] = useState<Cat[]>([])
@@ -18,16 +27,17 @@ export function GalleryCategoryManager() {
 
   function openEdit(c?: Cat) {
     setError('')
-    if (c) { setEditing(c.id); setForm({ name: c.name, status: c.status }) }
+    if (c) { setEditing(c.id); setForm({ name: c.name, description: c.description || '', status: c.status, parentId: c.parentId ? String(c.parentId) : '' }) }
     else { setEditing('new'); setForm(EMPTY) }
   }
 
   async function save(e: React.FormEvent) {
     e.preventDefault()
     try {
+      const body = { ...form, parentId: form.parentId || null }
       await adminApi(editing === 'new' ? '/admin/gallery/categories' : `/admin/gallery/categories/${editing}`, {
         method: editing === 'new' ? 'POST' : 'PUT',
-        body: form,
+        body,
       })
       setEditing(null)
       load()
@@ -57,6 +67,7 @@ export function GalleryCategoryManager() {
             <tr className="border-b border-stone-200 text-left text-xs uppercase tracking-wide text-stone-500">
               <th className="px-4 py-3">Name</th>
               <th className="px-3 py-3">Slug</th>
+              <th className="px-3 py-3">Parent</th>
               <th className="px-3 py-3 text-right">Albums</th>
               <th className="px-3 py-3">Status</th>
               <th className="px-4 py-3 text-right">Actions</th>
@@ -67,6 +78,7 @@ export function GalleryCategoryManager() {
               <tr key={c.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50">
                 <td className="px-4 py-3 font-medium">{c.name}</td>
                 <td className="px-3 py-3 text-stone-500">{c.slug}</td>
+                <td className="px-3 py-3 text-stone-500">{c.parent?.name || '—'}</td>
                 <td className="px-3 py-3 text-right text-stone-500">{c.albumCount}</td>
                 <td className="px-3 py-3">
                   <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${c.status ? 'bg-green-100 text-green-800' : 'bg-stone-200 text-stone-600'}`}>
@@ -79,7 +91,7 @@ export function GalleryCategoryManager() {
                 </td>
               </tr>
             ))}
-            {!cats.length && <tr><td colSpan={5} className="px-4 py-10 text-center text-stone-400">No categories yet.</td></tr>}
+            {!cats.length && <tr><td colSpan={6} className="px-4 py-10 text-center text-stone-400">No categories yet.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -92,6 +104,19 @@ export function GalleryCategoryManager() {
             <div>
               <label className="admin-label">Name *</label>
               <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required className="admin-input" />
+            </div>
+            <div>
+              <label className="admin-label">Description</label>
+              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="admin-input" />
+            </div>
+            <div>
+              <label className="admin-label">Parent</label>
+              <select value={form.parentId} onChange={(e) => setForm({ ...form, parentId: e.target.value })} className="admin-input">
+                <option value="">— None (top level) —</option>
+                {cats.filter((c) => c.id !== editing).map((c) => (
+                  <option key={c.id} value={c.id}>{c.parent ? `— ${c.name}` : c.name}</option>
+                ))}
+              </select>
             </div>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={form.status} onChange={(e) => setForm({ ...form, status: e.target.checked })} className="h-4 w-4 accent-stone-900" />

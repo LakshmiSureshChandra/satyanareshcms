@@ -57,6 +57,15 @@ export default async function GalleryPage() {
                     <Link href={`/gallery/${c.slug}`}>
                       <h3 className="headline text-lg leading-snug transition-colors group-hover:text-accent">{c.name}</h3>
                     </Link>
+                    {c.children.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {c.children.map((child) => (
+                          <Link key={child.id} href={`/gallery/${child.slug}`} className="rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-ink-soft hover:border-accent hover:text-accent">
+                            {child.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </article>
               )

@@ -6,7 +6,7 @@ import { adminApi, apiOrigin, ApiError } from '@/lib/admin-api'
 import { ImagePicker } from '@/components/admin/ImagePicker'
 
 type Photo = { id: number; file: string; caption: string | null }
-type Category = { id: number; name: string }
+type Category = { id: number; name: string; parentId: number | null }
 
 export function GalleryAlbumForm({ id }: { id?: number }) {
   const router = useRouter()
@@ -133,7 +133,7 @@ export function GalleryAlbumForm({ id }: { id?: number }) {
               <label className="admin-label">Category *</label>
               <select value={form.categoryId} onChange={(e) => set({ categoryId: e.target.value })} required className="admin-input">
                 <option value="">— choose —</option>
-                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {categories.map((c) => <option key={c.id} value={c.id}>{c.parentId ? `— ${c.name}` : c.name}</option>)}
               </select>
             </div>
             <div>

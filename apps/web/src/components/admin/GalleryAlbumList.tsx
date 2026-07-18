@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { adminApi, apiOrigin } from '@/lib/admin-api'
 
-type Category = { id: number; name: string }
+type Category = { id: number; name: string; parentId: number | null }
 type Album = {
   id: number
   title: string
@@ -96,7 +96,7 @@ export function GalleryAlbumList() {
         />
         <select value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setPage(1) }} className="admin-input max-w-48">
           <option value="">All categories</option>
-          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {categories.map((c) => <option key={c.id} value={c.id}>{c.parentId ? `— ${c.name}` : c.name}</option>)}
         </select>
       </div>
 
