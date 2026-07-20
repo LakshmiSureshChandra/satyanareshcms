@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { adminApi, apiOrigin, ApiError } from '@/lib/admin-api'
 import { ImagePicker } from '@/components/admin/ImagePicker'
@@ -102,6 +103,9 @@ export function GalleryAlbumForm({ id }: { id?: number }) {
 
   return (
     <div className="max-w-4xl">
+      <Link href="/admin/gallery" className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-stone-500 hover:text-stone-800">
+        ← Back to Albums
+      </Link>
       <form onSubmit={save}>
         <div className="mb-5 flex items-center justify-between">
           <h1 className="text-xl font-bold">{id ? 'Edit' : 'New'} Album</h1>

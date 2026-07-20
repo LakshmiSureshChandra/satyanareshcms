@@ -17,6 +17,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
@@ -24,6 +25,10 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  /* safety net: no single element (a long unbroken title/URL, a stray wide
+     child) should ever be able to force the whole page to scroll sideways */
+  width: 100%;
 }
 
 /* display headline */
@@ -32,6 +37,7 @@ body {
   font-weight: 700;
   line-height: 1.38;
   letter-spacing: -0.01em;
+  overflow-wrap: break-word;
 }
 
 /* section title — serif over a hairline, gold tick on the left */
@@ -117,6 +123,7 @@ body {
   font-size: 1.1rem;
   line-height: 2;
   color: var(--color-ink);
+  overflow-wrap: break-word;
 }
 .prose-news p { margin: 1.15em 0; }
 .prose-news h2, .prose-news h3 { font-family: var(--font-display); font-weight: 700; margin: 1.4em 0 0.5em; line-height: 1.35; }

@@ -169,9 +169,10 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
           </div>
         )}
 
-        {/* mobile overlay menu */}
+        {/* mobile overlay menu — solid (not glass), capped to the viewport with its own scroll
+            so a large/deeply-nested menu can never push the page around or run off-screen */}
         {open && (
-          <div className="border-t border-line px-5 pb-8 pt-2 md:hidden">
+          <div className="absolute inset-x-0 top-full max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-line bg-paper px-5 pb-8 pt-2 shadow-xl md:hidden">
             {menus.map((m) => (
               <MobileItem key={m.id} item={m} depth={0} close={() => setOpen(false)} />
             ))}
