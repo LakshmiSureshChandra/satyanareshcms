@@ -11,7 +11,7 @@ import { db } from '../src/lib/db.js'
 import { uniqueSlug } from '../src/lib/slug.js'
 
 const MARKER = 'demo_content_seeded'
-const SEED_VERSION = 'v2-en-ca'
+const SEED_VERSION = 'v3-en-ca'
 
 // v1 (Telugu, wrong — superseded) content, removed if still present before reseeding
 const V1_CATEGORY_NAMES = ['క్రీడలు', 'సినిమా', 'విద్య', 'ఆరోగ్యం']
@@ -94,6 +94,7 @@ async function main() {
     },
   ]
 
+  const categoryByName = {}
   for (const cat of CATEGORIES) {
     let category = await db.category.findFirst({ where: { name: cat.name } })
     if (!category) {
@@ -102,6 +103,7 @@ async function main() {
       })
       console.log('created category', cat.name)
     }
+    categoryByName[cat.name] = category
 
     for (const p of cat.posts) {
       const exists = await db.post.findFirst({ where: { title: p.title } })
@@ -195,6 +197,28 @@ async function main() {
     })
     console.log('created poll', p.title)
   }
+
+  // ---- point the homepage Hero + Featured Stories sections at populated
+  // categories, but only if they're currently unset or pointing at a category
+  // with no posts — never override a real editorial choice that already works
+  async function ensureHomeCategorySetting(key, fallbackCategoryName) {
+    const current = await db.option.findUnique({ where: { key } })
+    const currentId = current?.value ? Number(current.value) : null
+    if (currentId) {
+      const postCount = await db.categoryPost.count({ where: { categoryId: currentId } })
+      if (postCount > 0) return // already points somewhere with content — leave it alone
+    }
+    const fallback = categoryByName[fallbackCategoryName]
+    if (!fallback) return
+    await db.option.upsert({
+      where: { key },
+      create: { key, value: String(fallback.id) },
+      update: { value: String(fallback.id) },
+    })
+    console.log(`set ${key} -> ${fallbackCategoryName}`)
+  }
+  await ensureHomeCategorySetting('home_hero_category_id', 'Tax Updates')
+  await ensureHomeCategorySetting('home_featured_category_id', 'GST Compliance')
 
   await db.option.upsert({
     where: { key: MARKER },
