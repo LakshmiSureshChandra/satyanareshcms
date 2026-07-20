@@ -43,8 +43,17 @@ export function PollWidget({ showArchiveLink = true }: { showArchiveLink?: boole
       body: JSON.stringify({ optionId: selected }),
     })
     const data = await res.json().catch(() => null)
-    if (res.ok) setPoll(data)
-    else setError(data?.error || 'Something went wrong.')
+    if (res.ok) {
+      setPoll(data)
+    } else if (res.status === 404) {
+      // this poll stopped being the live one while the page sat open — refresh
+      // to whatever's actually live now instead of leaving a stale, votable form
+      const fresh = await fetch(`${API}/api/polls/active`).then((r) => (r.ok ? r.json() : null)).catch(() => null)
+      setPoll(fresh)
+      setError(fresh ? '' : 'This poll has closed.')
+    } else {
+      setError(data?.error || 'Something went wrong.')
+    }
     setBusy(false)
   }
 
