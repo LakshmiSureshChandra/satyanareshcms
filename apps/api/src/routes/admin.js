@@ -729,7 +729,11 @@ router.post('/trash/:type/restore', adminOnly, async (req, res) => {
   if (!t) return res.status(404).json({ error: 'Unknown type' })
   const ids = (req.body?.ids || []).map(Number)
   if (!ids.length) return res.status(422).json({ error: 'No items selected' })
-  await db[t.model].updateMany({ where: { id: { in: ids }, ...t.where }, data: { deletedAt: null } })
+  const data = { deletedAt: null }
+  // a poll's "live" status must never come back silently — restoring always
+  // lands it as archived; re-publishing is a deliberate, separate admin action
+  if (req.params.type === 'polls') data.status = false
+  await db[t.model].updateMany({ where: { id: { in: ids }, ...t.where }, data })
   revalidate(['/'])
   res.json({ ok: true })
 })

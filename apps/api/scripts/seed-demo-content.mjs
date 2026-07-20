@@ -188,6 +188,9 @@ async function main() {
   for (const p of POLLS) {
     const exists = await db.poll.findFirst({ where: { title: p.title } })
     if (exists) continue
+    // only one poll site-wide may ever be live — archive any existing live poll
+    // before creating one of our own as live, same rule the admin API enforces
+    if (p.status) await db.poll.updateMany({ where: { status: true }, data: { status: false } })
     await db.poll.create({
       data: {
         title: p.title,
