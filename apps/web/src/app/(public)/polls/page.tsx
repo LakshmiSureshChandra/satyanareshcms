@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { api, type PollListItem } from '@/lib/api'
 import { Pagination } from '@/components/public/Pagination'
-import { formatDate } from '@/components/public/PostCard'
+import { formatDateTime } from '@/components/public/PostCard'
 import { Breadcrumbs } from '@/components/public/Breadcrumbs'
 import { PollWidget } from '@/components/public/PollWidget'
 
@@ -52,7 +52,7 @@ export default async function PollsArchivePage({
               <tbody>
                 {list.polls.map((p) => (
                   <tr key={p.id} className="border-b border-line last:border-0">
-                    <td className="px-4 py-3 text-ink-soft">{formatDate(p.createdAt)}</td>
+                    <td className="px-4 py-3 text-ink-soft">{formatDateTime(p.createdAt)}</td>
                     <td className="px-4 py-3">{p.title}</td>
                     <td className="px-4 py-3 text-right">
                       <Link href={`/polls/${p.id}`} className="rounded-md bg-accent px-4 py-1.5 text-xs font-semibold text-white hover:bg-accent-dark">

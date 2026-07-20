@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { api, type PostCard as PostCardType, type PollListItem } from '@/lib/api'
-import { PostCard, PostRow, OverlayCard, formatDate } from '@/components/public/PostCard'
+import { PostCard, PostRow, OverlayCard, formatDateTime } from '@/components/public/PostCard'
 import { FeaturedCarousel } from '@/components/public/FeaturedCarousel'
 import { HeroSlider } from '@/components/public/HeroSlider'
 import { PollWidget } from '@/components/public/PollWidget'
@@ -114,7 +114,7 @@ export default async function HomePage() {
                   className="flex items-center justify-between gap-3 rounded-md border border-line bg-white px-3.5 py-2.5 text-xs hover:bg-paper-2"
                 >
                   <span className="truncate font-medium">{p.title}</span>
-                  <span className="shrink-0 text-ink-soft">{formatDate(p.createdAt)}</span>
+                  <span className="shrink-0 text-ink-soft">{formatDateTime(p.createdAt)}</span>
                 </Link>
               ))}
             </div>
