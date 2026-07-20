@@ -102,7 +102,7 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
       <div className="border-b border-line bg-paper-2/60">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-1.5 text-xs font-medium text-ink-soft">
           <span suppressHydrationWarning>
-            {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Kolkata' })}
           </span>
           <SocialIcons settings={settings} className="h-4 w-4" />
         </div>

@@ -1,14 +1,15 @@
 import Link from 'next/link'
 import { imageUrl, type PostCard as PostCardType } from '@/lib/api'
 
+// Always rendered in IST regardless of the server's or visitor's own timezone.
 export function formatDate(d: string | Date) {
-  return new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })
+  return new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Kolkata' })
 }
 
 // Date + time — used on the article byline where the exact publish time matters.
 export function formatDateTime(d: string | Date) {
   return new Date(d).toLocaleString('en-IN', {
-    year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata',
   })
 }
 

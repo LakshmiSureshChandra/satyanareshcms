@@ -67,7 +67,7 @@ export default function TrashPage() {
                   <input type="checkbox" checked={selected.includes(item.id)} onChange={() => toggle(item.id)} className="h-4 w-4 accent-stone-900" />
                 </td>
                 <td className="px-2 py-3 font-medium">{label(item)}</td>
-                <td className="px-3 py-3 text-stone-500">deleted {new Date(item.deletedAt).toLocaleString('en-IN')}</td>
+                <td className="px-3 py-3 text-stone-500">deleted {new Date(item.deletedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
                 <td className="px-4 py-3 text-right">
                   <button onClick={() => restore([item.id])} className="mr-3 text-green-700 hover:underline">Restore</button>
                   <button onClick={() => destroy([item.id])} className="text-red-600 hover:underline">Delete forever</button>

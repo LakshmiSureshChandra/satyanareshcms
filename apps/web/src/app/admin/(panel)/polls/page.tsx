@@ -64,7 +64,7 @@ export default function PollsPage() {
                     {p.status ? 'Published' : 'Archived'}
                   </span>
                 </td>
-                <td className="px-3 py-3 text-stone-500">{new Date(p.createdAt).toLocaleDateString('en-IN')}</td>
+                <td className="px-3 py-3 text-stone-500">{new Date(p.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
                 <td className="px-4 py-3 text-right">
                   <a href={p.status ? '/' : `/polls/${p.id}`} target="_blank" rel="noreferrer" className="mr-3 text-stone-600 hover:underline">View</a>
                   {p.status ? (

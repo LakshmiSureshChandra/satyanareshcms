@@ -119,7 +119,7 @@ export function PostListPage({ kind }: { kind: 'post' | 'page' }) {
                 </td>
                 {kind === 'post' && <td className="px-3 py-3 text-right text-stone-500">{row.views}</td>}
                 <td className="px-3 py-3 text-stone-500">
-                  {row.publishedAt ? new Date(row.publishedAt).toLocaleDateString('en-IN') : '—'}
+                  {row.publishedAt ? new Date(row.publishedAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—'}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <a
