@@ -11,27 +11,13 @@ export const metadata: Metadata = { title: 'Completed Polls' }
 
 type PollList = { polls: PollListItem[]; total: number; page: number; pages: number }
 
-const MONTHS = [
-  ['01', 'January'], ['02', 'February'], ['03', 'March'], ['04', 'April'],
-  ['05', 'May'], ['06', 'June'], ['07', 'July'], ['08', 'August'],
-  ['09', 'September'], ['10', 'October'], ['11', 'November'], ['12', 'December'],
-]
-const CURRENT_YEAR = new Date().getFullYear()
-const YEARS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - i)
-
 export default async function PollsArchivePage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string; year?: string; monthNum?: string; date?: string }>
+  searchParams: Promise<{ page?: string }>
 }) {
-  const { page = '1', year = '', monthNum = '', date = '' } = await searchParams
-  const month = year && monthNum ? `${year}-${monthNum}` : ''
-  const params = new URLSearchParams({ page })
-  if (date) params.set('date', date)
-  else if (month) params.set('month', month)
-  const list = await api<PollList>(`/polls?${params}`, 300)
-
-  const base = date ? `/polls?date=${date}` : month ? `/polls?year=${year}&monthNum=${monthNum}` : '/polls'
+  const { page = '1' } = await searchParams
+  const list = await api<PollList>(`/polls?page=${page}`, 300)
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -47,31 +33,6 @@ export default async function PollsArchivePage({
       <div className="mt-6">
         <PollWidget showArchiveLink={false} />
       </div>
-
-      <form className="mt-6 flex flex-wrap items-end gap-3 rounded-lg border border-line bg-paper-2 p-4">
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-ink-soft">Month</label>
-          <select name="monthNum" defaultValue={monthNum} className="rounded-md border border-line bg-white px-3 py-1.5 text-sm">
-            <option value="">Any month</option>
-            {MONTHS.map(([num, name]) => <option key={num} value={num}>{name}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-ink-soft">Year</label>
-          <select name="year" defaultValue={year} className="rounded-md border border-line bg-white px-3 py-1.5 text-sm">
-            <option value="">Any year</option>
-            {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-ink-soft">Day</label>
-          <input type="date" name="date" defaultValue={date} className="rounded-md border border-line bg-white px-3 py-1.5 text-sm" />
-        </div>
-        <button className="rounded-md bg-accent px-5 py-1.5 text-sm font-semibold text-white hover:bg-accent-dark">Filter</button>
-        {(month || date) && (
-          <Link href="/polls" className="text-sm font-medium text-ink-soft hover:text-accent hover:underline">Clear</Link>
-        )}
-      </form>
 
       <div className="mt-6">
         {list.polls.length === 0 ? (
@@ -104,7 +65,7 @@ export default async function PollsArchivePage({
             </table>
           </div>
         )}
-        <Pagination page={list.page} pages={list.pages} base={base} />
+        <Pagination page={list.page} pages={list.pages} base="/polls" />
       </div>
     </div>
   )
