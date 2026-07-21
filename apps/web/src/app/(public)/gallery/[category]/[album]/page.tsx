@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { api, imageUrl, NotFoundError, type GalleryAlbum } from '@/lib/api'
@@ -88,18 +87,6 @@ export default async function AlbumPage({
           <h2 className="section-title text-2xl">Related Albums</h2>
           <div className="mt-6 grid gap-8 sm:grid-cols-2">
             {a.related.map((r) => <AlbumCard key={r.id} album={r} />)}
-          </div>
-        </section>
-      )}
-
-      {a.moreFromGallery.length > 0 && (
-        <section className="mt-14">
-          <div className="flex items-end justify-between">
-            <h2 className="section-title text-2xl">More from Gallery</h2>
-            <Link href="/gallery" className="mb-1 text-sm font-semibold text-accent hover:underline">View All →</Link>
-          </div>
-          <div className="mt-6 grid gap-8 sm:grid-cols-2">
-            {a.moreFromGallery.map((r) => <AlbumCard key={r.id} album={r} showCategory />)}
           </div>
         </section>
       )}

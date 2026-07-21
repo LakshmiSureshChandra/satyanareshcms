@@ -287,19 +287,25 @@ router.get('/gallery/:categorySlug', async (req, res) => {
   const limit = 12
   const subtreeIds = await galleryCategoryAndDescendantIds(category.id)
   const where = { categoryId: { in: subtreeIds }, ...publishedNow() }
-  const [total, albums, children] = await Promise.all([
+  const [total, albums, children, moreFromGallery] = await Promise.all([
     db.galleryAlbum.count({ where }),
     db.galleryAlbum.findMany({
       where, orderBy: { publishedAt: 'desc' }, skip: (page - 1) * limit, take: limit,
       select: { ...albumCard, category: { select: { id: true, name: true, slug: true } } },
     }),
     db.galleryCategory.findMany({ where: { parentId: category.id, status: true }, select: { id: true, name: true, slug: true } }),
+    db.galleryAlbum.findMany({
+      where: { categoryId: { notIn: subtreeIds }, ...publishedNow(), category: { status: true } },
+      orderBy: { publishedAt: 'desc' }, take: 4,
+      select: { ...albumCard, category: { select: { id: true, name: true, slug: true } } },
+    }),
   ])
   res.json({
     category: { name: category.name, slug: category.slug, description: category.description, parent: category.parent },
     children,
     albums: albums.map(flattenAlbum),
     total, page, pages: Math.ceil(total / limit),
+    moreFromGallery: moreFromGallery.map(flattenAlbum),
   })
 })
 
@@ -311,7 +317,7 @@ router.get('/gallery/:categorySlug/:albumSlug', async (req, res) => {
   })
   if (!album) return res.status(404).json({ error: 'Not found' })
   const page = Math.max(1, Number(req.query.page) || 1)
-  const [totalPhotos, photos, related, moreFromGallery] = await Promise.all([
+  const [totalPhotos, photos, related] = await Promise.all([
     db.galleryPhoto.count({ where: { albumId: album.id } }),
     db.galleryPhoto.findMany({
       where: { albumId: album.id }, orderBy: { sortOrder: 'asc' },
@@ -324,16 +330,10 @@ router.get('/gallery/:categorySlug/:albumSlug', async (req, res) => {
           select: { ...albumCard, category: { select: { id: true, name: true, slug: true } } },
         })
       : [],
-    db.galleryAlbum.findMany({
-      where: { categoryId: { not: album.categoryId }, id: { not: album.id }, ...publishedNow(), category: { status: true } },
-      orderBy: { publishedAt: 'desc' }, take: 4,
-      select: { ...albumCard, category: { select: { id: true, name: true, slug: true } } },
-    }),
   ])
   res.json({
     ...album, photos, photoPage: page, photoPages: Math.ceil(totalPhotos / PHOTOS_PER_PAGE), totalPhotos,
     related: related.map(flattenAlbum),
-    moreFromGallery: moreFromGallery.map(flattenAlbum),
   })
 })
 

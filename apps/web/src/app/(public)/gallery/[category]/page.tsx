@@ -15,6 +15,7 @@ type AlbumList = {
   total: number
   page: number
   pages: number
+  moreFromGallery: GalleryAlbumCard[]
 }
 
 async function getList(category: string, page: string) {
@@ -85,6 +86,18 @@ export default async function GalleryCategoryPage({
         )}
         <Pagination page={list.page} pages={list.pages} base={`/gallery/${list.category.slug}`} />
       </div>
+
+      {list.moreFromGallery.length > 0 && (
+        <section className="mt-14">
+          <div className="flex items-end justify-between">
+            <h2 className="section-title text-2xl">More from Gallery</h2>
+            <Link href="/gallery" className="mb-1 text-sm font-semibold text-accent hover:underline">View All →</Link>
+          </div>
+          <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {list.moreFromGallery.map((a) => <AlbumCard key={a.id} album={a} showCategory />)}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
