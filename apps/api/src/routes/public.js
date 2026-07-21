@@ -311,7 +311,7 @@ router.get('/gallery/:categorySlug/:albumSlug', async (req, res) => {
   })
   if (!album) return res.status(404).json({ error: 'Not found' })
   const page = Math.max(1, Number(req.query.page) || 1)
-  const [totalPhotos, photos, related] = await Promise.all([
+  const [totalPhotos, photos, related, moreFromGallery] = await Promise.all([
     db.galleryPhoto.count({ where: { albumId: album.id } }),
     db.galleryPhoto.findMany({
       where: { albumId: album.id }, orderBy: { sortOrder: 'asc' },
@@ -324,10 +324,16 @@ router.get('/gallery/:categorySlug/:albumSlug', async (req, res) => {
           select: { ...albumCard, category: { select: { id: true, name: true, slug: true } } },
         })
       : [],
+    db.galleryAlbum.findMany({
+      where: { categoryId: { not: album.categoryId }, id: { not: album.id }, ...publishedNow(), category: { status: true } },
+      orderBy: { publishedAt: 'desc' }, take: 4,
+      select: { ...albumCard, category: { select: { id: true, name: true, slug: true } } },
+    }),
   ])
   res.json({
     ...album, photos, photoPage: page, photoPages: Math.ceil(totalPhotos / PHOTOS_PER_PAGE), totalPhotos,
     related: related.map(flattenAlbum),
+    moreFromGallery: moreFromGallery.map(flattenAlbum),
   })
 })
 
