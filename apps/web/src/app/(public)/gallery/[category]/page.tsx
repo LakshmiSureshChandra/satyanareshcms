@@ -93,7 +93,7 @@ export default async function GalleryCategoryPage({
             <h2 className="section-title min-w-0 flex-1 text-2xl">More from Gallery</h2>
             <Link href="/gallery" className="mb-1 shrink-0 whitespace-nowrap text-sm font-semibold text-accent hover:underline">View All →</Link>
           </div>
-          <div className="mt-6 grid gap-6 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
             {list.moreFromGallery.map((a) => <AlbumCard key={a.id} album={a} showCategory compact />)}
           </div>
         </section>

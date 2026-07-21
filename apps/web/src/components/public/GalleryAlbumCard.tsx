@@ -22,19 +22,19 @@ export function AlbumCard({ album, showCategory = false, compact = false }: { al
               <span className="headline text-5xl text-ink/8 select-none">A</span>
             </div>
           )}
-          <span className="absolute bottom-2 right-2 rounded bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white">
+          <span className={`absolute bottom-1.5 right-1.5 rounded bg-black/60 font-semibold text-white ${compact ? 'px-1.5 py-0.5 text-[9px]' : 'px-2 py-0.5 text-[11px]'}`}>
             {album.photoCount} photo{album.photoCount === 1 ? '' : 's'}
           </span>
         </div>
       </Link>
-      <div className={compact ? 'pt-2' : 'pt-3.5'}>
+      <div className={compact ? 'pt-1.5' : 'pt-3.5'}>
         {showCategory && (
-          <Link href={`/gallery/${album.category.slug}`} className="kicker hover:underline">{album.category.name}</Link>
+          <Link href={`/gallery/${album.category.slug}`} className={compact ? 'text-[9px] font-bold uppercase tracking-widest text-accent hover:underline' : 'kicker hover:underline'}>{album.category.name}</Link>
         )}
         <Link href={href}>
-          <h3 className={`headline leading-snug transition-colors group-hover:text-accent ${compact ? 'text-sm' : 'text-lg'}`}>{album.title}</h3>
+          <h3 className={`headline truncate leading-snug transition-colors group-hover:text-accent ${compact ? 'text-xs' : 'text-lg'}`}>{album.title}</h3>
         </Link>
-        <time className={`mt-1 block text-ink-soft ${compact ? 'text-[11px]' : 'mt-1.5 text-xs'}`}>{formatDate(album.publishedAt)}</time>
+        {!compact && <time className="mt-1.5 block text-xs text-ink-soft">{formatDate(album.publishedAt)}</time>}
       </div>
     </article>
   )
