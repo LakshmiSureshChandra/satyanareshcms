@@ -66,18 +66,42 @@ function DesktopItem({ item }: { item: MenuItem }) {
 }
 
 function MobileItem({ item, depth, close }: { item: MenuItem; depth: number; close: () => void }) {
+  const [expanded, setExpanded] = useState(false)
+  const hasKids = item.children.length > 0
+
   return (
-    <>
-      <MenuLink
-        item={item}
-        onClick={close}
-        className={`block border-b border-line py-3 ${depth === 0 ? 'headline text-2xl' : 'text-base text-ink-soft'}`}
-        style={depth > 0 ? { paddingLeft: depth * 18 } : undefined}
-      />
-      {item.children.map((c) => (
-        <MobileItem key={c.id} item={c} depth={depth + 1} close={close} />
-      ))}
-    </>
+    <div className="border-b border-line" style={depth > 0 ? { paddingLeft: 18 } : undefined}>
+      <div className="flex items-center">
+        <MenuLink
+          item={item}
+          onClick={close}
+          className={`block flex-1 py-3 ${depth === 0 ? 'headline text-2xl' : 'text-base text-ink-soft'}`}
+        />
+        {hasKids && (
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            aria-label={expanded ? 'Collapse' : 'Expand'}
+            aria-expanded={expanded}
+            className="-m-2 shrink-0 p-2 text-ink-soft"
+          >
+            <svg
+              width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"
+              className={`transition-transform ${expanded ? 'rotate-180' : ''}`}
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+        )}
+      </div>
+      {hasKids && expanded && (
+        <div className="pb-1">
+          {item.children.map((c) => (
+            <MobileItem key={c.id} item={c} depth={depth + 1} close={close} />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
