@@ -89,12 +89,12 @@ export default async function GalleryCategoryPage({
 
       {list.moreFromGallery.length > 0 && (
         <section className="mt-14">
-          <div className="flex items-end justify-between">
-            <h2 className="section-title text-2xl">More from Gallery</h2>
-            <Link href="/gallery" className="mb-1 text-sm font-semibold text-accent hover:underline">View All →</Link>
+          <div className="flex items-end justify-between gap-4">
+            <h2 className="section-title min-w-0 flex-1 text-2xl">More from Gallery</h2>
+            <Link href="/gallery" className="mb-1 shrink-0 whitespace-nowrap text-sm font-semibold text-accent hover:underline">View All →</Link>
           </div>
-          <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {list.moreFromGallery.map((a) => <AlbumCard key={a.id} album={a} showCategory />)}
+          <div className="mt-6 grid gap-6 sm:grid-cols-3 lg:grid-cols-4">
+            {list.moreFromGallery.map((a) => <AlbumCard key={a.id} album={a} showCategory compact />)}
           </div>
         </section>
       )}

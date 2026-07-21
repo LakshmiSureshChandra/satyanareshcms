@@ -5,7 +5,9 @@ import { formatDate } from './PostCard'
 // showCategory: set when the card appears on a page that mixes albums from
 // several (sub)categories — e.g. a parent category page rolling up its
 // children's albums — so each card can reveal which one it actually belongs to.
-export function AlbumCard({ album, showCategory = false }: { album: GalleryAlbumCard; showCategory?: boolean }) {
+// compact: smaller title/date — used for secondary "more from elsewhere" rails
+// so they read as lower-priority than the primary album grid above them.
+export function AlbumCard({ album, showCategory = false, compact = false }: { album: GalleryAlbumCard; showCategory?: boolean; compact?: boolean }) {
   const src = imageUrl(album.coverImage)
   const href = `/gallery/${album.category.slug}/${album.slug}`
   return (
@@ -25,14 +27,14 @@ export function AlbumCard({ album, showCategory = false }: { album: GalleryAlbum
           </span>
         </div>
       </Link>
-      <div className="pt-3.5">
+      <div className={compact ? 'pt-2' : 'pt-3.5'}>
         {showCategory && (
           <Link href={`/gallery/${album.category.slug}`} className="kicker hover:underline">{album.category.name}</Link>
         )}
         <Link href={href}>
-          <h3 className="headline text-lg leading-snug transition-colors group-hover:text-accent">{album.title}</h3>
+          <h3 className={`headline leading-snug transition-colors group-hover:text-accent ${compact ? 'text-sm' : 'text-lg'}`}>{album.title}</h3>
         </Link>
-        <time className="mt-1.5 block text-xs text-ink-soft">{formatDate(album.publishedAt)}</time>
+        <time className={`mt-1 block text-ink-soft ${compact ? 'text-[11px]' : 'mt-1.5 text-xs'}`}>{formatDate(album.publishedAt)}</time>
       </div>
     </article>
   )
