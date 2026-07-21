@@ -76,6 +76,7 @@ export type GalleryAlbum = Omit<GalleryAlbumCard, 'category'> & {
   photoPage: number
   photoPages: number
   totalPhotos: number
+  related: GalleryAlbumCard[]
 }
 
 export type PollOptionData = { id: number; text: string; votes: number }

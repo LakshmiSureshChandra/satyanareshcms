@@ -311,14 +311,24 @@ router.get('/gallery/:categorySlug/:albumSlug', async (req, res) => {
   })
   if (!album) return res.status(404).json({ error: 'Not found' })
   const page = Math.max(1, Number(req.query.page) || 1)
-  const [totalPhotos, photos] = await Promise.all([
+  const [totalPhotos, photos, related] = await Promise.all([
     db.galleryPhoto.count({ where: { albumId: album.id } }),
     db.galleryPhoto.findMany({
       where: { albumId: album.id }, orderBy: { sortOrder: 'asc' },
       skip: (page - 1) * PHOTOS_PER_PAGE, take: PHOTOS_PER_PAGE,
     }),
+    album.categoryId
+      ? db.galleryAlbum.findMany({
+          where: { categoryId: album.categoryId, id: { not: album.id }, ...publishedNow() },
+          orderBy: { publishedAt: 'desc' }, take: 4,
+          select: { ...albumCard, category: { select: { id: true, name: true, slug: true } } },
+        })
+      : [],
   ])
-  res.json({ ...album, photos, photoPage: page, photoPages: Math.ceil(totalPhotos / PHOTOS_PER_PAGE), totalPhotos })
+  res.json({
+    ...album, photos, photoPage: page, photoPages: Math.ceil(totalPhotos / PHOTOS_PER_PAGE), totalPhotos,
+    related: related.map(flattenAlbum),
+  })
 })
 
 // ---- polls: one active poll voted on publicly, archived ones viewable read-only ----

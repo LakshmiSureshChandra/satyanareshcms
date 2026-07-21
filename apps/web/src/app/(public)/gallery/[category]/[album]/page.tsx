@@ -4,6 +4,7 @@ import { api, imageUrl, NotFoundError, type GalleryAlbum } from '@/lib/api'
 import { formatDate } from '@/components/public/PostCard'
 import { Pagination } from '@/components/public/Pagination'
 import { Breadcrumbs } from '@/components/public/Breadcrumbs'
+import { AlbumCard } from '@/components/public/GalleryAlbumCard'
 
 export const revalidate = 3600
 
@@ -80,6 +81,15 @@ export default async function AlbumPage({
       </div>
 
       <Pagination page={a.photoPage} pages={a.photoPages} base={base} />
+
+      {a.related.length > 0 && (
+        <section className="mt-14">
+          <h2 className="section-title text-2xl">Related Albums</h2>
+          <div className="mt-6 grid gap-8 sm:grid-cols-2">
+            {a.related.map((r) => <AlbumCard key={r.id} album={r} />)}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
