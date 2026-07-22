@@ -10,6 +10,19 @@ function stripHtml(html: string) {
   return div.textContent || div.innerText || ''
 }
 
+// speechSynthesis.getVoices() is frequently empty on the first call — the list
+// loads asynchronously and fires 'voiceschanged' once ready (some browsers,
+// notably Safari, never fire it and just have voices available immediately).
+function loadVoices(): Promise<SpeechSynthesisVoice[]> {
+  return new Promise((resolve) => {
+    const existing = window.speechSynthesis.getVoices()
+    if (existing.length) return resolve(existing)
+    window.speechSynthesis.onvoiceschanged = () => resolve(window.speechSynthesis.getVoices())
+    // fallback in case the event never fires
+    setTimeout(() => resolve(window.speechSynthesis.getVoices()), 500)
+  })
+}
+
 // prefer higher-quality bundled voices (iOS/Android/desktop all ship at least
 // one "enhanced"/"premium"/"natural" system voice alongside the default one)
 function pickVoice(voices: SpeechSynthesisVoice[]) {
@@ -20,15 +33,57 @@ function pickVoice(voices: SpeechSynthesisVoice[]) {
   )
 }
 
+// Split into sentence-ish chunks and speak as a queue, all pinned to the same
+// voice — one giant utterance is unreliable across browsers (silent cutoffs,
+// and some engines re-pick a voice partway through a very long single call,
+// which is what produced the "multiple voices" effect).
+function splitIntoChunks(text: string) {
+  const sentences = text.match(/[^.!?]+[.!?]+|\s*$/g)?.filter((s) => s.trim()) || [text]
+  const chunks: string[] = []
+  let current = ''
+  for (const s of sentences) {
+    if ((current + s).length > 200) {
+      if (current) chunks.push(current.trim())
+      current = s
+    } else {
+      current += s
+    }
+  }
+  if (current.trim()) chunks.push(current.trim())
+  return chunks
+}
+
 export function ListenButton({ title, content }: { title: string; content: string }) {
   const [supported, setSupported] = useState(true)
   const [state, setState] = useState<State>('idle')
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const voiceRef = useRef<SpeechSynthesisVoice | undefined>(undefined)
+  const queueRef = useRef<string[]>([])
+  const stoppedRef = useRef(true)
 
   useEffect(() => {
-    if (!('speechSynthesis' in window)) setSupported(false)
-    return () => { window.speechSynthesis?.cancel() }
+    if (!('speechSynthesis' in window)) {
+      setSupported(false)
+      return
+    }
+    loadVoices().then((voices) => { voiceRef.current = pickVoice(voices) })
+    return () => {
+      stoppedRef.current = true
+      window.speechSynthesis.cancel()
+    }
   }, [])
+
+  function speakNext() {
+    const text = queueRef.current.shift()
+    if (!text) {
+      setState('idle')
+      return
+    }
+    const utter = new SpeechSynthesisUtterance(text)
+    if (voiceRef.current) utter.voice = voiceRef.current
+    utter.onend = () => { if (!stoppedRef.current) speakNext() }
+    utter.onerror = () => { if (!stoppedRef.current) speakNext() }
+    window.speechSynthesis.speak(utter)
+  }
 
   function play() {
     if (state === 'paused') {
@@ -36,14 +91,11 @@ export function ListenButton({ title, content }: { title: string; content: strin
       setState('playing')
       return
     }
+    stoppedRef.current = false
     window.speechSynthesis.cancel()
-    const utter = new SpeechSynthesisUtterance(`${title}. ${stripHtml(content)}`)
-    const voice = pickVoice(window.speechSynthesis.getVoices())
-    if (voice) utter.voice = voice
-    utter.onend = () => setState('idle')
-    utter.onerror = () => setState('idle')
-    utteranceRef.current = utter
-    window.speechSynthesis.speak(utter)
+    queueRef.current = splitIntoChunks(`${title}. ${stripHtml(content)}`)
+    // Chrome can silently drop a speak() called in the same tick as cancel()
+    setTimeout(() => { if (!stoppedRef.current) speakNext() }, 50)
     setState('playing')
   }
 
@@ -53,6 +105,8 @@ export function ListenButton({ title, content }: { title: string; content: strin
   }
 
   function stop() {
+    stoppedRef.current = true
+    queueRef.current = []
     window.speechSynthesis.cancel()
     setState('idle')
   }
