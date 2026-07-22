@@ -87,8 +87,19 @@ export function ListenButton({ title, content }: { title: string; content: strin
     }
     const utter = new SpeechSynthesisUtterance(text)
     if (voiceRef.current) utter.voice = voiceRef.current
-    utter.onend = () => speakNext(gen)
-    utter.onerror = () => speakNext(gen)
+    // A single utterance can fire BOTH onend and onerror (an interrupted one
+    // errors then ends; some engines double-fire). Without this latch each
+    // firing would call speakNext again, spawning parallel chains that shift
+    // different chunks off the shared queue and speak them at once — two
+    // overlapping voices. The latch guarantees one advance per utterance.
+    let advanced = false
+    const advance = () => {
+      if (advanced) return
+      advanced = true
+      speakNext(gen)
+    }
+    utter.onend = advance
+    utter.onerror = advance
     window.speechSynthesis.speak(utter)
   }
 
