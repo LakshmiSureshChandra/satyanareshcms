@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { api, imageUrl, NotFoundError, type CategoryNode, type PostCard as PostCardType, type Settings } from '@/lib/api'
 import { PostCard, formatDateTime, CategoryTag } from '@/components/public/PostCard'
 import { ShareButtons } from '@/components/public/ShareButtons'
+import { ListenButton } from '@/components/public/ListenButton'
 import { Sidebar } from '@/components/public/Sidebar'
 import { ReadingProgress } from '@/components/public/ReadingProgress'
 import { Breadcrumbs } from '@/components/public/Breadcrumbs'
@@ -102,6 +103,10 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
               </>
             )}
             <time dateTime={post.publishedAt}>{formatDateTime(post.publishedAt)}</time>
+          </div>
+
+          <div className="mt-4">
+            <ListenButton title={post.title} content={post.content} />
           </div>
 
           {img && (
