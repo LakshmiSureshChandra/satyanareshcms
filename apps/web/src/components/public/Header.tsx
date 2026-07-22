@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import type { MenuItem, Settings } from '@/lib/api'
 import { SocialIcons } from './SocialIcons'
 import { TextSizeControl } from './TextSizeControl'
+import { ThemeColorControl } from './ThemeColorControl'
 
 function MenuLink({ item, className, style, onClick }: { item: MenuItem; className?: string; style?: React.CSSProperties; onClick?: () => void }) {
   return (
@@ -166,6 +167,7 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
 
           <div className="ml-auto flex items-center gap-2 md:ml-0">
             <TextSizeControl />
+            <ThemeColorControl />
             <button
               className="rounded-md border border-line p-2.5 text-ink transition-colors hover:border-accent hover:text-accent"
               onClick={() => { setSearchOpen(!searchOpen); setOpen(false) }}

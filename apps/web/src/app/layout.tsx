@@ -33,10 +33,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* runs before paint so a saved text-size preference never flashes at the default size */}
+        {/* runs before paint so saved text-size/theme-color preferences never flash at the default */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var s=localStorage.getItem('text-size');if(s&&s!=='md')document.documentElement.setAttribute('data-text-size',s)}catch(e){}`,
+            __html: `try{
+              var s=localStorage.getItem('text-size');if(s&&s!=='md')document.documentElement.setAttribute('data-text-size',s);
+              var c=localStorage.getItem('theme-color');if(c&&c!=='default')document.documentElement.setAttribute('data-theme-color',c);
+            }catch(e){}`,
           }}
         />
       </head>

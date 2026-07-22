@@ -27,6 +27,40 @@ html[data-text-size="sm"] { font-size: 87.5%; }
 html[data-text-size="lg"] { font-size: 112.5%; }
 html[data-text-size="xl"] { font-size: 125%; }
 
+/* site-wide color theme control — every component already reads colors through
+   these custom properties (bg-paper, text-ink, border-line, text-accent, …),
+   so overriding them here re-themes the whole site with no component changes */
+html[data-theme-color="dark"] {
+  --color-paper: #15130f;
+  --color-paper-2: #201d18;
+  --color-ink: #f0ece3;
+  --color-ink-soft: #a89f8f;
+  --color-line: #35312a;
+  --color-accent: #d9666b;
+  --color-accent-dark: #c14a50;
+  --color-gold: #d4b06a;
+}
+html[data-theme-color="sepia"] {
+  --color-paper: #f4ecd8;
+  --color-paper-2: #ebe0c7;
+  --color-ink: #3b2f22;
+  --color-ink-soft: #6b5c46;
+  --color-line: #d9c9a8;
+  --color-accent: #8e1f22;
+  --color-accent-dark: #6e1518;
+  --color-gold: #9c7a3c;
+}
+html[data-theme-color="contrast"] {
+  --color-paper: #ffffff;
+  --color-paper-2: #ececec;
+  --color-ink: #000000;
+  --color-ink-soft: #333333;
+  --color-line: #000000;
+  --color-accent: #a3121f;
+  --color-accent-dark: #7a0d17;
+  --color-gold: #6b4f00;
+}
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);
