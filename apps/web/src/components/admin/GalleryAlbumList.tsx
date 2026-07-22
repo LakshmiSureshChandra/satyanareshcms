@@ -108,7 +108,11 @@ export function GalleryAlbumList() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {list?.items.map((a) => (
-          <div key={a.id} className="overflow-hidden rounded-xl border border-stone-200 bg-white">
+          <Link
+            key={a.id}
+            href={`/admin/gallery/${a.id}/edit`}
+            className="group overflow-hidden rounded-xl border border-stone-200 bg-white transition-shadow hover:shadow-md"
+          >
             {a.coverImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={`${apiOrigin}${a.coverImage}`} alt={a.title} className="aspect-video w-full object-cover" />
@@ -123,13 +127,17 @@ export function GalleryAlbumList() {
                 <span className="text-xs text-stone-400">{a.photoCount} photo{a.photoCount === 1 ? '' : 's'}</span>
                 {a.category && <span className="ml-auto text-xs text-stone-400">{a.category.name}</span>}
               </div>
-              <Link href={`/admin/gallery/${a.id}/edit`} className="mt-1.5 block truncate font-medium hover:underline">{a.title}</Link>
-              <div className="mt-2 flex items-center gap-3 text-sm">
-                <Link href={`/admin/gallery/${a.id}/edit`} className="text-stone-600 hover:underline">Edit</Link>
-                <button onClick={() => remove(a)} className="ml-auto text-red-600 hover:underline">Delete</button>
+              <p className="mt-1.5 truncate font-medium group-hover:underline">{a.title}</p>
+              <div className="mt-2 flex items-center justify-end text-sm">
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); remove(a) }}
+                  className="text-red-600 hover:underline"
+                >
+                  Delete
+                </button>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
         {list && !list.items.length && <p className="col-span-full py-10 text-center text-sm text-stone-400">No albums yet.</p>}
       </div>
