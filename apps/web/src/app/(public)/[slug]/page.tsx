@@ -125,7 +125,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             </div>
           )}
 
-          <div className="mt-7 rounded-lg border border-line bg-white/60 p-5">
+          <div className="mt-7 rounded-lg border border-line bg-paper-2/70 p-5">
             <ShareButtons url={url} title={post.title} />
           </div>
 

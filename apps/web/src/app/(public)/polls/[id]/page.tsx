@@ -37,7 +37,7 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
         </Link>
       </div>
 
-      <section className="rounded-lg border border-line bg-white p-6 shadow-sm md:p-8">
+      <section className="rounded-lg border border-line bg-paper p-6 shadow-sm md:p-8">
         <h2 className="headline text-xl leading-snug md:text-2xl">Poll: {poll.title}</h2>
 
         <div className="mt-6">

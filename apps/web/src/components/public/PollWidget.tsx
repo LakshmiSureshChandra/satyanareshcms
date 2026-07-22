@@ -60,7 +60,7 @@ export function PollWidget({ showArchiveLink = true }: { showArchiveLink?: boole
   if (!poll) return null
 
   return (
-    <div className="rounded-lg border border-line bg-white p-4">
+    <div className="rounded-lg border border-line bg-paper p-4">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-accent">Poll</p>
       <h3 className="mt-1 text-sm font-bold leading-snug">{poll.title}</h3>
 

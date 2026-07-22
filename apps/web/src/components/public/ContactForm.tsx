@@ -32,7 +32,7 @@ export function ContactForm() {
       </div>
     )
 
-  const field = 'w-full rounded-md border border-line bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-accent focus:bg-white'
+  const field = 'w-full rounded-md border border-line bg-paper px-4 py-3 text-sm outline-none transition-colors focus:border-accent'
 
   return (
     <form onSubmit={submit} className="mt-8 grid gap-4 md:grid-cols-2">

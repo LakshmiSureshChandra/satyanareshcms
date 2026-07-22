@@ -190,7 +190,7 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search news…"
-                className="w-full rounded-md border border-line bg-white px-4 py-2.5 outline-none focus:border-accent"
+                className="w-full rounded-md border border-line bg-paper px-4 py-2.5 outline-none focus:border-accent"
               />
               <button className="rounded-md bg-accent px-6 py-2.5 font-semibold text-white hover:bg-accent-dark">
                 Search

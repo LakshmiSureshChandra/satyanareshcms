@@ -46,7 +46,7 @@ export default async function HomePage() {
             <div className="md:col-span-2">
               <OverlayCard post={lead} />
             </div>
-            <div className="flex flex-col justify-between gap-5 rounded-lg border border-line bg-white/50 p-5">
+            <div className="flex flex-col justify-between gap-5 rounded-lg border border-line bg-paper-2/70 p-5">
               {side.map((p) => (
                 <PostRow key={p.id} post={p} />
               ))}
@@ -91,7 +91,7 @@ export default async function HomePage() {
         {home.more.length > 0 && (
           <section className="rise-3 rise py-8">
             <SectionTitle>More News</SectionTitle>
-            <div className="grid gap-x-10 gap-y-7 rounded-lg border border-line bg-white/50 p-6 md:grid-cols-2 md:p-8">
+            <div className="grid gap-x-10 gap-y-7 rounded-lg border border-line bg-paper-2/70 p-6 md:grid-cols-2 md:p-8">
               {home.more.map((p) => (
                 <PostRow key={p.id} post={p} />
               ))}
@@ -111,7 +111,7 @@ export default async function HomePage() {
                 <Link
                   key={p.id}
                   href={`/polls/${p.id}`}
-                  className="flex items-center justify-between gap-3 rounded-md border border-line bg-white px-3.5 py-2.5 text-xs hover:bg-paper-2"
+                  className="flex items-center justify-between gap-3 rounded-md border border-line bg-paper px-3.5 py-2.5 text-xs hover:bg-paper-2"
                 >
                   <span className="truncate font-medium">{p.title}</span>
                   <span className="shrink-0 text-ink-soft">{formatDateTime(p.createdAt)}</span>
