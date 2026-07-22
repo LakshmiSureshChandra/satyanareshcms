@@ -75,12 +75,13 @@ export default async function GalleryCategoryPage({
       )}
 
       <div className="mt-9">
+        <Pagination page={list.page} pages={list.pages} base={`/gallery/${list.category.slug}`} className="mb-6" />
         {list.albums.length === 0 ? (
           <div className="rounded-lg border border-dashed border-line py-20 text-center">
             <p className="headline text-2xl text-ink-soft">No albums yet</p>
           </div>
         ) : (
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {list.albums.map((a) => <AlbumCard key={a.id} album={a} showCategory={list.children.length > 0} />)}
           </div>
         )}

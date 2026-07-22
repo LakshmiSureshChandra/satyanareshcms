@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-export function Pagination({ page, pages, base }: { page: number; pages: number; base: string }) {
+export function Pagination({ page, pages, base, className = 'mt-12' }: { page: number; pages: number; base: string; className?: string }) {
   if (pages <= 1) return null
   const sep = base.includes('?') ? '&' : '?'
   const href = (p: number) => `${base}${sep}page=${p}`
@@ -9,7 +9,7 @@ export function Pagination({ page, pages, base }: { page: number; pages: number;
   )
 
   return (
-    <nav className="mt-12 flex items-center justify-center gap-2">
+    <nav className={`flex items-center justify-center gap-2 ${className}`}>
       {page > 1 && (
         <Link href={href(page - 1)} className="rounded-md border border-line px-3.5 py-2 text-sm font-medium hover:border-accent hover:text-accent">←</Link>
       )}

@@ -67,6 +67,8 @@ export default async function AlbumPage({
         <span>{a.totalPhotos} photo{a.totalPhotos === 1 ? '' : 's'}</span>
       </div>
 
+      <Pagination page={a.photoPage} pages={a.photoPages} base={base} className="mt-8" />
+
       <div className="mt-8 space-y-10">
         {a.photos.map((p) => (
           <figure key={p.id}>
