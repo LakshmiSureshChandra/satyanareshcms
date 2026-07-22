@@ -58,7 +58,13 @@ export function ListenButton({ title, content }: { title: string; content: strin
   const [state, setState] = useState<State>('idle')
   const voiceRef = useRef<SpeechSynthesisVoice | undefined>(undefined)
   const queueRef = useRef<string[]>([])
-  const stoppedRef = useRef(true)
+  // Cancelling an in-progress utterance fires ITS OWN onend — a stale callback
+  // that must never be allowed to keep talking. Each play() bumps this counter
+  // and closes over the new value, so any earlier utterance's onend/onerror
+  // (however it fires) is checked against the current generation and becomes a
+  // no-op once superseded, instead of racing a second speech chain in parallel
+  // (which is what produced two overlapping voices at once).
+  const genRef = useRef(0)
 
   useEffect(() => {
     if (!('speechSynthesis' in window)) {
@@ -67,12 +73,13 @@ export function ListenButton({ title, content }: { title: string; content: strin
     }
     loadVoices().then((voices) => { voiceRef.current = pickVoice(voices) })
     return () => {
-      stoppedRef.current = true
+      genRef.current++
       window.speechSynthesis.cancel()
     }
   }, [])
 
-  function speakNext() {
+  function speakNext(gen: number) {
+    if (gen !== genRef.current) return
     const text = queueRef.current.shift()
     if (!text) {
       setState('idle')
@@ -80,8 +87,8 @@ export function ListenButton({ title, content }: { title: string; content: strin
     }
     const utter = new SpeechSynthesisUtterance(text)
     if (voiceRef.current) utter.voice = voiceRef.current
-    utter.onend = () => { if (!stoppedRef.current) speakNext() }
-    utter.onerror = () => { if (!stoppedRef.current) speakNext() }
+    utter.onend = () => speakNext(gen)
+    utter.onerror = () => speakNext(gen)
     window.speechSynthesis.speak(utter)
   }
 
@@ -91,11 +98,11 @@ export function ListenButton({ title, content }: { title: string; content: strin
       setState('playing')
       return
     }
-    stoppedRef.current = false
+    const gen = ++genRef.current
     window.speechSynthesis.cancel()
     queueRef.current = splitIntoChunks(`${title}. ${stripHtml(content)}`)
     // Chrome can silently drop a speak() called in the same tick as cancel()
-    setTimeout(() => { if (!stoppedRef.current) speakNext() }, 50)
+    setTimeout(() => speakNext(gen), 50)
     setState('playing')
   }
 
@@ -105,7 +112,7 @@ export function ListenButton({ title, content }: { title: string; content: strin
   }
 
   function stop() {
-    stoppedRef.current = true
+    genRef.current++
     queueRef.current = []
     window.speechSynthesis.cancel()
     setState('idle')
