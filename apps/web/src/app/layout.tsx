@@ -32,6 +32,14 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
+      <head>
+        {/* runs before paint so a saved text-size preference never flashes at the default size */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var s=localStorage.getItem('text-size');if(s&&s!=='md')document.documentElement.setAttribute('data-text-size',s)}catch(e){}`,
+          }}
+        />
+      </head>
       <body className={`${bodySans.variable} ${display.variable} antialiased`}>
         {children}
       </body>

@@ -20,6 +20,13 @@ html {
   overflow-x: hidden;
 }
 
+/* site-wide text size control — scales the root font-size, which rem-based
+   Tailwind text/spacing utilities are all relative to, so the whole layout
+   scales proportionally instead of just individual font sizes breaking rhythm */
+html[data-text-size="sm"] { font-size: 87.5%; }
+html[data-text-size="lg"] { font-size: 112.5%; }
+html[data-text-size="xl"] { font-size: 125%; }
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { MenuItem, Settings } from '@/lib/api'
 import { SocialIcons } from './SocialIcons'
+import { TextSizeControl } from './TextSizeControl'
 
 function MenuLink({ item, className, style, onClick }: { item: MenuItem; className?: string; style?: React.CSSProperties; onClick?: () => void }) {
   return (
@@ -163,16 +164,19 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
             ))}
           </nav>
 
-          <button
-            className="ml-auto rounded-md border border-line p-2.5 text-ink transition-colors hover:border-accent hover:text-accent md:ml-0"
-            onClick={() => { setSearchOpen(!searchOpen); setOpen(false) }}
-            aria-label="Search"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-              <circle cx="11" cy="11" r="7" />
-              <path d="M21 21l-4.3-4.3" />
-            </svg>
-          </button>
+          <div className="ml-auto flex items-center gap-2 md:ml-0">
+            <TextSizeControl />
+            <button
+              className="rounded-md border border-line p-2.5 text-ink transition-colors hover:border-accent hover:text-accent"
+              onClick={() => { setSearchOpen(!searchOpen); setOpen(false) }}
+              aria-label="Search"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M21 21l-4.3-4.3" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* search drawer */}
