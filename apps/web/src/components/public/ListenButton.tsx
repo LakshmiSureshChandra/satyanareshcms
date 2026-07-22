@@ -103,6 +103,22 @@ export function ListenButton({ title, content }: { title: string; content: strin
     window.speechSynthesis.speak(utter)
   }
 
+  // Chrome's cancel() does not synchronously stop the previous utterance — its
+  // audio backend can keep producing sound for a variable, unbounded amount of
+  // time afterward (Safari's implementation happens to be effectively
+  // synchronous, which is why this only showed up in Chrome). A fixed delay
+  // before the next speak() is therefore a guess that can lose the race under
+  // load; poll until the engine actually reports idle instead.
+  function waitUntilIdleThenSpeak(gen: number, attempt = 0) {
+    if (gen !== genRef.current) return
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      if (attempt > 40) { speakNext(gen); return } // ~2s cap — don't wait forever
+      setTimeout(() => waitUntilIdleThenSpeak(gen, attempt + 1), 50)
+      return
+    }
+    speakNext(gen)
+  }
+
   function play() {
     if (state === 'paused') {
       window.speechSynthesis.resume()
@@ -110,11 +126,10 @@ export function ListenButton({ title, content }: { title: string; content: strin
       return
     }
     const gen = ++genRef.current
-    window.speechSynthesis.cancel()
     queueRef.current = splitIntoChunks(`${title}. ${stripHtml(content)}`)
-    // Chrome can silently drop a speak() called in the same tick as cancel()
-    setTimeout(() => speakNext(gen), 50)
+    window.speechSynthesis.cancel()
     setState('playing')
+    waitUntilIdleThenSpeak(gen)
   }
 
   function pause() {
