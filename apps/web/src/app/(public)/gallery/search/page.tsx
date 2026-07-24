@@ -1,5 +1,6 @@
+import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { api, type GalleryAlbumSearch } from '@/lib/api'
+import { api, NotFoundError, type GalleryAlbumSearch } from '@/lib/api'
 import { Breadcrumbs } from '@/components/public/Breadcrumbs'
 import { GallerySearchBox } from '@/components/public/GallerySearchBox'
 import { Pagination } from '@/components/public/Pagination'
@@ -8,6 +9,15 @@ import { AlbumCard } from '@/components/public/GalleryAlbumCard'
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Search Gallery' }
 
+async function getResults(s: string, page: string) {
+  try {
+    return await api<GalleryAlbumSearch>(`/gallery/search?s=${encodeURIComponent(s)}&page=${page}`, false)
+  } catch (e) {
+    if (e instanceof NotFoundError) return null
+    throw e
+  }
+}
+
 export default async function GallerySearchPage({
   searchParams,
 }: {
@@ -15,8 +25,9 @@ export default async function GallerySearchPage({
 }) {
   const { s = '', page = '1' } = await searchParams
   const result = s.trim()
-    ? await api<GalleryAlbumSearch>(`/gallery/search?s=${encodeURIComponent(s)}&page=${page}`, false)
+    ? await getResults(s, page)
     : { albums: [], total: 0, page: 1, pages: 0, query: '' }
+  if (!result) notFound()
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
