@@ -55,7 +55,7 @@ export function ThemeColorControl() {
         aria-expanded={open}
         className="flex items-center rounded-md border border-line p-2.5 transition-colors hover:border-accent"
       >
-        <span className="h-4 w-4 rounded-full border border-black/10" style={swatch(current.paper, current.ink)} />
+        <span className="h-4 w-4 rounded-full" style={swatch(current.paper, current.ink)} />
       </button>
 
       {open && (
@@ -71,7 +71,7 @@ export function ThemeColorControl() {
                   theme === t.key ? 'bg-paper-2 font-semibold text-ink' : 'text-ink-soft hover:bg-paper-2'
                 }`}
               >
-                <span className="h-5 w-5 shrink-0 rounded-full border border-black/10" style={swatch(t.paper, t.ink)} />
+                <span className="h-5 w-5 shrink-0 rounded-full" style={swatch(t.paper, t.ink)} />
                 {t.label}
               </button>
             ))}
