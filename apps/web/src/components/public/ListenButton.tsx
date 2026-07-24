@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 
 type State = 'idle' | 'playing' | 'paused'
 
+const API = process.env.NEXT_PUBLIC_API_URL ?? ''
+
 function stripHtml(html: string) {
   const div = document.createElement('div')
   div.innerHTML = html
@@ -53,7 +55,7 @@ function splitIntoChunks(text: string) {
   return chunks
 }
 
-export function ListenButton({ title, content }: { title: string; content: string }) {
+export function ListenButton({ slug, title, content }: { slug: string; title: string; content: string }) {
   const [supported, setSupported] = useState(true)
   const [state, setState] = useState<State>('idle')
   const voiceRef = useRef<SpeechSynthesisVoice | undefined>(undefined)
@@ -130,6 +132,7 @@ export function ListenButton({ title, content }: { title: string; content: strin
     window.speechSynthesis.cancel()
     setState('playing')
     waitUntilIdleThenSpeak(gen)
+    fetch(`${API}/api/posts/${slug}/audio-play`, { method: 'POST' }).catch(() => {})
   }
 
   function pause() {

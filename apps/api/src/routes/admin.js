@@ -56,14 +56,19 @@ router.get('/dashboard-stats', async (req, res) => {
     db.post.count({ where: { type: 'page', ...notTrashed } }),
     db.category.count(),
     db.user.count({ where: notTrashed }),
-    db.post.aggregate({ _sum: { views: true }, where: { type: 'post', ...notTrashed } }),
+    db.post.aggregate({ _sum: { views: true, audioPlays: true }, where: { type: 'post', ...notTrashed } }),
     db.post.findMany({
       where: { type: 'post', ...notTrashed },
       orderBy: { createdAt: 'desc' }, take: 8,
       select: { id: true, title: true, status: true, views: true, publishedAt: true, createdAt: true },
     }),
   ])
-  res.json({ posts, pages, categories, users, totalViews: viewsAgg._sum.views || 0, recent })
+  res.json({
+    posts, pages, categories, users,
+    totalViews: viewsAgg._sum.views || 0,
+    totalAudioPlays: viewsAgg._sum.audioPlays || 0,
+    recent,
+  })
 })
 
 // ---- posts & pages (shared handlers, type discriminator) ----
@@ -83,7 +88,7 @@ function postListHandler(type) {
         orderBy: { [req.query.sort === 'title' ? 'title' : 'createdAt']: req.query.dir === 'asc' ? 'asc' : 'desc' },
         skip: (page - 1) * limit, take: limit,
         select: {
-          id: true, title: true, slug: true, status: true, publishedAt: true, views: true, createdAt: true,
+          id: true, title: true, slug: true, status: true, publishedAt: true, views: true, audioPlays: true, createdAt: true,
           author: { select: { name: true } },
           categories: { select: { category: { select: { name: true } } } },
         },

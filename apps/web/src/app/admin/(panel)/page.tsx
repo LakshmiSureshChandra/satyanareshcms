@@ -10,6 +10,7 @@ type Stats = {
   categories: number
   users: number
   totalViews: number
+  totalAudioPlays: number
   recent: { id: number; title: string; status: boolean; views: number; publishedAt: string | null; createdAt: string }[]
 }
 
@@ -27,6 +28,7 @@ export default function DashboardPage() {
         ['Categories', stats.categories, '/admin/posts'],
         ['Staff', stats.users, '/admin/users'],
         ['Total Views', stats.totalViews.toLocaleString(), null],
+        ['Audio Plays', stats.totalAudioPlays.toLocaleString(), null],
       ]
     : []
 
@@ -34,7 +36,7 @@ export default function DashboardPage() {
     <div>
       <h1 className="text-xl font-bold">Dashboard</h1>
 
-      <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-5">
+      <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-6">
         {cards.map(([label, value, href]) => {
           const inner = (
             <div className="rounded-xl border border-stone-200 bg-white p-4 transition-shadow hover:shadow-sm">

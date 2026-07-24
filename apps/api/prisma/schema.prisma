@@ -58,6 +58,7 @@ model Post {
   metaDescription String?    @map("meta_description") @db.Text
   status          Boolean    @default(false)
   views           Int        @default(0) @db.UnsignedInt
+  audioPlays      Int        @default(0) @map("audio_plays") @db.UnsignedInt
   createdAt       DateTime   @default(now()) @map("created_at")
   updatedAt       DateTime   @updatedAt @map("updated_at")
   deletedAt       DateTime?  @map("deleted_at")

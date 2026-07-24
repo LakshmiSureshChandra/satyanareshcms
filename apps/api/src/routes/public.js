@@ -356,6 +356,13 @@ function flattenPoll(poll, hasVoted) {
   return { id: poll.id, title: poll.title, totalVotes, hasVoted, options: poll.options.map((o) => ({ id: o.id, text: o.text, votes: o.votes })) }
 }
 
+router.post('/posts/:slug/audio-play', async (req, res) => {
+  const post = await db.post.findFirst({ where: { slug: req.params.slug, type: 'post', ...publishedNow() }, select: { id: true } })
+  if (!post) return res.status(404).json({ error: 'Not found' })
+  await db.post.update({ where: { id: post.id }, data: { audioPlays: { increment: 1 } } })
+  res.json({ ok: true })
+})
+
 router.get('/polls/active', async (req, res) => {
   let poll = await db.poll.findFirst({
     where: { status: true, ...notTrashed },

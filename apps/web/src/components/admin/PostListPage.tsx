@@ -11,6 +11,7 @@ type Row = {
   status: boolean
   publishedAt: string | null
   views: number
+  audioPlays: number
   author: { name: string } | null
   categories: string[]
 }
@@ -97,6 +98,7 @@ export function PostListPage({ kind }: { kind: 'post' | 'page' }) {
               <th className="px-3 py-3">Author</th>
               <th className="px-3 py-3">Status</th>
               {kind === 'post' && <th className="px-3 py-3 text-right">Views</th>}
+              {kind === 'post' && <th className="px-3 py-3 text-right">Audio Plays</th>}
               <th className="px-3 py-3">Published</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
@@ -118,6 +120,7 @@ export function PostListPage({ kind }: { kind: 'post' | 'page' }) {
                   </span>
                 </td>
                 {kind === 'post' && <td className="px-3 py-3 text-right text-stone-500">{row.views}</td>}
+                {kind === 'post' && <td className="px-3 py-3 text-right text-stone-500">{row.audioPlays}</td>}
                 <td className="px-3 py-3 text-stone-500">
                   {row.publishedAt ? new Date(row.publishedAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—'}
                 </td>

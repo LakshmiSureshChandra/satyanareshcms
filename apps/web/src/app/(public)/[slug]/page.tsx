@@ -106,7 +106,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           </div>
 
           <div className="mt-4">
-            <ListenButton title={post.title} content={post.content} />
+            <ListenButton slug={post.slug} title={post.title} content={post.content} />
           </div>
 
           {img && (
