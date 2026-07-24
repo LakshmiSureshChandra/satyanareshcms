@@ -276,6 +276,27 @@ router.get('/gallery', async (req, res) => {
   res.json(result)
 })
 
+router.get('/gallery/search', async (req, res) => {
+  if (!(await galleryEnabled())) return res.status(404).json({ error: 'Not found' })
+  const q = String(req.query.s || '').trim()
+  const page = Math.max(1, Number(req.query.page) || 1)
+  const limit = 12
+  if (!q) return res.json({ albums: [], total: 0, page: 1, pages: 0, query: '' })
+  const where = {
+    ...publishedNow(),
+    category: { status: true },
+    OR: [{ title: { contains: q } }, { photos: { some: { caption: { contains: q } } } }],
+  }
+  const [total, albums] = await Promise.all([
+    db.galleryAlbum.count({ where }),
+    db.galleryAlbum.findMany({
+      where, orderBy: { publishedAt: 'desc' }, skip: (page - 1) * limit, take: limit,
+      select: { ...albumCard, category: { select: { id: true, name: true, slug: true } } },
+    }),
+  ])
+  res.json({ albums: albums.map(flattenAlbum), total, page, pages: Math.ceil(total / limit), query: q })
+})
+
 router.get('/gallery/:categorySlug', async (req, res) => {
   if (!(await galleryEnabled())) return res.status(404).json({ error: 'Not found' })
   const category = await db.galleryCategory.findFirst({

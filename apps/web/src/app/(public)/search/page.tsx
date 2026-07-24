@@ -18,7 +18,7 @@ export default async function SearchPage({
   return (
     <ListingPage
       title="Search Results"
-      subtitle={s ? ` results for ""` : 'Use the search bar above to find articles'}
+      subtitle={s ? `Results for "${s}"` : 'Use the search bar above to find articles'}
       list={list}
       base={`/search?s=${encodeURIComponent(s)}`}
     />

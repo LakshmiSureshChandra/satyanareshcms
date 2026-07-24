@@ -5,6 +5,7 @@ import { api, NotFoundError, type GalleryAlbumCard, type GalleryCategoryChild } 
 import { AlbumCard } from '@/components/public/GalleryAlbumCard'
 import { Pagination } from '@/components/public/Pagination'
 import { Breadcrumbs } from '@/components/public/Breadcrumbs'
+import { GallerySearchBox } from '@/components/public/GallerySearchBox'
 
 export const revalidate = 300
 
@@ -62,6 +63,7 @@ export default async function GalleryCategoryPage({
           <span className="text-gold">.</span>
         </h1>
         {list.category.description && <p className="mt-2 text-sm text-paper/60">{list.category.description}</p>}
+        <GallerySearchBox />
       </div>
 
       {list.children.length > 0 && (

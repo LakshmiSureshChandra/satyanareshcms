@@ -4,6 +4,7 @@ import { api, imageUrl, NotFoundError, type GalleryAlbum } from '@/lib/api'
 import { formatDate } from '@/components/public/PostCard'
 import { Pagination } from '@/components/public/Pagination'
 import { Breadcrumbs } from '@/components/public/Breadcrumbs'
+import { GallerySearchBox } from '@/components/public/GallerySearchBox'
 import { AlbumCard } from '@/components/public/GalleryAlbumCard'
 
 export const revalidate = 3600
@@ -66,6 +67,7 @@ export default async function AlbumPage({
         <span className="text-line">|</span>
         <span>{a.totalPhotos} photo{a.totalPhotos === 1 ? '' : 's'}</span>
       </div>
+      <GallerySearchBox />
 
       <Pagination page={a.photoPage} pages={a.photoPages} base={base} className="mt-8" />
 

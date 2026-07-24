@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { api, imageUrl, NotFoundError, type GalleryCategoryCard } from '@/lib/api'
 import { Breadcrumbs } from '@/components/public/Breadcrumbs'
+import { GallerySearchBox } from '@/components/public/GallerySearchBox'
 
 export const revalidate = 300
 export const metadata: Metadata = { title: 'Gallery' }
@@ -25,6 +26,7 @@ export default async function GalleryPage() {
           Gallery
           <span className="text-gold">.</span>
         </h1>
+        <GallerySearchBox />
       </div>
 
       <div className="mt-9">
