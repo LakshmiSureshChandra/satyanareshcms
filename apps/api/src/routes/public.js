@@ -353,7 +353,10 @@ function votedIds(req) {
 
 function flattenPoll(poll, hasVoted) {
   const totalVotes = poll.options.reduce((sum, o) => sum + o.votes, 0)
-  return { id: poll.id, title: poll.title, totalVotes, hasVoted, options: poll.options.map((o) => ({ id: o.id, text: o.text, votes: o.votes })) }
+  return {
+    id: poll.id, title: poll.title, totalVotes, hasVoted, closed: !poll.status,
+    options: poll.options.map((o) => ({ id: o.id, text: o.text, votes: o.votes })),
+  }
 }
 
 router.post('/posts/:slug/audio-play', async (req, res) => {
@@ -368,9 +371,7 @@ router.get('/polls/active', async (req, res) => {
     where: { status: true, ...notTrashed },
     include: { options: { orderBy: { sortOrder: 'asc' } } },
   })
-  let closed = false
   if (!poll) {
-    closed = true
     poll = await db.poll.findFirst({
       where: { status: false, ...notTrashed },
       orderBy: { createdAt: 'desc' },
@@ -378,7 +379,7 @@ router.get('/polls/active', async (req, res) => {
     })
   }
   if (!poll) return res.status(404).json({ error: 'Not found' })
-  res.json({ ...flattenPoll(poll, votedIds(req).includes(poll.id)), closed })
+  res.json(flattenPoll(poll, votedIds(req).includes(poll.id)))
 })
 
 router.post('/polls/:id/vote', async (req, res) => {

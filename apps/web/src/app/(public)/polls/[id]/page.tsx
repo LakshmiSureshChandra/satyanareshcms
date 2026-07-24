@@ -39,6 +39,9 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
 
       <section className="rounded-lg border border-line bg-paper p-6 shadow-sm md:p-8">
         <h2 className="headline text-xl leading-snug md:text-2xl">Poll: {poll.title}</h2>
+        {poll.closed && (
+          <p className="mt-2 text-xs italic text-ink-soft">This poll is closed. You can only view the results.</p>
+        )}
 
         <div className="mt-6">
           <p className="text-sm text-ink-soft">Total votes: {poll.totalVotes}</p>
