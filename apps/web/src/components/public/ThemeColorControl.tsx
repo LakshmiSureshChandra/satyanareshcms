@@ -45,8 +45,6 @@ export function ThemeColorControl() {
     else document.documentElement.setAttribute('data-theme-color', key)
   }
 
-  const current = THEMES.find((t) => t.key === theme)!
-
   return (
     <div className="relative" ref={ref}>
       <button
@@ -55,7 +53,15 @@ export function ThemeColorControl() {
         aria-expanded={open}
         className="flex items-center rounded-md border border-line p-2.5 transition-colors hover:border-accent"
       >
-        <span className="h-4 w-4 rounded-full" style={swatch(current.paper, current.ink)} />
+        {/* palette icon — a two-tone dot only reads as "a shape", not as a
+            theme-switcher control; this is instantly recognizable as one */}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2C6.5 2 2 6.5 2 12c0 3 2 5 5 5h1a2 2 0 0 1 2 2v1c0 1 1 2 2 2 5.5 0 10-4.5 10-10S17.5 2 12 2z" />
+          <circle cx="6.7" cy="11.5" r="1.15" fill="currentColor" stroke="none" />
+          <circle cx="9.7" cy="7" r="1.15" fill="currentColor" stroke="none" />
+          <circle cx="15" cy="7" r="1.15" fill="currentColor" stroke="none" />
+          <circle cx="17.8" cy="11.5" r="1.15" fill="currentColor" stroke="none" />
+        </svg>
       </button>
 
       {open && (
