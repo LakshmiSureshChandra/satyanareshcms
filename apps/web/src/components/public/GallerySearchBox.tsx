@@ -6,7 +6,7 @@ export function GallerySearchBox({ defaultValue = '' }: { defaultValue?: string 
         name="s"
         defaultValue={defaultValue}
         placeholder="Search albums or photo captions…"
-        className="w-full max-w-sm rounded-md border border-line bg-paper px-3.5 py-2 text-sm focus:border-accent focus:outline-none"
+        className="w-full max-w-sm rounded-md border border-line bg-paper px-3.5 py-2 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
       />
       <button type="submit" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark">
         Search
