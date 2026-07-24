@@ -150,12 +150,12 @@ export function ListenButton({ title, content }: { title: string; content: strin
     <div className="flex items-center gap-2">
       <button
         onClick={state === 'playing' ? pause : play}
-        className="flex items-center gap-2 rounded-md border border-line px-4 py-2 text-sm font-semibold transition-colors hover:border-accent hover:text-accent"
+        className="flex items-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-dark"
       >
         {state === 'playing' ? (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" /><rect x="14" y="5" width="4" height="14" /></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" /><rect x="14" y="5" width="4" height="14" /></svg>
         ) : (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M11 5 6 9H2v6h4l5 4V5z" /><path d="M15.5 8.5a5 5 0 0 1 0 7" /><path d="M18.5 6a9 9 0 0 1 0 12" />
           </svg>
         )}
@@ -164,7 +164,7 @@ export function ListenButton({ title, content }: { title: string; content: strin
         {state === 'paused' && 'Resume'}
       </button>
       {state !== 'idle' && (
-        <button onClick={stop} aria-label="Stop" className="rounded-md border border-line p-2 text-ink-soft transition-colors hover:border-accent hover:text-accent">
+        <button onClick={stop} aria-label="Stop" className="rounded-md border border-line p-2.5 text-ink-soft transition-colors hover:border-accent hover:text-accent">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" /></svg>
         </button>
       )}
