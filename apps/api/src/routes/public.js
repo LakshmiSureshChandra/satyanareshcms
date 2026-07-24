@@ -357,12 +357,21 @@ function flattenPoll(poll, hasVoted) {
 }
 
 router.get('/polls/active', async (req, res) => {
-  const poll = await db.poll.findFirst({
+  let poll = await db.poll.findFirst({
     where: { status: true, ...notTrashed },
     include: { options: { orderBy: { sortOrder: 'asc' } } },
   })
+  let closed = false
+  if (!poll) {
+    closed = true
+    poll = await db.poll.findFirst({
+      where: { status: false, ...notTrashed },
+      orderBy: { createdAt: 'desc' },
+      include: { options: { orderBy: { sortOrder: 'asc' } } },
+    })
+  }
   if (!poll) return res.status(404).json({ error: 'Not found' })
-  res.json(flattenPoll(poll, votedIds(req).includes(poll.id)))
+  res.json({ ...flattenPoll(poll, votedIds(req).includes(poll.id)), closed })
 })
 
 router.post('/polls/:id/vote', async (req, res) => {

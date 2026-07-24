@@ -85,6 +85,7 @@ export type Poll = {
   title: string
   totalVotes: number
   hasVoted: boolean
+  closed?: boolean
   options: PollOptionData[]
 }
 export type PollListItem = { id: number; title: string; createdAt: string }

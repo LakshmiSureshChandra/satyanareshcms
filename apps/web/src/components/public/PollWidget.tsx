@@ -64,7 +64,11 @@ export function PollWidget({ showArchiveLink = true }: { showArchiveLink?: boole
       <p className="text-[11px] font-semibold uppercase tracking-wide text-accent">Poll</p>
       <h3 className="mt-1 text-sm font-bold leading-snug">{poll.title}</h3>
 
-      {!poll.hasVoted ? (
+      {poll.closed && (
+        <p className="mt-2 text-xs italic text-ink-soft">This poll is closed. You can only view the results.</p>
+      )}
+
+      {!poll.closed && !poll.hasVoted ? (
         <form onSubmit={vote} className="mt-3 space-y-1.5">
           {poll.options.map((o) => (
             <label key={o.id} className="flex cursor-pointer items-center gap-2 text-xs">
