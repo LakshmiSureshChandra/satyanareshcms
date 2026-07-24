@@ -472,7 +472,13 @@ router.get('/gallery', async (req, res) => {
   const page = Math.max(1, Number(req.query.page) || 1)
   const limit = 20
   const where = { ...notTrashed }
-  if (req.query.s) where.title = { contains: String(req.query.s) }
+  if (req.query.s) {
+    const s = String(req.query.s)
+    // match the album's own title, or any photo caption inside it — so a
+    // search for something only mentioned in a photo's caption still surfaces
+    // the album it belongs to
+    where.OR = [{ title: { contains: s } }, { photos: { some: { caption: { contains: s } } } }]
+  }
   if (req.query.category) where.categoryId = Number(req.query.category)
   const [total, items] = await Promise.all([
     db.galleryAlbum.count({ where }),

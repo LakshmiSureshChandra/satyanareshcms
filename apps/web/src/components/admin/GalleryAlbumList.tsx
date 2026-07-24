@@ -91,7 +91,7 @@ export function GalleryAlbumList() {
         <input
           value={s}
           onChange={(e) => { setS(e.target.value); setPage(1) }}
-          placeholder="Search albums…"
+          placeholder="Search albums or photo captions…"
           className="admin-input max-w-xs"
         />
         <select value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setPage(1) }} className="admin-input max-w-48">
