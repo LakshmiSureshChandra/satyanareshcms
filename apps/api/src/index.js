@@ -6,13 +6,16 @@ import path from 'node:path'
 import { db } from './lib/db.js'
 import { seedDatabase } from './lib/seed.js'
 import authRoutes from './routes/auth.js'
-import publicRoutes from './routes/public.js'
+import publicRoutes, { handleZeptoBounceWebhook } from './routes/public.js'
 import adminRoutes from './routes/admin.js'
 
 const app = express()
 app.set('trust proxy', 1) // behind Caddy in production
 
 app.use(cors({ origin: process.env.WEB_URL || 'http://localhost:3000', credentials: true }))
+// raw body (not JSON-parsed) so the HMAC signature check sees the exact bytes
+// Zoho signed — must be registered before express.json() below
+app.post('/api/newsletter/bounce-webhook', express.raw({ type: '*/*' }), handleZeptoBounceWebhook)
 app.use(express.json({ limit: '5mb' }))
 app.use(cookieParser())
 

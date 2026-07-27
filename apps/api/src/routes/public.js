@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
+import crypto from 'node:crypto'
 import { db, notTrashed, publishedNow } from '../lib/db.js'
 import { sendMail } from '../lib/mailer.js'
 import { revalidate } from '../lib/revalidate.js'
@@ -479,5 +480,99 @@ router.post('/contact', contactLimiter, async (req, res) => {
   }
   res.json({ ok: true })
 })
+
+// ---- newsletter: double opt-in subscribe, one-click unsubscribe ----
+const WEB_URL = process.env.WEB_URL || 'http://localhost:3000'
+const newSubToken = () => crypto.randomBytes(24).toString('hex')
+
+const subscribeLimiter = rateLimit({ windowMs: 3600 * 1000, limit: 5 })
+router.post('/newsletter/subscribe', subscribeLimiter, async (req, res) => {
+  const email = String(req.body?.email || '').trim().toLowerCase()
+  if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(422).json({ error: 'Enter a valid email address' })
+
+  let sub = await db.subscriber.findUnique({ where: { email } })
+  if (sub?.status === 'active') return res.json({ ok: true, alreadySubscribed: true })
+
+  if (sub) {
+    sub = await db.subscriber.update({
+      where: { id: sub.id },
+      data: { status: 'pending', confirmToken: newSubToken(), unsubscribeToken: sub.unsubscribeToken || newSubToken() },
+    })
+  } else {
+    sub = await db.subscriber.create({
+      data: { email, confirmToken: newSubToken(), unsubscribeToken: newSubToken() },
+    })
+  }
+
+  await sendMail({
+    to: email,
+    subject: 'Confirm your subscription — AK Ganesh & Co',
+    html: `<p>Please confirm you'd like to receive updates from AK Ganesh & Co.</p>
+      <p><a href="${WEB_URL}/newsletter/confirm/${sub.confirmToken}">Confirm subscription</a></p>
+      <p>If you didn't request this, you can ignore this email.</p>`,
+  }).catch((e) => console.error('Subscribe confirmation email failed:', e.message))
+
+  res.json({ ok: true })
+})
+
+router.post('/newsletter/confirm/:token', async (req, res) => {
+  const sub = await db.subscriber.findUnique({ where: { confirmToken: req.params.token } })
+  if (!sub) return res.status(404).json({ error: 'Invalid or expired confirmation link' })
+  if (sub.status !== 'active') {
+    await db.subscriber.update({ where: { id: sub.id }, data: { status: 'active', confirmedAt: new Date() } })
+  }
+  res.json({ ok: true })
+})
+
+router.post('/newsletter/unsubscribe/:token', async (req, res) => {
+  const sub = await db.subscriber.findUnique({ where: { unsubscribeToken: req.params.token } })
+  if (!sub) return res.status(404).json({ error: 'Invalid unsubscribe link' })
+  if (sub.status !== 'unsubscribed') {
+    await db.subscriber.update({ where: { id: sub.id }, data: { status: 'unsubscribed', unsubscribedAt: new Date() } })
+  }
+  res.json({ ok: true })
+})
+
+// ZeptoMail bounce webhook — verifies the producer-signature header (HMAC-SHA256
+// over the raw body, using the auth key configured in the ZeptoMail Agent's
+// Webhooks tab) before marking a subscriber bounced. Only hard bounces (invalid
+// address) are treated as permanent; soft bounces (e.g. full mailbox) are
+// transient and left alone.
+// ponytail: signature format inferred from Zoho's docs summary, not verified
+// against a live payload yet — re-check once a real webhook call comes in.
+export function verifyZeptoWebhook(rawBody, signatureHeader) {
+  const key = process.env.ZEPTOMAIL_WEBHOOK_KEY
+  if (!key) return true // not configured yet — accept, but log it (see caller)
+  if (!signatureHeader) return false
+  const parts = Object.fromEntries(
+    signatureHeader.split(',').map((kv) => kv.trim().split('=').map((s) => s.trim()))
+  )
+  const expected = crypto.createHmac('sha256', key).update(rawBody).digest('base64')
+  return parts.s === expected
+}
+
+export async function handleZeptoBounceWebhook(req, res) {
+  const raw = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body || {}))
+  if (!process.env.ZEPTOMAIL_WEBHOOK_KEY) {
+    console.warn('ZEPTOMAIL_WEBHOOK_KEY not set — accepting bounce webhook without signature verification')
+  } else if (!verifyZeptoWebhook(raw, req.headers['producer-signature'])) {
+    return res.status(401).json({ error: 'Invalid signature' })
+  }
+
+  let payload
+  try {
+    payload = JSON.parse(raw.toString('utf8'))
+  } catch {
+    return res.status(400).json({ error: 'Invalid payload' })
+  }
+
+  const eventName = String(payload.event_name || '').toLowerCase()
+  const email = payload.event_message?.email_info?.event_data?.bounced_recipient
+    || payload.event_message?.email_info?.to?.[0]?.email_address?.address
+  if (eventName === 'hard bounce' && email) {
+    await db.subscriber.updateMany({ where: { email: email.toLowerCase() }, data: { status: 'bounced' } }).catch(() => {})
+  }
+  res.json({ ok: true })
+}
 
 export default router

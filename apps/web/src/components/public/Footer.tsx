@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { MenuItem, Settings } from '@/lib/api'
 import { SocialIcons } from './SocialIcons'
+import { NewsletterSubscribeBox } from './NewsletterSubscribeBox'
 
 const linkClass = 'text-paper/75 transition-colors hover:text-gold'
 
@@ -29,6 +30,9 @@ export function Footer({ settings, menu }: { settings: Settings; menu: MenuItem[
             </p>
             <div className="mt-5 [&_a]:rounded-full [&_a]:bg-paper/10 [&_a]:p-2.5 [&_a]:text-paper/80 [&_a:hover]:bg-accent [&_a:hover]:text-white">
               <SocialIcons settings={settings} />
+            </div>
+            <div className="mt-8">
+              <NewsletterSubscribeBox />
             </div>
           </div>
 

@@ -207,6 +207,39 @@ model PollOption {
   @@map("poll_options")
 }
 
+enum SubscriberStatus {
+  pending
+  active
+  unsubscribed
+  bounced
+}
+
+model Subscriber {
+  id                Int              @id @default(autoincrement())
+  email             String           @unique
+  status            SubscriberStatus @default(pending)
+  confirmToken      String           @unique @map("confirm_token")
+  unsubscribeToken  String           @unique @map("unsubscribe_token")
+  subscribedAt      DateTime         @default(now()) @map("subscribed_at")
+  confirmedAt       DateTime?        @map("confirmed_at")
+  unsubscribedAt    DateTime?        @map("unsubscribed_at")
+
+  @@index([status])
+  @@map("subscribers")
+}
+
+model Newsletter {
+  id        Int      @id @default(autoincrement())
+  subject   String
+  body      String   @db.LongText
+  sentAt    DateTime? @map("sent_at")
+  sentCount Int      @default(0) @map("sent_count")
+  createdBy Int?     @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("newsletters")
+}
+
 model ContactSubmission {
   id        Int      @id @default(autoincrement())
   name      String

@@ -8,6 +8,7 @@ import crypto from 'node:crypto'
 import { db, notTrashed } from '../lib/db.js'
 import { requireAuth, requireRole } from '../middleware/auth.js'
 import { uniqueSlug } from '../lib/slug.js'
+import { sendMail } from '../lib/mailer.js'
 import { revalidate } from '../lib/revalidate.js'
 
 const router = Router()
@@ -762,6 +763,69 @@ router.delete('/trash/:type', adminOnly, async (req, res) => {
   for (const item of items) removeFile(item.bannerImage || item.coverImage || item.file)
   await db[t.model].deleteMany({ where: { id: { in: items.map((i) => i.id) } } })
   res.json({ ok: true })
+})
+
+// ---- newsletter ----
+router.get('/newsletter/subscribers', async (req, res) => {
+  const page = Math.max(1, Number(req.query.page) || 1)
+  const limit = 20
+  const where = {}
+  if (req.query.s) where.email = { contains: String(req.query.s) }
+  if (req.query.status) where.status = String(req.query.status)
+  const [total, items, counts] = await Promise.all([
+    db.subscriber.count({ where }),
+    db.subscriber.findMany({ where, orderBy: { subscribedAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+    db.subscriber.groupBy({ by: ['status'], _count: true }),
+  ])
+  const countsByStatus = Object.fromEntries(counts.map((c) => [c.status, c._count]))
+  res.json({ items, total, page, pages: Math.ceil(total / limit), counts: countsByStatus })
+})
+
+router.delete('/newsletter/subscribers/:id', async (req, res) => {
+  await db.subscriber.delete({ where: { id: Number(req.params.id) } }).catch(() => {})
+  res.json({ ok: true })
+})
+
+router.get('/newsletter/history', async (req, res) => {
+  const page = Math.max(1, Number(req.query.page) || 1)
+  const limit = 20
+  const [total, items] = await Promise.all([
+    db.newsletter.count(),
+    db.newsletter.findMany({ orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+  ])
+  res.json({ items, total, page, pages: Math.ceil(total / limit) })
+})
+
+const WEB_URL = process.env.WEB_URL || 'http://localhost:3000'
+
+// Sends synchronously in the request — fine at the subscriber counts a firm's
+// newsletter list realistically has (dozens-low thousands). If this list ever
+// grows into the tens of thousands, move this to a background job instead of
+// holding the admin's request open.
+// ponytail: small delay between sends to stay well under ZeptoMail's rate limits
+router.post('/newsletter/send', async (req, res) => {
+  const subject = String(req.body?.subject || '').trim()
+  const body = String(req.body?.body || '').trim()
+  if (!subject || !body) return res.status(422).json({ error: 'Subject and body are required' })
+
+  const subscribers = await db.subscriber.findMany({ where: { status: 'active' } })
+  const newsletter = await db.newsletter.create({ data: { subject, body, createdBy: req.user.id } })
+
+  let sent = 0
+  for (const sub of subscribers) {
+    const html = `${body}<hr><p style="font-size:12px;color:#888">
+      <a href="${WEB_URL}/newsletter/unsubscribe/${sub.unsubscribeToken}">Unsubscribe</a> from these emails.</p>`
+    try {
+      await sendMail({ to: sub.email, subject, html })
+      sent++
+    } catch (e) {
+      console.error('Newsletter send failed for', sub.email, e.message)
+    }
+    await new Promise((r) => setTimeout(r, 150))
+  }
+
+  await db.newsletter.update({ where: { id: newsletter.id }, data: { sentAt: new Date(), sentCount: sent } })
+  res.json({ ok: true, sent, total: subscribers.length })
 })
 
 export default router
