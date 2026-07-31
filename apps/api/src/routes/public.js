@@ -504,8 +504,16 @@ router.post('/newsletter/subscribe', subscribeLimiter, async (req, res) => {
     })
   }
 
+  const settings = await getSettings()
+  const from = settings.newsletter_from_email
+    ? settings.newsletter_from_name
+      ? `"${settings.newsletter_from_name.replace(/"/g, "'")}" <${settings.newsletter_from_email}>`
+      : settings.newsletter_from_email
+    : undefined
+
   await sendMail({
     to: email,
+    from,
     subject: 'Confirm your subscription — AK Ganesh & Co',
     html: `<p>Please confirm you'd like to receive updates from AK Ganesh & Co.</p>
       <p><a href="${WEB_URL}/newsletter/confirm/${sub.confirmToken}">Confirm subscription</a></p>

@@ -47,9 +47,19 @@ export function NewsletterSubscriberList() {
 
   const counts = list?.counts || {}
 
+  const exportParams = new URLSearchParams()
+  if (s) exportParams.set('s', s)
+  if (status) exportParams.set('status', status)
+  const exportHref = `/api/admin/newsletter/subscribers/export${exportParams.toString() ? `?${exportParams}` : ''}`
+
   return (
     <div>
-      <h1 className="mb-5 text-xl font-bold">Newsletter Subscribers</h1>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-bold">Newsletter Subscribers</h1>
+        <a href={exportHref} className="rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold hover:bg-stone-50">
+          Export CSV
+        </a>
+      </div>
 
       <NewsletterTabs />
 

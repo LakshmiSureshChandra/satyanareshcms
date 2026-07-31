@@ -7,6 +7,7 @@ const TABS = [
   { label: 'Subscribers', href: '/admin/newsletter' },
   { label: 'Compose', href: '/admin/newsletter/send' },
   { label: 'Drafts & Sent', href: '/admin/newsletter/history' },
+  { label: 'Sender', href: '/admin/newsletter/sender' },
 ]
 
 export function NewsletterTabs() {

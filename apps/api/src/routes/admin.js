@@ -765,8 +765,8 @@ router.delete('/trash/:type', adminOnly, async (req, res) => {
   res.json({ ok: true })
 })
 
-// ---- newsletter ----
-router.get('/newsletter/subscribers', async (req, res) => {
+// ---- newsletter (admin role only — not managers) ----
+router.get('/newsletter/subscribers', adminOnly, async (req, res) => {
   const page = Math.max(1, Number(req.query.page) || 1)
   const limit = 20
   const where = {}
@@ -781,12 +781,31 @@ router.get('/newsletter/subscribers', async (req, res) => {
   res.json({ items, total, page, pages: Math.ceil(total / limit), counts: countsByStatus })
 })
 
-router.delete('/newsletter/subscribers/:id', async (req, res) => {
+function csvEscape(v) {
+  const s = String(v ?? '')
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+router.get('/newsletter/subscribers/export', adminOnly, async (req, res) => {
+  const where = {}
+  if (req.query.s) where.email = { contains: String(req.query.s) }
+  if (req.query.status) where.status = String(req.query.status)
+  const subs = await db.subscriber.findMany({ where, orderBy: { subscribedAt: 'desc' } })
+
+  const rows = [
+    ['Email', 'Status', 'Subscribed At', 'Confirmed At', 'Unsubscribed At'],
+    ...subs.map((s) => [s.email, s.status, s.subscribedAt.toISOString(), s.confirmedAt?.toISOString() || '', s.unsubscribedAt?.toISOString() || '']),
+  ]
+  const csv = rows.map((r) => r.map(csvEscape).join(',')).join('\n')
+  res.set('Content-Type', 'text/csv').set('Content-Disposition', 'attachment; filename="subscribers.csv"').send(csv)
+})
+
+router.delete('/newsletter/subscribers/:id', adminOnly, async (req, res) => {
   await db.subscriber.delete({ where: { id: Number(req.params.id) } }).catch(() => {})
   res.json({ ok: true })
 })
 
-router.get('/newsletter/history', async (req, res) => {
+router.get('/newsletter/history', adminOnly, async (req, res) => {
   const page = Math.max(1, Number(req.query.page) || 1)
   const limit = 20
   const [total, items] = await Promise.all([
@@ -804,14 +823,14 @@ function validateNewsletter(b) {
   return null
 }
 
-router.get('/newsletter/:id', async (req, res) => {
+router.get('/newsletter/:id', adminOnly, async (req, res) => {
   const n = await db.newsletter.findUnique({ where: { id: Number(req.params.id) } })
   if (!n) return res.status(404).json({ error: 'Not found' })
   res.json(n)
 })
 
 // creates a draft — sentAt stays null until /send is called
-router.post('/newsletter', async (req, res) => {
+router.post('/newsletter', adminOnly, async (req, res) => {
   const err = validateNewsletter(req.body)
   if (err) return res.status(422).json({ error: err })
   const n = await db.newsletter.create({
@@ -820,7 +839,7 @@ router.post('/newsletter', async (req, res) => {
   res.json(n)
 })
 
-router.put('/newsletter/:id', async (req, res) => {
+router.put('/newsletter/:id', adminOnly, async (req, res) => {
   const existing = await db.newsletter.findUnique({ where: { id: Number(req.params.id) } })
   if (!existing) return res.status(404).json({ error: 'Not found' })
   // once sent, a newsletter is a permanent record of what actually went out —
@@ -835,7 +854,7 @@ router.put('/newsletter/:id', async (req, res) => {
   res.json(n)
 })
 
-router.delete('/newsletter/:id', async (req, res) => {
+router.delete('/newsletter/:id', adminOnly, async (req, res) => {
   const existing = await db.newsletter.findUnique({ where: { id: Number(req.params.id) } })
   if (!existing) return res.status(404).json({ error: 'Not found' })
   if (existing.sentAt) return res.status(422).json({ error: 'Sent newsletters are kept as a permanent record and cannot be deleted' })
@@ -848,19 +867,26 @@ router.delete('/newsletter/:id', async (req, res) => {
 // grows into the tens of thousands, move this to a background job instead of
 // holding the admin's request open.
 // ponytail: small delay between sends to stay well under ZeptoMail's rate limits
-router.post('/newsletter/:id/send', async (req, res) => {
+router.post('/newsletter/:id/send', adminOnly, async (req, res) => {
   const newsletter = await db.newsletter.findUnique({ where: { id: Number(req.params.id) } })
   if (!newsletter) return res.status(404).json({ error: 'Not found' })
   if (newsletter.sentAt) return res.status(422).json({ error: 'Already sent' })
 
   const subscribers = await db.subscriber.findMany({ where: { status: 'active' } })
+  const settingsRows = await db.option.findMany({ where: { key: { in: ['newsletter_from_email', 'newsletter_from_name'] } } })
+  const settings = Object.fromEntries(settingsRows.map((r) => [r.key, r.value]))
+  const from = settings.newsletter_from_email
+    ? settings.newsletter_from_name
+      ? `"${settings.newsletter_from_name.replace(/"/g, "'")}" <${settings.newsletter_from_email}>`
+      : settings.newsletter_from_email
+    : undefined
 
   let sent = 0
   for (const sub of subscribers) {
     const html = `${newsletter.body}<hr><p style="font-size:12px;color:#888">
       <a href="${WEB_URL}/newsletter/unsubscribe/${sub.unsubscribeToken}">Unsubscribe</a> from these emails.</p>`
     try {
-      await sendMail({ to: sub.email, subject: newsletter.subject, html })
+      await sendMail({ to: sub.email, subject: newsletter.subject, html, from })
       sent++
     } catch (e) {
       console.error('Newsletter send failed for', sub.email, e.message)
