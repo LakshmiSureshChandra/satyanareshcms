@@ -11,8 +11,11 @@ const TABS = [
 
 // exact match, or a real sub-path (`+ '/'`) — plain startsWith would treat
 // /admin/newsletter/sender as matching the Compose tab's href because the
-// string "sender" starts with "send"
+// string "sender" starts with "send". The Subscribers tab's own href
+// (/admin/newsletter) is also a literal path-prefix of every other newsletter
+// page, so it needs exact match only — it has no sub-pages of its own.
 function isActive(pathname: string, href: string) {
+  if (href === '/admin/newsletter') return pathname === href
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
