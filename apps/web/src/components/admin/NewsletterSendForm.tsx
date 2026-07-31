@@ -27,8 +27,14 @@ export function NewsletterSendForm({ id }: { id?: number }) {
   const [savedNote, setSavedNote] = useState('')
   const [error, setError] = useState('')
   const [preview, setPreview] = useState(false)
+  const [fromEmail, setFromEmail] = useState('')
+  const [fromName, setFromName] = useState('')
 
   useEffect(() => {
+    adminApi<Record<string, string>>('/admin/settings').then((s) => {
+      setFromEmail(s.newsletter_from_email || '')
+      setFromName(s.newsletter_from_name || '')
+    })
     if (id) {
       adminApi<Newsletter>(`/admin/newsletter/${id}`).then((n) => {
         setSubject(n.subject)
@@ -149,7 +155,15 @@ export function NewsletterSendForm({ id }: { id?: number }) {
               <h2 className="text-lg font-bold">Preview — what subscribers will see</h2>
               <button onClick={() => setPreview(false)} className="text-stone-400 hover:text-stone-900">✕</button>
             </div>
-            <p className="mb-3 border-b border-stone-200 pb-3 text-sm text-stone-500">Subject: <span className="font-medium text-stone-900">{subject}</span></p>
+            <div className="mb-3 space-y-1 border-b border-stone-200 pb-3 text-sm text-stone-500">
+              <p>
+                From: <span className="font-medium text-stone-900">
+                  {fromName || 'AK Ganesh & Co'} {fromEmail && `<${fromEmail}>`}
+                  {!fromEmail && <span className="ml-1 text-amber-600">(no sender set — see the Sender tab)</span>}
+                </span>
+              </p>
+              <p>Subject: <span className="font-medium text-stone-900">{subject}</span></p>
+            </div>
             <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: body }} />
             <hr className="my-4" />
             <p className="text-xs text-stone-400">Unsubscribe from these emails.</p>
