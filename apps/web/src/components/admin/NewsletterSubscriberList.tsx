@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { adminApi } from '@/lib/admin-api'
+import { NewsletterTabs } from './NewsletterTabs'
 
 type Subscriber = {
   id: number
@@ -49,12 +49,9 @@ export function NewsletterSubscriberList() {
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold">Newsletter Subscribers</h1>
-        <Link href="/admin/newsletter/send" className="rounded-md bg-stone-900 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-700">
-          Compose &amp; Send
-        </Link>
-      </div>
+      <h1 className="mb-5 text-xl font-bold">Newsletter Subscribers</h1>
+
+      <NewsletterTabs />
 
       <div className="mb-4 flex flex-wrap gap-3 text-sm">
         <span className="rounded-md border border-stone-200 bg-white px-3 py-1.5">Active: <b>{counts.active || 0}</b></span>

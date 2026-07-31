@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { adminApi } from '@/lib/admin-api'
 import { Editor } from './Editor'
+import { NewsletterTabs } from './NewsletterTabs'
 
 type Newsletter = {
   id: number
@@ -14,8 +14,6 @@ type Newsletter = {
   sentCount: number
   createdAt: string
 }
-type HistoryItem = { id: number; subject: string; sentAt: string | null; sentCount: number; createdAt: string }
-type History = { items: HistoryItem[]; total: number; page: number; pages: number }
 
 export function NewsletterSendForm({ id }: { id?: number }) {
   const router = useRouter()
@@ -29,12 +27,8 @@ export function NewsletterSendForm({ id }: { id?: number }) {
   const [savedNote, setSavedNote] = useState('')
   const [error, setError] = useState('')
   const [preview, setPreview] = useState(false)
-  const [history, setHistory] = useState<History | null>(null)
-
-  const loadHistory = () => adminApi<History>('/admin/newsletter/history').then(setHistory)
 
   useEffect(() => {
-    loadHistory()
     if (id) {
       adminApi<Newsletter>(`/admin/newsletter/${id}`).then((n) => {
         setSubject(n.subject)
@@ -61,7 +55,6 @@ export function NewsletterSendForm({ id }: { id?: number }) {
       setNewsletterId(n.id)
       setSavedNote('Draft saved.')
       if (!id) router.replace(`/admin/newsletter/send/${n.id}`)
-      loadHistory()
     } catch (e: any) {
       setError(e.message || 'Failed to save draft')
     }
@@ -87,7 +80,6 @@ export function NewsletterSendForm({ id }: { id?: number }) {
       setSentAt(result.sentAt)
       setSentCount(result.sentCount)
       setSavedNote(`Sent to ${result.sentCount} of ${result.totalAttempted} active subscribers.`)
-      loadHistory()
     } catch (e: any) {
       setError(e.message || 'Failed to send')
     }
@@ -105,13 +97,9 @@ export function NewsletterSendForm({ id }: { id?: number }) {
 
   return (
     <div>
-      <div className="mb-5 flex items-center justify-between">
-        <h1 className="text-xl font-bold">{sent ? 'Newsletter' : 'Compose Newsletter'}</h1>
-        <div className="flex items-center gap-4 text-sm">
-          <Link href="/admin/newsletter/send" className="font-medium text-stone-600 hover:text-stone-900">+ New</Link>
-          <Link href="/admin/newsletter" className="font-medium text-stone-600 hover:text-stone-900">← Subscribers</Link>
-        </div>
-      </div>
+      <h1 className="mb-5 text-xl font-bold">{sent ? 'Newsletter' : 'Compose Newsletter'}</h1>
+
+      <NewsletterTabs />
 
       <div className="space-y-4 rounded-xl border border-stone-200 bg-white p-5">
         {sent && (
@@ -165,40 +153,6 @@ export function NewsletterSendForm({ id }: { id?: number }) {
             <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: body }} />
             <hr className="my-4" />
             <p className="text-xs text-stone-400">Unsubscribe from these emails.</p>
-          </div>
-        </div>
-      )}
-
-      {history && history.items.length > 0 && (
-        <div className="mt-8">
-          <h2 className="mb-3 text-sm font-semibold text-stone-600">All Newsletters</h2>
-          <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-stone-200 bg-stone-50 text-left">
-                  <th className="px-4 py-3">Subject</th>
-                  <th className="px-3 py-3">Status</th>
-                  <th className="px-3 py-3">Sent</th>
-                  <th className="px-3 py-3 text-right">Recipients</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.items.map((n) => (
-                  <tr key={n.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50">
-                    <td className="px-4 py-3">
-                      <Link href={`/admin/newsletter/send/${n.id}`} className="font-medium hover:underline">{n.subject}</Link>
-                    </td>
-                    <td className="px-3 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${n.sentAt ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
-                        {n.sentAt ? 'Sent' : 'Draft'}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 text-stone-500">{n.sentAt ? new Date(n.sentAt).toLocaleString() : '—'}</td>
-                    <td className="px-3 py-3 text-right text-stone-500">{n.sentCount}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </div>
       )}
