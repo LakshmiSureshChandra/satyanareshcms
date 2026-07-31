@@ -798,25 +798,69 @@ router.get('/newsletter/history', async (req, res) => {
 
 const WEB_URL = process.env.WEB_URL || 'http://localhost:3000'
 
+function validateNewsletter(b) {
+  if (!b.subject?.trim()) return 'Subject is required'
+  if (!b.body?.trim()) return 'Body is required'
+  return null
+}
+
+router.get('/newsletter/:id', async (req, res) => {
+  const n = await db.newsletter.findUnique({ where: { id: Number(req.params.id) } })
+  if (!n) return res.status(404).json({ error: 'Not found' })
+  res.json(n)
+})
+
+// creates a draft — sentAt stays null until /send is called
+router.post('/newsletter', async (req, res) => {
+  const err = validateNewsletter(req.body)
+  if (err) return res.status(422).json({ error: err })
+  const n = await db.newsletter.create({
+    data: { subject: req.body.subject.trim(), body: req.body.body, createdBy: req.user.id },
+  })
+  res.json(n)
+})
+
+router.put('/newsletter/:id', async (req, res) => {
+  const existing = await db.newsletter.findUnique({ where: { id: Number(req.params.id) } })
+  if (!existing) return res.status(404).json({ error: 'Not found' })
+  // once sent, a newsletter is a permanent record of what actually went out —
+  // editing it after the fact would defeat the point of keeping that record
+  if (existing.sentAt) return res.status(422).json({ error: 'This newsletter has already been sent and cannot be edited' })
+  const err = validateNewsletter(req.body)
+  if (err) return res.status(422).json({ error: err })
+  const n = await db.newsletter.update({
+    where: { id: existing.id },
+    data: { subject: req.body.subject.trim(), body: req.body.body },
+  })
+  res.json(n)
+})
+
+router.delete('/newsletter/:id', async (req, res) => {
+  const existing = await db.newsletter.findUnique({ where: { id: Number(req.params.id) } })
+  if (!existing) return res.status(404).json({ error: 'Not found' })
+  if (existing.sentAt) return res.status(422).json({ error: 'Sent newsletters are kept as a permanent record and cannot be deleted' })
+  await db.newsletter.delete({ where: { id: existing.id } })
+  res.json({ ok: true })
+})
+
 // Sends synchronously in the request — fine at the subscriber counts a firm's
 // newsletter list realistically has (dozens-low thousands). If this list ever
 // grows into the tens of thousands, move this to a background job instead of
 // holding the admin's request open.
 // ponytail: small delay between sends to stay well under ZeptoMail's rate limits
-router.post('/newsletter/send', async (req, res) => {
-  const subject = String(req.body?.subject || '').trim()
-  const body = String(req.body?.body || '').trim()
-  if (!subject || !body) return res.status(422).json({ error: 'Subject and body are required' })
+router.post('/newsletter/:id/send', async (req, res) => {
+  const newsletter = await db.newsletter.findUnique({ where: { id: Number(req.params.id) } })
+  if (!newsletter) return res.status(404).json({ error: 'Not found' })
+  if (newsletter.sentAt) return res.status(422).json({ error: 'Already sent' })
 
   const subscribers = await db.subscriber.findMany({ where: { status: 'active' } })
-  const newsletter = await db.newsletter.create({ data: { subject, body, createdBy: req.user.id } })
 
   let sent = 0
   for (const sub of subscribers) {
-    const html = `${body}<hr><p style="font-size:12px;color:#888">
+    const html = `${newsletter.body}<hr><p style="font-size:12px;color:#888">
       <a href="${WEB_URL}/newsletter/unsubscribe/${sub.unsubscribeToken}">Unsubscribe</a> from these emails.</p>`
     try {
-      await sendMail({ to: sub.email, subject, html })
+      await sendMail({ to: sub.email, subject: newsletter.subject, html })
       sent++
     } catch (e) {
       console.error('Newsletter send failed for', sub.email, e.message)
@@ -824,8 +868,8 @@ router.post('/newsletter/send', async (req, res) => {
     await new Promise((r) => setTimeout(r, 150))
   }
 
-  await db.newsletter.update({ where: { id: newsletter.id }, data: { sentAt: new Date(), sentCount: sent } })
-  res.json({ ok: true, sent, total: subscribers.length })
+  const updated = await db.newsletter.update({ where: { id: newsletter.id }, data: { sentAt: new Date(), sentCount: sent } })
+  res.json({ ...updated, totalAttempted: subscribers.length })
 })
 
 export default router
