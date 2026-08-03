@@ -42,15 +42,15 @@ export function TextSizeControl() {
         onClick={() => setOpen((o) => !o)}
         aria-label="Adjust text size"
         aria-expanded={open}
-        className="flex items-center gap-0.5 rounded-md border border-line px-2.5 py-2.5 text-ink transition-colors hover:border-accent hover:text-accent"
+        className="flex size-9 items-center justify-center gap-0.5 rounded-full border border-line text-ink-2 transition-colors hover:border-ink-soft hover:text-ink"
       >
-        <span className="text-[11px] font-bold leading-none">A</span>
-        <span className="text-[16px] font-bold leading-none">A</span>
+        <span className="text-[10px] font-bold leading-none">A</span>
+        <span className="text-[15px] font-bold leading-none">A</span>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-40 mt-2 flex items-center gap-1 whitespace-nowrap rounded-md border border-line bg-paper p-2 shadow-lg">
-          <span className="mr-1 pl-1 text-xs font-medium text-ink-soft">Text size</span>
+        <div className="absolute right-0 top-full z-40 mt-2 flex items-center gap-1 whitespace-nowrap rounded-xl border border-line bg-card p-2 shadow-2xl shadow-black/40">
+          <span className="mr-1 pl-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-soft">Text size</span>
           {SIZES.map((s) => (
             <button
               key={s.key}
@@ -58,8 +58,8 @@ export function TextSizeControl() {
               aria-label={`Text size ${s.key}`}
               aria-pressed={size === s.key}
               style={{ fontSize: s.px }}
-              className={`flex h-9 w-9 items-center justify-center rounded font-bold transition-colors ${
-                size === s.key ? 'bg-accent text-white' : 'text-ink-soft hover:bg-paper-2'
+              className={`flex size-9 items-center justify-center rounded-lg font-bold transition-colors ${
+                size === s.key ? 'bg-accent-dark text-on-accent' : 'text-ink-2 hover:bg-paper-2'
               }`}
             >
               A

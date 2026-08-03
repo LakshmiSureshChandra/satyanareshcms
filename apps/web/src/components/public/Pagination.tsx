@@ -11,21 +11,26 @@ export function Pagination({ page, pages, base, className = 'mt-12' }: { page: n
   return (
     <nav className={`flex items-center justify-center gap-2 ${className}`}>
       {page > 1 && (
-        <Link href={href(page - 1)} className="rounded-md border border-line px-3.5 py-2 text-sm font-medium hover:border-accent hover:text-accent">←</Link>
+        <Link href={href(page - 1)} className="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink-2 transition-colors hover:border-accent-dark hover:text-accent">←</Link>
       )}
       {nums.map((p, i) => (
         <span key={p} className="flex items-center gap-2">
           {i > 0 && nums[i - 1] !== p - 1 && <span className="text-ink-soft">…</span>}
           <Link
             href={href(p)}
-            className={`rounded-md px-3.5 py-2 text-sm font-medium transition-colors ${p === page ? 'bg-ink text-paper' : 'border border-line hover:border-accent hover:text-accent'}`}
+            aria-current={p === page ? 'page' : undefined}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              p === page
+                ? 'bg-accent-dark text-on-accent'
+                : 'border border-line text-ink-2 hover:border-accent-dark hover:text-accent'
+            }`}
           >
             {p}
           </Link>
         </span>
       ))}
       {page < pages && (
-        <Link href={href(page + 1)} className="rounded-md border border-line px-3.5 py-2 text-sm font-medium hover:border-accent hover:text-accent">→</Link>
+        <Link href={href(page + 1)} className="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink-2 transition-colors hover:border-accent-dark hover:text-accent">→</Link>
       )}
     </nav>
   )

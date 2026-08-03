@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { api, NotFoundError, type GalleryAlbumCard, type GalleryCategoryChild } from '@/lib/api'
 import { AlbumCard } from '@/components/public/GalleryAlbumCard'
 import { Pagination } from '@/components/public/Pagination'
-import { Breadcrumbs } from '@/components/public/Breadcrumbs'
+import { PageHeader } from '@/components/public/PageHeader'
 import { GallerySearchBox } from '@/components/public/GallerySearchBox'
 
 export const revalidate = 300
@@ -48,38 +48,34 @@ export default async function GalleryCategoryPage({
   if (!list) notFound()
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <Breadcrumbs
-        items={[
+    <>
+      <PageHeader
+        eyebrow="Gallery"
+        title={list.category.name}
+        subtitle={list.category.description || undefined}
+        crumbs={[
           { label: 'Gallery', href: '/gallery' },
           ...(list.category.parent ? [{ label: list.category.parent.name, href: `/gallery/${list.category.parent.slug}` }] : []),
           { label: list.category.name },
         ]}
-      />
-
-      <div className="rise rounded-lg bg-ink px-6 py-8 text-paper md:px-10 md:py-10">
-        <h1 className="headline text-3xl md:text-5xl">
-          {list.category.name}
-          <span className="text-gold">.</span>
-        </h1>
-        {list.category.description && <p className="mt-2 text-sm text-paper/60">{list.category.description}</p>}
+      >
         <GallerySearchBox />
-      </div>
+      </PageHeader>
 
-      {list.children.length > 0 && (
-        <div className="mt-6 flex flex-wrap gap-2">
-          {list.children.map((c) => (
-            <Link key={c.id} href={`/gallery/${c.slug}`} className="rounded-full border border-line px-4 py-1.5 text-sm font-medium hover:border-accent hover:text-accent">
-              {c.name}
-            </Link>
-          ))}
-        </div>
-      )}
+      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+        {list.children.length > 0 && (
+          <div className="mb-8 flex flex-wrap gap-2">
+            {list.children.map((c) => (
+              <Link key={c.id} href={`/gallery/${c.slug}`} className="rounded-full border border-line px-4 py-1.5 text-sm font-medium text-ink-2 transition-colors hover:border-accent-dark hover:text-accent">
+                {c.name}
+              </Link>
+            ))}
+          </div>
+        )}
 
-      <div className="mt-9">
         <Pagination page={list.page} pages={list.pages} base={`/gallery/${list.category.slug}`} className="mb-6" />
         {list.albums.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-line py-20 text-center">
+          <div className="rounded-2xl border border-dashed border-line py-20 text-center">
             <p className="headline text-2xl text-ink-soft">No albums yet</p>
           </div>
         ) : (
@@ -88,19 +84,19 @@ export default async function GalleryCategoryPage({
           </div>
         )}
         <Pagination page={list.page} pages={list.pages} base={`/gallery/${list.category.slug}`} />
-      </div>
 
-      {list.moreFromGallery.length > 0 && (
-        <section className="mt-14">
-          <div className="flex items-end justify-between gap-4">
-            <h2 className="section-title min-w-0 flex-1 text-2xl">More from Gallery</h2>
-            <Link href="/gallery" className="mb-1 shrink-0 whitespace-nowrap text-sm font-semibold text-accent hover:underline">View All →</Link>
-          </div>
-          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
-            {list.moreFromGallery.map((a) => <AlbumCard key={a.id} album={a} showCategory compact />)}
-          </div>
-        </section>
-      )}
-    </div>
+        {list.moreFromGallery.length > 0 && (
+          <section className="mt-16 border-t border-line pt-10">
+            <div className="flex items-end justify-between gap-4">
+              <h2 className="headline min-w-0 flex-1 text-2xl">More from Gallery</h2>
+              <Link href="/gallery" className="shrink-0 whitespace-nowrap text-sm font-semibold text-accent hover:underline">View all →</Link>
+            </div>
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
+              {list.moreFromGallery.map((a) => <AlbumCard key={a.id} album={a} showCategory compact />)}
+            </div>
+          </section>
+        )}
+      </div>
+    </>
   )
 }

@@ -3,65 +3,56 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { ArrowRight, ChevronDown, LogIn, Menu, Search, X } from 'lucide-react'
 import type { MenuItem, Settings } from '@/lib/api'
-import { SocialIcons } from './SocialIcons'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { TextSizeControl } from './TextSizeControl'
 import { ThemeColorControl } from './ThemeColorControl'
 
-function MenuLink({ item, className, style, onClick }: { item: MenuItem; className?: string; style?: React.CSSProperties; onClick?: () => void }) {
+function MenuLink({ item, className, onClick }: { item: MenuItem; className?: string; onClick?: () => void }) {
   return (
-    <Link
-      href={item.url}
-      target={item.newWindow ? '_blank' : undefined}
-      className={className}
-      style={style}
-      onClick={onClick}
-    >
+    <Link href={item.url} target={item.newWindow ? '_blank' : undefined} className={className} onClick={onClick}>
       {item.title}
     </Link>
   )
 }
 
 function DesktopItem({ item }: { item: MenuItem }) {
-  if (!item.children.length)
-    return (
-      <MenuLink
-        item={item}
-        className="border-b-2 border-transparent px-4 py-3 text-[15px] font-semibold transition-colors hover:border-accent hover:text-accent"
-      />
-    )
+  const base = 'flex items-center gap-1 rounded-full px-3.5 py-2 text-sm font-medium text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink'
+  if (!item.children.length) return <MenuLink item={item} className={base} />
+
   return (
     <div className="group relative">
-      <MenuLink
-        item={item}
-        className="flex items-center gap-1 border-b-2 border-transparent px-4 py-3 text-[15px] font-semibold transition-colors hover:border-accent hover:text-accent after:content-['▾'] after:text-[10px] after:opacity-60"
-      />
-      <div className="invisible absolute left-0 top-full z-40 min-w-56 border border-line bg-paper py-1 opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100">
-        {item.children.map((c) => {
-          const hasKids = c.children.length > 0
-          return (
-            <div key={c.id} className="group/sub relative">
-              <MenuLink
-                item={c}
-                className={`flex items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium hover:bg-paper-2 hover:text-accent ${hasKids ? "after:content-['›'] after:text-ink-soft" : ''}`}
-              />
-              {hasKids && (
-                // pl-1 bridges the hover gap so the flyout doesn't close mid-travel
-                <div className="invisible absolute left-full top-0 z-50 min-w-48 pl-1 opacity-0 transition-all group-hover/sub:visible group-hover/sub:opacity-100">
-                  <div className="border border-line bg-paper py-1 shadow-lg">
-                    {c.children.map((g) => (
-                      <MenuLink
-                        key={g.id}
-                        item={g}
-                        className="block px-4 py-2.5 text-sm font-medium hover:bg-paper-2 hover:text-accent"
-                      />
-                    ))}
+      <MenuLink item={item} className={base} />
+      <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 size-3 -translate-y-1/2 text-ink-soft" />
+      <div className="invisible absolute left-0 top-full z-40 min-w-56 translate-y-1 pt-2 opacity-0 transition-all group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
+        <div className="overflow-hidden rounded-xl border border-line bg-card py-1.5 shadow-2xl shadow-black/40">
+          {item.children.map((c) => {
+            const hasKids = c.children.length > 0
+            return (
+              <div key={c.id} className="group/sub relative">
+                <MenuLink
+                  item={c}
+                  className={cn(
+                    'flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-ink-2 hover:bg-paper-2 hover:text-accent',
+                    hasKids && "after:text-ink-soft after:content-['›']"
+                  )}
+                />
+                {hasKids && (
+                  // pl-1 bridges the hover gap so the flyout doesn't close mid-travel
+                  <div className="invisible absolute left-full top-0 z-50 min-w-48 pl-1 opacity-0 transition-all group-hover/sub:visible group-hover/sub:opacity-100">
+                    <div className="overflow-hidden rounded-xl border border-line bg-card py-1.5 shadow-2xl shadow-black/40">
+                      {c.children.map((g) => (
+                        <MenuLink key={g.id} item={g} className="block px-4 py-2.5 text-sm text-ink-2 hover:bg-paper-2 hover:text-accent" />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )
-        })}
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
@@ -72,12 +63,12 @@ function MobileItem({ item, depth, close }: { item: MenuItem; depth: number; clo
   const hasKids = item.children.length > 0
 
   return (
-    <div className="border-b border-line" style={depth > 0 ? { paddingLeft: 18 } : undefined}>
+    <div className="border-b border-line" style={depth > 0 ? { paddingLeft: 16 } : undefined}>
       <div className="flex items-center">
         <MenuLink
           item={item}
           onClick={close}
-          className={`block flex-1 py-3 ${depth === 0 ? 'headline text-2xl' : 'text-base text-ink-soft'}`}
+          className={cn('block flex-1 py-3', depth === 0 ? 'text-base font-semibold text-ink' : 'text-sm text-ink-2')}
         />
         {hasKids && (
           <button
@@ -87,12 +78,7 @@ function MobileItem({ item, depth, close }: { item: MenuItem; depth: number; clo
             aria-expanded={expanded}
             className="-m-2 shrink-0 p-2 text-ink-soft"
           >
-            <svg
-              width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"
-              className={`transition-transform ${expanded ? 'rotate-180' : ''}`}
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+            <ChevronDown className={cn('size-4 transition-transform', expanded && 'rotate-180')} />
           </button>
         )}
       </div>
@@ -115,103 +101,113 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (q.trim()) {
-      router.push(`/search?s=${encodeURIComponent(q.trim())}`)
-      setSearchOpen(false)
-      setOpen(false)
-    }
+    if (!q.trim()) return
+    router.push(`/search?s=${encodeURIComponent(q.trim())}`)
+    setSearchOpen(false)
+    setOpen(false)
   }
 
+  // "AK Ganesh & Co" → accent on the initials, matching the reference wordmark
+  const name = settings.site_name || 'AK Ganesh & Co'
+  const [firstWord, ...restWords] = name.split(' ')
+
   return (
-    <>
-      {/* top strip */}
-      <div className="border-b border-line bg-paper-2/60">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-1.5 text-xs font-medium text-ink-soft">
-          <span suppressHydrationWarning>
-            {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Kolkata' })}
-          </span>
-          <SocialIcons settings={settings} className="h-4 w-4" />
+    <header className="glass fixed inset-x-0 top-0 z-50 border-b border-line">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <Link href="/" className="flex shrink-0 flex-col leading-none" onClick={() => setOpen(false)}>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={name} className="h-9 w-auto md:h-10" />
+          ) : (
+            <>
+              <span className="text-lg font-bold tracking-tight text-ink md:text-xl">
+                <span className="text-accent">{firstWord}</span>
+                {restWords.length > 0 && ` ${restWords.join(' ')}`}
+              </span>
+              <span className="mt-1 text-[10px] uppercase tracking-[0.15em] text-ink-soft">Chartered Accountants</span>
+            </>
+          )}
+        </Link>
+
+        <nav className="hidden items-center gap-1 lg:flex">
+          {menus.map((m) => (
+            <DesktopItem key={m.id} item={m} />
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setSearchOpen(!searchOpen); setOpen(false) }}
+            aria-label="Search"
+            aria-expanded={searchOpen}
+            className="flex size-9 items-center justify-center rounded-full border border-line text-ink-2 transition-colors hover:border-ink-soft hover:text-ink"
+          >
+            {searchOpen ? <X className="size-4" /> : <Search className="size-4" />}
+          </button>
+          <div className="hidden sm:flex sm:items-center sm:gap-2">
+            <TextSizeControl />
+            <ThemeColorControl />
+          </div>
+          <Button asChild size="sm" className="hidden xl:inline-flex">
+            <Link href="/contact">
+              Book a Consultation
+              <ArrowRight />
+            </Link>
+          </Button>
+
+          <button
+            onClick={() => { setOpen(!open); setSearchOpen(false) }}
+            aria-label="Menu"
+            aria-expanded={open}
+            className="flex size-9 items-center justify-center rounded-full border border-line text-ink-2 lg:hidden"
+          >
+            {open ? <X className="size-4" /> : <Menu className="size-4" />}
+          </button>
         </div>
       </div>
 
-      {/* sticky glass bar: logo + nav + actions in one row */}
-      <header className="glass sticky top-0 z-50 border-b border-line">
-        <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2.5">
-          <button
-            className="rounded-full p-2 hover:bg-paper-2 md:hidden"
-            onClick={() => { setOpen(!open); setSearchOpen(false) }}
-            aria-label="Menu"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M3 7h18M3 12h12M3 17h18" />}
-            </svg>
-          </button>
+      {searchOpen && (
+        <div className="border-t border-line">
+          <form onSubmit={submitSearch} className="mx-auto flex max-w-3xl gap-2 px-4 py-3 sm:px-6">
+            <input
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search articles, updates, insights…"
+              className="w-full rounded-full border border-line bg-paper-2 px-4 py-2.5 text-sm text-ink placeholder:text-ink-soft outline-none focus:border-accent"
+            />
+            <Button type="submit">Search</Button>
+          </form>
+        </div>
+      )}
 
-          <Link href="/" className="mr-2 flex items-center" onClick={() => setOpen(false)}>
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={settings.site_name} className="h-10 w-auto md:h-11" />
-            ) : (
-              <span className="headline text-2xl md:text-[1.7rem]">
-                {settings.site_name || 'AK Ganesh'}
-                <span className="text-accent">.</span>
-              </span>
-            )}
-          </Link>
-
-          <nav className="hidden flex-1 items-center md:flex">
-            {menus.map((m) => (
-              <DesktopItem key={m.id} item={m} />
-            ))}
-          </nav>
-
-          <div className="ml-auto flex items-center gap-2 md:ml-0">
+      {/* mobile drawer — solid (not glass), capped to the viewport with its own
+          scroll so a deeply nested menu can never run off-screen */}
+      {open && (
+        <div className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto border-t border-line bg-paper px-5 pb-8 pt-2 lg:hidden">
+          {menus.map((m) => (
+            <MobileItem key={m.id} item={m} depth={0} close={() => setOpen(false)} />
+          ))}
+          <div className="mt-5 flex items-center gap-2 sm:hidden">
             <TextSizeControl />
             <ThemeColorControl />
-            <button
-              className="rounded-md border border-line p-2.5 text-ink transition-colors hover:border-accent hover:text-accent"
-              onClick={() => { setSearchOpen(!searchOpen); setOpen(false) }}
-              aria-label="Search"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M21 21l-4.3-4.3" />
-              </svg>
-            </button>
+          </div>
+          <div className="mt-5 flex flex-col gap-2">
+            <Button asChild onClick={() => setOpen(false)}>
+              <Link href="/contact">
+                Book a Consultation
+                <ArrowRight />
+              </Link>
+            </Button>
+            <Button asChild variant="outline" onClick={() => setOpen(false)}>
+              <Link href="/contact">
+                <LogIn />
+                Get in touch
+              </Link>
+            </Button>
           </div>
         </div>
-
-        {/* search drawer */}
-        {searchOpen && (
-          <div className="border-t border-line">
-            <form onSubmit={submitSearch} className="mx-auto flex max-w-3xl gap-2 px-4 py-3">
-              <input
-                autoFocus
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search news…"
-                className="w-full rounded-md border border-line bg-paper px-4 py-2.5 outline-none focus:border-accent"
-              />
-              <button className="rounded-md bg-accent px-6 py-2.5 font-semibold text-white hover:bg-accent-dark">
-                Search
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* mobile overlay menu — solid (not glass), capped to the viewport with its own scroll
-            so a large/deeply-nested menu can never push the page around or run off-screen */}
-        {open && (
-          <div className="absolute inset-x-0 top-full max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-line bg-paper px-5 pb-8 pt-2 shadow-xl md:hidden">
-            {menus.map((m) => (
-              <MobileItem key={m.id} item={m} depth={0} close={() => setOpen(false)} />
-            ))}
-            <div className="mt-6">
-              <SocialIcons settings={settings} />
-            </div>
-          </div>
-        )}
-      </header>
-    </>
+      )}
+    </header>
   )
 }

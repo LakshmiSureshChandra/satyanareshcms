@@ -1,19 +1,27 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_Telugu, Playfair_Display } from "next/font/google";
+import { Inter, Noto_Sans_Telugu, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-// Body: Noto Sans Telugu covers Latin cleanly and still renders any Telugu content.
-const bodySans = Noto_Sans_Telugu({
+// Body copy — Inter. Neutral, dense, excellent at small sizes in tables/meta.
+const bodySans = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
+// Display — Plus Jakarta Sans. Geometric, confident, carries the headlines.
+const display = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+  weight: ["500", "700", "800"],
+});
+
+// Neither Latin face ships Telugu glyphs, so Telugu characters fall through to
+// this in the font stack — CMS content can stay bilingual without a second theme.
+const telugu = Noto_Sans_Telugu({
   variable: "--font-telugu-sans",
   subsets: ["telugu", "latin"],
   weight: ["400", "500", "600", "700"],
-});
-
-// Serif display — editorial authority for headlines, wordmark, section titles.
-const display = Playfair_Display({
-  variable: "--font-telugu-display",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -24,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#8e1f22",
+  themeColor: "#0b1220",
 };
 
 export default function RootLayout({
@@ -43,7 +51,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${bodySans.variable} ${display.variable} antialiased`}>
+      <body className={`${bodySans.variable} ${display.variable} ${telugu.variable} antialiased`}>
         {children}
       </body>
     </html>

@@ -37,7 +37,7 @@ export function NewsletterTokenAction({
     <button
       onClick={run}
       disabled={state === 'busy'}
-      className="rounded-md bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-dark disabled:opacity-50"
+      className="rounded-full bg-accent-dark px-6 py-2.5 text-sm font-semibold text-on-accent transition-colors hover:opacity-90 disabled:opacity-50"
     >
       {state === 'busy' ? 'Please wait…' : buttonLabel}
     </button>

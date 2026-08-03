@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { api, NotFoundError, type Poll } from '@/lib/api'
-import { Breadcrumbs } from '@/components/public/Breadcrumbs'
+import { PageHeader } from '@/components/public/PageHeader'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 export const revalidate = 3600
 
@@ -27,42 +29,44 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
   if (!poll) notFound()
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <Breadcrumbs items={[{ label: 'Completed Polls', href: '/polls' }, { label: poll.title }]} />
+    <>
+      <PageHeader
+        eyebrow="Poll results"
+        title={poll.title}
+        crumbs={[{ label: 'Polls', href: '/polls' }, { label: poll.title }]}
+      />
 
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="headline text-2xl md:text-3xl">Polls</h1>
-        <Link href="/polls" className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark">
-          Back
-        </Link>
-      </div>
+      <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
+        <section className="rounded-2xl border border-line bg-card p-6 md:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-ink-soft">
+              {poll.totalVotes} vote{poll.totalVotes === 1 ? '' : 's'} cast
+            </p>
+            {poll.closed && <Badge variant="muted">Closed — results only</Badge>}
+          </div>
 
-      <section className="rounded-lg border border-line bg-paper p-6 shadow-sm md:p-8">
-        <h2 className="headline text-xl leading-snug md:text-2xl">Poll: {poll.title}</h2>
-        {poll.closed && (
-          <p className="mt-2 text-xs italic text-ink-soft">This poll is closed. You can only view the results.</p>
-        )}
-
-        <div className="mt-6">
-          <p className="text-sm text-ink-soft">Total votes: {poll.totalVotes}</p>
-          {poll.options.map((o) => {
-            const pct = poll.totalVotes > 0 ? Math.round((o.votes / poll.totalVotes) * 100) : 0
-            return (
-              <div key={o.id} className="mt-3">
-                <p className="text-sm font-medium">{o.text}</p>
-                <div className="mt-1 h-6 w-full overflow-hidden rounded-full bg-paper-2">
-                  <div
-                    className="flex h-full items-center justify-center rounded-full bg-accent text-xs font-semibold text-white"
-                    style={{ width: `${pct}%` }}
-                  >
-                    {pct > 8 && `${pct}%`}
+          <div className="mt-6 space-y-4">
+            {poll.options.map((o) => {
+              const pct = poll.totalVotes > 0 ? Math.round((o.votes / poll.totalVotes) * 100) : 0
+              return (
+                <div key={o.id}>
+                  <div className="mb-1.5 flex items-baseline justify-between gap-3">
+                    <p className="text-sm font-medium text-ink">{o.text}</p>
+                    <span className="shrink-0 text-sm font-semibold text-accent">{pct}%</span>
+                  </div>
+                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-paper-2">
+                    <div className="h-full rounded-full bg-accent-dark transition-all" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
-      </section>
-    </div>
+              )
+            })}
+          </div>
+        </section>
+
+        <Button asChild variant="outline" className="mt-8">
+          <Link href="/polls">← Back to all polls</Link>
+        </Button>
+      </div>
+    </>
   )
 }

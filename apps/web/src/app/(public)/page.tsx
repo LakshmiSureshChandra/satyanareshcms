@@ -1,9 +1,15 @@
 import Link from 'next/link'
-import { api, type PostCard as PostCardType, type PollListItem } from '@/lib/api'
-import { PostCard, PostRow, OverlayCard, formatDateTime } from '@/components/public/PostCard'
-import { FeaturedCarousel } from '@/components/public/FeaturedCarousel'
-import { HeroSlider } from '@/components/public/HeroSlider'
+import { ArrowRight } from 'lucide-react'
+import { api, type PostCard as PostCardType, type PollListItem, type Settings } from '@/lib/api'
+import { PostCard, PostRow, formatDateTime } from '@/components/public/PostCard'
 import { PollWidget } from '@/components/public/PollWidget'
+import { HeroSlider } from '@/components/public/HeroSlider'
+import { Reveal } from '@/components/public/Reveal'
+import { Hero } from '@/components/public/home/Hero'
+import { TrustStats } from '@/components/public/home/TrustStats'
+import { ComplianceTicker } from '@/components/public/home/ComplianceTicker'
+import { ServicesBento } from '@/components/public/home/ServicesBento'
+import { TaxTools } from '@/components/public/home/TaxTools'
 
 export const revalidate = 300
 
@@ -17,110 +23,114 @@ type Home = {
 }
 type PollList = { polls: PollListItem[] }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="section-title mb-7 text-2xl md:text-3xl">{children}</h2>
-  )
-}
-
 export default async function HomePage() {
-  const [home, pollArchive] = await Promise.all([
+  const [home, pollArchive, settings] = await Promise.all([
     api<Home>('/home', 300),
     api<PollList>('/polls?page=1', 300),
+    api<Settings>('/settings', 300),
   ])
-  const [lead, ...heroRest] = home.hero
-  // side column always gets 4 items — backfill from latest when the hero category is small
-  const side = [
-    ...heroRest,
-    ...home.latest.filter((p) => p.id !== lead?.id && !heroRest.some((h) => h.id === p.id)),
-  ].slice(0, 4)
+
+  // one de-duplicated stream of the newest posts, whatever the admin filed them under
+  const seen = new Set<number>()
+  const insights = [...home.hero, ...home.latest, ...home.featured, ...home.more].filter((p) => {
+    if (seen.has(p.id)) return false
+    seen.add(p.id)
+    return true
+  })
+  const [leadInsight, ...restInsights] = insights
 
   return (
     <>
-      <HeroSlider banners={home.banners} />
+      <Hero siteName={settings.site_name || 'AK Ganesh & Co'} />
+      <TrustStats />
+      <ComplianceTicker />
+      <ServicesBento />
 
-      <div className="mx-auto max-w-6xl px-4">
-        {/* HERO — bento: big overlay lead + stacked side rows */}
-        {lead && (
-          <section className="rise grid gap-7 py-8 md:grid-cols-3 md:py-10">
-            <div className="md:col-span-2">
-              <OverlayCard post={lead} />
-            </div>
-            <div className="flex flex-col justify-between gap-5 rounded-lg border border-line bg-paper-2/70 p-5">
-              {side.map((p) => (
-                <PostRow key={p.id} post={p} />
-              ))}
-            </div>
-          </section>
-        )}
+      {home.banners.length > 0 && (
+        <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
+          <div className="overflow-hidden rounded-2xl border border-line">
+            <HeroSlider banners={home.banners} />
+          </div>
+        </section>
+      )}
 
-        {/* FEATURED — swipeable rail, poll widget rides along as a narrow side card
-            when there's featured content to sit beside; otherwise the poll gets its
-            own centered row so it never leaves a blank grid column next to it */}
-        {home.featured.length > 0 ? (
-          <section className="rise-1 rise grid gap-7 py-8 md:grid-cols-3">
-            <div className="md:col-span-2">
-              <SectionTitle>Featured Stories</SectionTitle>
-              <FeaturedCarousel posts={home.featured} />
+      <TaxTools />
+
+      {/* ---- CMS content: whatever the admin publishes ---- */}
+      {insights.length > 0 && (
+        <section id="insights" className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+          <Reveal>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <span className="eyebrow">Insights &amp; updates</span>
+                <h2 className="headline mt-3 text-3xl sm:text-4xl">Latest from the practice.</h2>
+              </div>
+              <Link href="/search" className="flex items-center gap-1 text-sm font-medium text-accent hover:underline">
+                Browse all
+                <ArrowRight className="size-3.5" />
+              </Link>
             </div>
-            <div>
+          </Reveal>
+
+          <div className="mt-12 grid gap-10 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              {leadInsight && (
+                <Reveal>
+                  <PostCard post={leadInsight} big />
+                </Reveal>
+              )}
+              {restInsights.length > 0 && (
+                <div className="mt-10 grid gap-8 sm:grid-cols-2">
+                  {restInsights.slice(0, 4).map((p, i) => (
+                    <Reveal key={p.id} delay={i * 70}>
+                      <PostCard post={p} />
+                    </Reveal>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Reveal delay={120} className="space-y-8">
               <PollWidget />
-            </div>
-          </section>
-        ) : (
-          <section className="rise-1 rise py-8">
-            <div className="mx-auto max-w-md">
-              <PollWidget />
-            </div>
-          </section>
-        )}
+              {restInsights.length > 4 && (
+                <div className="rounded-2xl border border-line bg-card p-5">
+                  <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-soft">
+                    More reading
+                  </h3>
+                  <div className="space-y-5">
+                    {restInsights.slice(4, 9).map((p) => (
+                      <PostRow key={p.id} post={p} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Reveal>
+          </div>
 
-        {/* LATEST grid */}
-        {home.latest.length > 0 && (
-          <section className="rise-2 rise py-8">
-            <SectionTitle>Latest News</SectionTitle>
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {home.latest.map((p, i) => (
-                <PostCard key={p.id} post={p} big={i === 0 && home.latest.length < 4} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* MORE list */}
-        {home.more.length > 0 && (
-          <section className="rise-3 rise py-8">
-            <SectionTitle>More News</SectionTitle>
-            <div className="grid gap-x-10 gap-y-7 rounded-lg border border-line bg-paper-2/70 p-6 md:grid-cols-2 md:p-8">
-              {home.more.map((p) => (
-                <PostRow key={p.id} post={p} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* POLL ARCHIVE — compact strip, not a full section */}
-        {pollArchive.polls.length > 0 && (
-          <section className="rise-3 rise border-t border-line py-6">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-xs font-bold uppercase tracking-wide text-ink-soft">Poll Archive</h2>
-              <Link href="/polls" className="text-xs font-semibold text-accent hover:underline">View All →</Link>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {pollArchive.polls.slice(0, 4).map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/polls/${p.id}`}
-                  className="flex items-center justify-between gap-3 rounded-md border border-line bg-paper px-3.5 py-2.5 text-xs hover:bg-paper-2"
-                >
-                  <span className="truncate font-medium">{p.title}</span>
-                  <span className="shrink-0 text-ink-soft">{formatDateTime(p.createdAt)}</span>
+          {pollArchive.polls.length > 0 && (
+            <Reveal className="mt-16 border-t border-line pt-8">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-soft">Poll archive</h3>
+                <Link href="/polls" className="text-xs font-semibold text-accent hover:underline">
+                  View all →
                 </Link>
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {pollArchive.polls.slice(0, 4).map((p) => (
+                  <Link
+                    key={p.id}
+                    href={`/polls/${p.id}`}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-line bg-card px-4 py-3 text-xs transition-colors hover:border-accent-dark hover:bg-card-hover"
+                  >
+                    <span className="truncate font-medium text-ink">{p.title}</span>
+                    <span className="shrink-0 text-ink-soft">{formatDateTime(p.createdAt)}</span>
+                  </Link>
+                ))}
+              </div>
+            </Reveal>
+          )}
+        </section>
+      )}
     </>
   )
 }

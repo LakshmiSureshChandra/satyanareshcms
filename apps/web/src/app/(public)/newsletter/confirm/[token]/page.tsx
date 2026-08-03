@@ -7,9 +7,9 @@ export default async function ConfirmNewsletterPage({ params }: { params: Promis
   const { token } = await params
 
   return (
-    <div className="mx-auto max-w-md px-4 py-16 text-center">
-      <h1 className="headline text-2xl">Confirm your subscription</h1>
-      <p className="mt-2 text-sm text-ink-soft">Click below to start receiving updates from AK Ganesh &amp; Co.</p>
+    <div className="mx-auto max-w-md px-4 py-24 text-center sm:px-6">
+      <h1 className="headline text-2xl sm:text-3xl">Confirm your subscription</h1>
+      <p className="mt-3 text-sm leading-relaxed text-ink-2">Click below to start receiving updates from AK Ganesh &amp; Co.</p>
       <div className="mt-6 flex justify-center">
         <NewsletterTokenAction
           token={token}

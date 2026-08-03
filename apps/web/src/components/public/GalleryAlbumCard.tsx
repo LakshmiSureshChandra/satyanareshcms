@@ -13,16 +13,16 @@ export function AlbumCard({ album, showCategory = false, compact = false }: { al
   return (
     <article className="card-zoom group">
       <Link href={href} className="block">
-        <div className="card-img relative aspect-[4/3] w-full rounded-md bg-paper-2">
+        <div className="card-img relative aspect-4/3 w-full rounded-xl border border-line bg-paper-2">
           {src ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={src} alt={album.title} loading="lazy" className="absolute inset-0 h-full w-full rounded-md object-cover" />
+            <img src={src} alt={album.title} loading="lazy" className="absolute inset-0 size-full rounded-xl object-cover" />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center rounded-md">
-              <span className="headline text-5xl text-ink/8 select-none">A</span>
+            <div className="grid-bg absolute inset-0 flex items-center justify-center rounded-xl">
+              <span className="headline select-none text-5xl text-ink/10">A</span>
             </div>
           )}
-          <span className={`absolute bottom-1.5 right-1.5 rounded bg-black/60 font-semibold text-white ${compact ? 'px-1.5 py-0.5 text-[9px]' : 'px-2 py-0.5 text-[11px]'}`}>
+          <span className={`absolute bottom-1.5 right-1.5 rounded-full border border-white/20 bg-black/55 font-semibold text-white backdrop-blur-sm ${compact ? 'px-1.5 py-0.5 text-[9px]' : 'px-2 py-0.5 text-[11px]'}`}>
             {album.photoCount} photo{album.photoCount === 1 ? '' : 's'}
           </span>
         </div>

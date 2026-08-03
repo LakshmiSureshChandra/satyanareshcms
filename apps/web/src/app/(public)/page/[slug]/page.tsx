@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { api, imageUrl, NotFoundError } from '@/lib/api'
-import { Breadcrumbs } from '@/components/public/Breadcrumbs'
+import { PageHeader } from '@/components/public/PageHeader'
 
 export const revalidate = 3600
 
@@ -41,15 +41,16 @@ export default async function StaticPage({ params }: { params: Promise<{ slug: s
   const banner = imageUrl(page.bannerImage)
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <Breadcrumbs items={[{ label: page.title }]} />
+    <>
+      <PageHeader title={page.title} crumbs={[{ label: page.title }]} />
 
-      <h1 className="section-title text-3xl md:text-4xl">{page.title}</h1>
-      {banner && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={banner} alt={page.title} className="mt-6 w-full rounded-lg" />
-      )}
-      <div className="prose-news mt-4" dangerouslySetInnerHTML={{ __html: page.content }} />
-    </div>
+      <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
+        {banner && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={banner} alt={page.title} className="mb-8 w-full rounded-2xl border border-line" />
+        )}
+        <div className="prose-news" dangerouslySetInnerHTML={{ __html: page.content }} />
+      </div>
+    </>
   )
 }

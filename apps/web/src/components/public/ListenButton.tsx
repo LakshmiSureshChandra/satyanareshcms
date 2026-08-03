@@ -153,7 +153,7 @@ export function ListenButton({ slug, title, content }: { slug: string; title: st
     <div className="flex items-center gap-2">
       <button
         onClick={state === 'playing' ? pause : play}
-        className="flex items-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-dark"
+        className="flex items-center gap-2 rounded-full bg-accent-dark px-5 py-2.5 text-sm font-semibold text-on-accent transition-colors hover:opacity-90"
       >
         {state === 'playing' ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" /><rect x="14" y="5" width="4" height="14" /></svg>
@@ -167,7 +167,7 @@ export function ListenButton({ slug, title, content }: { slug: string; title: st
         {state === 'paused' && 'Resume'}
       </button>
       {state !== 'idle' && (
-        <button onClick={stop} aria-label="Stop" className="rounded-md border border-line p-2.5 text-ink-soft transition-colors hover:border-accent hover:text-accent">
+        <button onClick={stop} aria-label="Stop" className="rounded-full border border-line p-2.5 text-ink-soft transition-colors hover:border-accent hover:text-accent">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" /></svg>
         </button>
       )}

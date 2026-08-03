@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { api, NotFoundError, type GalleryAlbumSearch } from '@/lib/api'
-import { Breadcrumbs } from '@/components/public/Breadcrumbs'
+import { PageHeader } from '@/components/public/PageHeader'
 import { GallerySearchBox } from '@/components/public/GallerySearchBox'
 import { Pagination } from '@/components/public/Pagination'
 import { AlbumCard } from '@/components/public/GalleryAlbumCard'
@@ -30,22 +30,20 @@ export default async function GallerySearchPage({
   if (!result) notFound()
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <Breadcrumbs items={[{ label: 'Gallery', href: '/gallery' }, { label: 'Search' }]} />
-
-      <div className="rise rounded-lg bg-ink px-6 py-8 text-paper md:px-10 md:py-10">
-        <h1 className="headline text-3xl md:text-5xl">
-          Search Gallery
-          <span className="text-gold">.</span>
-        </h1>
+    <>
+      <PageHeader
+        eyebrow="Gallery"
+        title="Search gallery"
+        crumbs={[{ label: 'Gallery', href: '/gallery' }, { label: 'Search' }]}
+      >
         <GallerySearchBox defaultValue={s} />
-      </div>
+      </PageHeader>
 
-      <div className="mt-9">
+      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
         {!s.trim() ? (
           <p className="py-10 text-center text-sm text-ink-soft">Enter a search term above.</p>
         ) : result.albums.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-line py-20 text-center">
+          <div className="rounded-2xl border border-dashed border-line py-20 text-center">
             <p className="headline text-2xl text-ink-soft">No albums found for &quot;{s}&quot;</p>
           </div>
         ) : (
@@ -58,6 +56,6 @@ export default async function GallerySearchPage({
         )}
         <Pagination page={result.page} pages={result.pages} base={`/gallery/search?s=${encodeURIComponent(s)}`} />
       </div>
-    </div>
+    </>
   )
 }

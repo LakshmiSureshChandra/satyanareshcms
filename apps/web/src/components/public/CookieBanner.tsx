@@ -43,7 +43,7 @@ export function CookieBanner({ gaSnippet }: { gaSnippet: string }) {
           <button onClick={() => choose('rejected')} className="rounded-md border border-line px-4 py-2 text-sm hover:bg-paper-2">
             Decline
           </button>
-          <button onClick={() => choose('accepted')} className="rounded-md bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-dark">
+          <button onClick={() => choose('accepted')} className="rounded-full bg-accent-dark px-5 py-2 text-sm font-semibold text-on-accent transition-colors hover:opacity-90">
             Accept
           </button>
         </div>

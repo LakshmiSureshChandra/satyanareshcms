@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -30,21 +31,24 @@ export function NewsletterSubscribeBox() {
 
   return (
     <div>
-      <p className="mb-3 font-display text-sm font-bold uppercase tracking-widest text-paper/40">Newsletter</p>
-      <form onSubmit={submit} className="flex gap-2">
+      <p className="mb-3 text-sm leading-relaxed text-ink-2">
+        Tax deadlines, regulatory changes, and practical guidance — occasionally, never spam.
+      </p>
+      <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row lg:flex-col">
         <input
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Your email"
-          className="w-full max-w-[220px] rounded-md border border-paper/20 bg-paper/10 px-3 py-2 text-sm text-paper placeholder:text-paper/40 focus:border-gold focus:outline-none"
+          placeholder="you@company.com"
+          aria-label="Email address"
+          className="w-full rounded-full border border-line bg-paper px-4 py-2.5 text-sm text-ink placeholder:text-ink-soft outline-none focus:border-accent"
         />
-        <button disabled={busy} className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-dark disabled:opacity-50">
-          {busy ? '…' : 'Subscribe'}
-        </button>
+        <Button type="submit" disabled={busy} className="shrink-0">
+          {busy ? 'Subscribing…' : 'Subscribe'}
+        </Button>
       </form>
-      {message && <p className="mt-2 text-xs text-paper/60">{message}</p>}
+      {message && <p className="mt-2.5 text-xs text-ink-soft">{message}</p>}
     </div>
   )
 }

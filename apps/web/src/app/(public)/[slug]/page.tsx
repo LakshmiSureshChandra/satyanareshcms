@@ -75,11 +75,11 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     mainEntityOfPage: url,
   }
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <ReadingProgress />
 
-      <div className="grid gap-10 lg:grid-cols-3">
+      <div className="grid gap-12 lg:grid-cols-3">
         <article className="lg:col-span-2">
           <Breadcrumbs
             items={[
@@ -93,36 +93,40 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             {post.categories.map((c) => <CategoryTag key={c.id} cat={c} />)}
           </div>
 
-          <h1 className="headline mt-3 text-3xl leading-snug md:text-[2.6rem] md:leading-[1.25]">{post.title}</h1>
+          <h1 className="headline mt-3 text-3xl leading-tight md:text-[2.6rem]">{post.title}</h1>
 
-          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 border-y border-line py-3 text-sm text-ink-soft">
+          {post.metaDescription && (
+            <p className="mt-4 text-lg leading-relaxed text-ink-2">{post.metaDescription}</p>
+          )}
+
+          <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 border-y border-line py-3.5 text-sm text-ink-soft">
             {post.author && (
               <>
-                <span className="font-semibold text-ink">{post.author.name}</span>
+                <span className="font-medium text-ink">{post.author.name}</span>
                 <span className="text-line">|</span>
               </>
             )}
             <time dateTime={post.publishedAt}>{formatDateTime(post.publishedAt)}</time>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-5">
             <ListenButton slug={post.slug} title={post.title} content={post.content} />
           </div>
 
           {img && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={img} alt={post.title} className="mt-7 w-full rounded-lg" />
+            <img src={img} alt={post.title} className="mt-8 w-full rounded-2xl border border-line" />
           )}
 
-          <div className="prose-news mt-3" dangerouslySetInnerHTML={{ __html: post.content }} />
+          <div className="prose-news mt-6" dangerouslySetInnerHTML={{ __html: post.content }} />
 
           {post.tags && (
-            <div className="mt-9 flex flex-wrap gap-2">
+            <div className="mt-10 flex flex-wrap gap-2">
               {post.tags.split(',').map((t) => t.trim()).filter(Boolean).map((t) => (
                 <Link
                   key={t}
                   href={`/tag/${encodeURIComponent(t)}`}
-                  className="border border-line px-3 py-1.5 text-xs font-semibold text-ink-soft transition-colors hover:border-accent hover:text-accent"
+                  className="rounded-full border border-line px-3.5 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:border-accent-dark hover:text-accent"
                 >
                   #{t}
                 </Link>
@@ -130,13 +134,13 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             </div>
           )}
 
-          <div className="mt-7 rounded-lg border border-line bg-paper-2/70 p-5">
+          <div className="mt-8 rounded-2xl border border-line bg-card p-5">
             <ShareButtons url={url} title={post.title} />
           </div>
 
           {post.related.length > 0 && (
-            <section className="mt-14">
-              <h2 className="section-title text-2xl">Related News</h2>
+            <section className="mt-16 border-t border-line pt-10">
+              <h2 className="headline text-2xl">Related reading</h2>
               <div className="mt-6 grid gap-8 sm:grid-cols-2">
                 {post.related.map((p) => <PostCard key={p.id} post={p} />)}
               </div>

@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { api, imageUrl, NotFoundError, type GalleryAlbum } from '@/lib/api'
 import { formatDate } from '@/components/public/PostCard'
 import { Pagination } from '@/components/public/Pagination'
-import { Breadcrumbs } from '@/components/public/Breadcrumbs'
+import { PageHeader } from '@/components/public/PageHeader'
 import { GallerySearchBox } from '@/components/public/GallerySearchBox'
 import { AlbumCard } from '@/components/public/GalleryAlbumCard'
 
@@ -51,32 +51,30 @@ export default async function AlbumPage({
   const base = `/gallery/${a.category.slug}/${a.slug}`
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <Breadcrumbs
-        items={[
+    <>
+      <PageHeader
+        eyebrow="Album"
+        title={a.title}
+        subtitle={`${formatDate(a.publishedAt)} · ${a.totalPhotos} photo${a.totalPhotos === 1 ? '' : 's'}`}
+        crumbs={[
           { label: 'Gallery', href: '/gallery' },
           ...(a.category.parent ? [{ label: a.category.parent.name, href: `/gallery/${a.category.parent.slug}` }] : []),
           { label: a.category.name, href: `/gallery/${a.category.slug}` },
           { label: a.title },
         ]}
-      />
+      >
+        <GallerySearchBox />
+      </PageHeader>
 
-      <h1 className="headline text-3xl leading-snug md:text-4xl">{a.title}</h1>
-      <div className="mt-3 flex items-center gap-3 border-y border-line py-3 text-sm text-ink-soft">
-        <time>{formatDate(a.publishedAt)}</time>
-        <span className="text-line">|</span>
-        <span>{a.totalPhotos} photo{a.totalPhotos === 1 ? '' : 's'}</span>
-      </div>
-      <GallerySearchBox />
+      <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
+      <Pagination page={a.photoPage} pages={a.photoPages} base={base} className="mb-8" />
 
-      <Pagination page={a.photoPage} pages={a.photoPages} base={base} className="mt-8" />
-
-      <div className="mt-8 space-y-10">
+      <div className="space-y-10">
         {a.photos.map((p) => (
           <figure key={p.id}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl(p.file) || ''} alt={p.caption || a.title} className="w-full rounded-lg" />
-            {p.caption && <figcaption className="mt-2.5 text-center text-sm text-ink-soft">{p.caption}</figcaption>}
+            <img src={imageUrl(p.file) || ''} alt={p.caption || a.title} className="w-full rounded-2xl border border-line" />
+            {p.caption && <figcaption className="mt-3 text-center text-sm text-ink-soft">{p.caption}</figcaption>}
           </figure>
         ))}
         {!a.photos.length && (
@@ -87,13 +85,14 @@ export default async function AlbumPage({
       <Pagination page={a.photoPage} pages={a.photoPages} base={base} />
 
       {a.related.length > 0 && (
-        <section className="mt-14">
-          <h2 className="section-title text-2xl">Related Albums</h2>
+        <section className="mt-16 border-t border-line pt-10">
+          <h2 className="headline text-2xl">Related albums</h2>
           <div className="mt-6 grid gap-8 sm:grid-cols-2">
             {a.related.map((r) => <AlbumCard key={r.id} album={r} />)}
           </div>
         </section>
       )}
-    </div>
+      </div>
+    </>
   )
 }

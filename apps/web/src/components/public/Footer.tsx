@@ -1,57 +1,96 @@
 import Link from 'next/link'
+import { ArrowRight, Mail, Phone } from 'lucide-react'
 import type { MenuItem, Settings } from '@/lib/api'
+import { Button } from '@/components/ui/button'
 import { SocialIcons } from './SocialIcons'
 import { NewsletterSubscribeBox } from './NewsletterSubscribeBox'
 
-const linkClass = 'text-paper/75 transition-colors hover:text-gold'
+const linkClass = 'text-sm text-ink-2 transition-colors hover:text-accent'
 
 function FLink({ item }: { item: { title: string; url: string; newWindow?: boolean } }) {
   const url = item.url?.trim() || '#'
-  if (url === '#') return <span className="text-paper/75">{item.title}</span>
+  if (url === '#') return <span className="text-sm text-ink-soft">{item.title}</span>
   if (url.startsWith('/')) return <Link href={url} className={linkClass}>{item.title}</Link>
   const external = /^https?:\/\//i.test(url) ? url : `https://${url.replace(/^\/+/, '')}`
-  return <a href={external} target={item.newWindow ? '_blank' : undefined} rel="noopener noreferrer" className={linkClass}>{item.title}</a>
+  return (
+    <a href={external} target={item.newWindow ? '_blank' : undefined} rel="noopener noreferrer" className={linkClass}>
+      {item.title}
+    </a>
+  )
 }
 
 export function Footer({ settings, menu }: { settings: Settings; menu: MenuItem[] }) {
   const hasMenu = menu?.length > 0
+  const name = settings.site_name || 'AK Ganesh & Co'
+  const [firstWord, ...restWords] = name.split(' ')
 
   return (
-    <footer className="mt-20 border-t-4 border-accent bg-ink text-paper">
-      <div className="mx-auto max-w-6xl px-6 py-14">
-        <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
-          <div className="max-w-sm">
-            <p className="headline text-4xl text-paper">
-              {settings.site_name}
-              <span className="text-gold">.</span>
+    <footer className="mt-24 border-t border-line bg-paper-2">
+      {/* CTA band */}
+      <div className="border-b border-line">
+        <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-12 sm:px-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="headline text-2xl md:text-3xl">Ready to simplify your compliance?</h2>
+            <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-2">
+              Talk to a chartered accountant about your filings, tax planning, or audit — no obligation.
             </p>
-            <p className="mt-3 text-sm leading-relaxed text-paper/60">
-              Latest news, analysis and special stories — read on {settings.site_name}.
-            </p>
-            <div className="mt-5 [&_a]:rounded-full [&_a]:bg-paper/10 [&_a]:p-2.5 [&_a]:text-paper/80 [&_a:hover]:bg-accent [&_a:hover]:text-white">
-              <SocialIcons settings={settings} />
+          </div>
+          <Button asChild size="lg" className="shrink-0">
+            <Link href="/contact">
+              Book a Consultation
+              <ArrowRight />
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+        <div className="grid gap-10 md:grid-cols-3 lg:grid-cols-4">
+          <div className="lg:col-span-1">
+            <div className="text-lg font-bold tracking-tight">
+              <span className="text-accent">{firstWord}</span>
+              {restWords.length > 0 && ` ${restWords.join(' ')}`}
             </div>
-            <div className="mt-8">
-              <NewsletterSubscribeBox />
+            <p className="mt-1 text-[11px] uppercase tracking-[0.15em] text-ink-soft">Chartered Accountants</p>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-2">
+              Audit, tax, and advisory for founders, professionals, and growing businesses across India.
+            </p>
+
+            <div className="mt-5 space-y-2 text-sm">
+              {settings.site_email && (
+                <a href={`mailto:${settings.site_email}`} className="flex items-center gap-2 text-ink-2 hover:text-accent">
+                  <Mail className="size-4 shrink-0 text-ink-soft" />
+                  {settings.site_email}
+                </a>
+              )}
+              {settings.site_phone && (
+                <a href={`tel:${settings.site_phone}`} className="flex items-center gap-2 text-ink-2 hover:text-accent">
+                  <Phone className="size-4 shrink-0 text-ink-soft" />
+                  {settings.site_phone}
+                </a>
+              )}
+            </div>
+
+            <div className="mt-6 [&_a]:rounded-full [&_a]:border [&_a]:border-line [&_a]:p-2.5 [&_a]:text-ink-soft [&_a:hover]:border-accent-dark [&_a:hover]:bg-accent-dark [&_a:hover]:text-on-accent">
+              <SocialIcons settings={settings} />
             </div>
           </div>
 
           {hasMenu && (
-            <div className="grid flex-1 gap-10 sm:grid-cols-2 md:max-w-xl lg:grid-cols-3">
+            <div className="grid gap-8 sm:grid-cols-2 md:col-span-2 lg:col-span-2">
               {menu.map((col) => (
                 <div key={col.id}>
-                  <p className="mb-4 font-display text-sm font-bold uppercase tracking-widest text-paper/40">
+                  <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-soft">
                     {col.url && col.url !== '#' ? <FLink item={col} /> : col.title}
                   </p>
-                  <ul className="space-y-2.5 text-sm">
+                  <ul className="space-y-2.5">
                     {col.children.map((link) => (
                       <li key={link.id}>
                         <FLink item={link} />
                         {link.children.length > 0 && (
-                          <ul className="mt-2 ml-1 space-y-1.5 border-l border-paper/15 pl-4 text-[13px]">
+                          <ul className="ml-1 mt-2 space-y-1.5 border-l border-line pl-4">
                             {link.children.map((sub) => (
-                              <li key={sub.id} className="flex items-start gap-1.5 [&_a]:text-paper/50 [&_a:hover]:text-gold">
-                                <span aria-hidden className="mt-px text-paper/30">–</span>
+                              <li key={sub.id}>
                                 <FLink item={sub} />
                               </li>
                             ))}
@@ -64,11 +103,17 @@ export function Footer({ settings, menu }: { settings: Settings; menu: MenuItem[
               ))}
             </div>
           )}
+
+          <div className={hasMenu ? 'md:col-span-3 lg:col-span-1' : 'md:col-span-2'}>
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-soft">Newsletter</p>
+            <NewsletterSubscribeBox />
+          </div>
         </div>
       </div>
-      <div className="border-t border-paper/10">
-        <p className="mx-auto max-w-6xl px-6 py-5 text-center text-xs text-paper/40">
-          {settings.copy_rights_info}
+
+      <div className="border-t border-line">
+        <p className="mx-auto max-w-6xl px-4 py-6 text-center text-xs text-ink-soft sm:px-6">
+          {settings.copy_rights_info || `© ${new Date().getFullYear()} ${name}. All rights reserved.`}
         </p>
       </div>
     </footer>
