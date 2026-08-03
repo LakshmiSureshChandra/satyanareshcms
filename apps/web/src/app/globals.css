@@ -285,6 +285,11 @@ body {
 @media (min-width: 640px) { .rail { grid-auto-columns: 44%; } }
 @media (min-width: 1024px) { .rail { grid-auto-columns: 31.5%; } }
 
+/* hides the scrollbar on an overflow-x-auto row while keeping it scrollable —
+   used by the desktop nav when there are more menu items than fit */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* ------------------------------------------------------- article content -- */
 .prose-news {
   font-size: 1.075rem;
