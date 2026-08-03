@@ -276,7 +276,7 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
         {/* min-w-0 lets this shrink inside the flex row; overflow-x-auto lets a
             long menu scroll horizontally (each pill stays whitespace-nowrap)
             instead of squeezing item text into multiple lines */}
-        <nav className="no-scrollbar hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto lg:flex">
+        <nav className="nav-scroll hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto pb-1 lg:flex">
           {menus.map((m) => (
             <DesktopItem key={m.id} item={m} />
           ))}

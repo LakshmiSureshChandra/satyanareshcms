@@ -285,10 +285,18 @@ body {
 @media (min-width: 640px) { .rail { grid-auto-columns: 44%; } }
 @media (min-width: 1024px) { .rail { grid-auto-columns: 31.5%; } }
 
-/* hides the scrollbar on an overflow-x-auto row while keeping it scrollable —
-   used by the desktop nav when there are more menu items than fit */
-.no-scrollbar { scrollbar-width: none; }
-.no-scrollbar::-webkit-scrollbar { display: none; }
+/* thin, theme-colored scrollbar for the desktop nav row — a hidden scrollbar
+   makes horizontal overflow undiscoverable, so this shows a slim themed one
+   instead (colors track the active theme via the same custom properties as
+   everything else, so it never looks out of place on any of the 4 themes) */
+.nav-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+.nav-scroll::-webkit-scrollbar { height: 4px; }
+.nav-scroll::-webkit-scrollbar-track { background: transparent; }
+.nav-scroll::-webkit-scrollbar-thumb { background: var(--color-line); border-radius: 9999px; }
+.nav-scroll::-webkit-scrollbar-thumb:hover { background: var(--color-ink-soft); }
 
 /* ------------------------------------------------------- article content -- */
 .prose-news {
