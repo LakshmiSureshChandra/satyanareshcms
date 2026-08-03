@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, ChevronDown, LogIn, Menu, Search, X } from 'lucide-react'
@@ -21,78 +22,112 @@ function MenuLink({ item, className, onClick }: { item: MenuItem; className?: st
 // Click/tap-toggled (not CSS :hover) — a hover-only dropdown never opens on
 // touch devices at this breakpoint (iPad, touchscreen laptops, Surface):
 // there's no hover event, so tapping the parent item did nothing.
+//
+// The panel is portaled to document.body and positioned with `fixed` +
+// coordinates read from the trigger's own getBoundingClientRect(). It cannot
+// be a normal absolutely-positioned child of the trigger: the nav row is
+// horizontally scrollable (overflow-x-auto), and per spec that silently
+// forces overflow-y to 'auto' too — any child positioned outside the row's
+// own (single-line) height would get clipped to invisible, which is exactly
+// what broke the dropdown on wide screens after the previous fix.
 function DesktopSubmenu({ item }: { item: MenuItem }) {
   const [open, setOpen] = useState(false)
   const [openSub, setOpenSub] = useState<number | null>(null)
-  const ref = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  function toggle() {
+    if (!open && triggerRef.current) {
+      const r = triggerRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + 8, left: r.left })
+    }
+    setOpen((o) => !o)
+    setOpenSub(null)
+  }
 
   useEffect(() => {
+    if (!open) return
     function onClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-        setOpenSub(null)
-      }
+      const t = e.target as Node
+      if (triggerRef.current?.contains(t) || panelRef.current?.contains(t)) return
+      setOpen(false)
+      setOpenSub(null)
+    }
+    // closes rather than tracking a stale position across scroll/resize
+    function onCloseTrigger() {
+      setOpen(false)
+      setOpenSub(null)
     }
     document.addEventListener('mousedown', onClickOutside)
-    return () => document.removeEventListener('mousedown', onClickOutside)
-  }, [])
+    window.addEventListener('scroll', onCloseTrigger, true)
+    window.addEventListener('resize', onCloseTrigger)
+    return () => {
+      document.removeEventListener('mousedown', onClickOutside)
+      window.removeEventListener('scroll', onCloseTrigger, true)
+      window.removeEventListener('resize', onCloseTrigger)
+    }
+  }, [open])
 
   return (
-    <div className="relative shrink-0" ref={ref}>
+    <>
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => { setOpen((o) => !o); setOpenSub(null) }}
+        onClick={toggle}
         aria-expanded={open}
-        className="flex items-center gap-1 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink"
+        className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium text-ink-2 transition-colors hover:bg-paper-2 hover:text-ink"
       >
         {item.title}
         <ChevronDown className={cn('size-3 text-ink-soft transition-transform', open && 'rotate-180')} />
       </button>
 
-      {open && (
-        <div className="absolute left-0 top-full z-40 min-w-56 pt-2">
-          <div className="overflow-visible rounded-xl border border-line bg-card py-1.5 shadow-2xl shadow-black/40">
-            {item.children.map((c) => {
-              const hasKids = c.children.length > 0
-              const subOpen = openSub === c.id
-              return (
-                <div key={c.id} className="relative">
-                  {hasKids ? (
-                    <button
-                      type="button"
-                      onClick={() => setOpenSub(subOpen ? null : c.id)}
-                      aria-expanded={subOpen}
-                      className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left text-sm text-ink-2 hover:bg-paper-2 hover:text-accent"
-                    >
-                      {c.title}
-                      <ChevronDown className={cn('size-3 shrink-0 text-ink-soft transition-transform', subOpen && 'rotate-180')} />
-                    </button>
-                  ) : (
-                    <MenuLink
-                      item={c}
-                      onClick={() => { setOpen(false); setOpenSub(null) }}
-                      className="block px-4 py-2.5 text-sm text-ink-2 hover:bg-paper-2 hover:text-accent"
-                    />
-                  )}
-                  {hasKids && subOpen && (
-                    <div className="bg-paper-2/60 py-1">
-                      {c.children.map((g) => (
-                        <MenuLink
-                          key={g.id}
-                          item={g}
-                          onClick={() => { setOpen(false); setOpenSub(null) }}
-                          className="block px-6 py-2.5 text-sm text-ink-2 hover:bg-paper-2 hover:text-accent"
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </div>
+      {open &&
+        createPortal(
+          <div ref={panelRef} className="fixed z-50 min-w-56" style={{ top: pos.top, left: pos.left }}>
+            <div className="overflow-hidden rounded-xl border border-line bg-card py-1.5 shadow-2xl shadow-black/40">
+              {item.children.map((c) => {
+                const hasKids = c.children.length > 0
+                const subOpen = openSub === c.id
+                return (
+                  <div key={c.id}>
+                    {hasKids ? (
+                      <button
+                        type="button"
+                        onClick={() => setOpenSub(subOpen ? null : c.id)}
+                        aria-expanded={subOpen}
+                        className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-left text-sm text-ink-2 hover:bg-paper-2 hover:text-accent"
+                      >
+                        {c.title}
+                        <ChevronDown className={cn('size-3 shrink-0 text-ink-soft transition-transform', subOpen && 'rotate-180')} />
+                      </button>
+                    ) : (
+                      <MenuLink
+                        item={c}
+                        onClick={() => { setOpen(false); setOpenSub(null) }}
+                        className="block px-4 py-2.5 text-sm text-ink-2 hover:bg-paper-2 hover:text-accent"
+                      />
+                    )}
+                    {hasKids && subOpen && (
+                      <div className="bg-paper-2/60 py-1">
+                        {c.children.map((g) => (
+                          <MenuLink
+                            key={g.id}
+                            item={g}
+                            onClick={() => { setOpen(false); setOpenSub(null) }}
+                            className="block px-6 py-2.5 text-sm text-ink-2 hover:bg-paper-2 hover:text-accent"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   )
 }
 
