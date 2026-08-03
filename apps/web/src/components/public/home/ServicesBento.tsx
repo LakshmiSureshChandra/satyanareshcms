@@ -8,7 +8,7 @@ const SERVICES = [
     icon: Receipt,
     title: 'GST advisory & filing',
     desc: 'End-to-end GST registration, monthly returns, reconciliation, and audit support so you never miss a due date.',
-    span: 'sm:col-span-2 lg:row-span-2',
+    span: 'sm:col-span-2',
   },
   { icon: ShieldCheck, title: 'Audit & assurance', desc: 'Statutory, internal, and tax audits conducted to ICAI standards.' },
   { icon: TrendingUp, title: 'Tax planning', desc: 'Proactive strategies that legally minimise your tax outgo.' },
