@@ -19,7 +19,12 @@ function swatch(paper: string, ink: string) {
   return { background: `conic-gradient(${ink} 0 50%, ${paper} 50% 100%)` }
 }
 
-export function ThemeColorControl() {
+// align="right" (default) opens the panel leftward from the trigger — correct
+// when the trigger sits near the right edge (the desktop header). The mobile
+// drawer's trigger sits near the LEFT edge instead, where a right-aligned
+// panel renders at a negative x offset — off-screen and unreachable, since
+// the page clips horizontal overflow. align="left" opens it rightward instead.
+export function ThemeColorControl({ align = 'right' }: { align?: 'left' | 'right' } = {}) {
   const [theme, setTheme] = useState<ThemeKey>('default')
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -65,7 +70,7 @@ export function ThemeColorControl() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-40 mt-2 w-48 rounded-xl border border-line bg-card p-2 shadow-2xl shadow-black/40">
+        <div className={`absolute top-full z-40 mt-2 w-48 rounded-xl border border-line bg-card p-2 shadow-2xl shadow-black/40 ${align === 'right' ? 'right-0' : 'left-0'}`}>
           <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-soft">Color theme</p>
           <div className="space-y-0.5">
             {THEMES.map((t) => (

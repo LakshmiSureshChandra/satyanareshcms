@@ -10,7 +10,12 @@ const SIZES = [
 ] as const
 type SizeKey = (typeof SIZES)[number]['key']
 
-export function TextSizeControl() {
+// align="right" (default) opens the panel leftward from the trigger — correct
+// when the trigger sits near the right edge (the desktop header). The mobile
+// drawer's trigger sits near the LEFT edge instead, where a right-aligned
+// panel renders at a negative x offset — off-screen and unreachable, since
+// the page clips horizontal overflow. align="left" opens it rightward instead.
+export function TextSizeControl({ align = 'right' }: { align?: 'left' | 'right' } = {}) {
   const [size, setSize] = useState<SizeKey>('md')
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -49,7 +54,7 @@ export function TextSizeControl() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-40 mt-2 flex items-center gap-1 whitespace-nowrap rounded-xl border border-line bg-card p-2 shadow-2xl shadow-black/40">
+        <div className={`absolute top-full z-40 mt-2 flex items-center gap-1 whitespace-nowrap rounded-xl border border-line bg-card p-2 shadow-2xl shadow-black/40 ${align === 'right' ? 'right-0' : 'left-0'}`}>
           <span className="mr-1 pl-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-soft">Text size</span>
           {SIZES.map((s) => (
             <button

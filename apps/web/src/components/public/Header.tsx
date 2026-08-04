@@ -207,7 +207,10 @@ function MobileItem({ item, depth, close }: { item: MenuItem; depth: number; clo
   const hasKids = item.children.length > 0
 
   return (
-    <div className="border-b border-line" style={depth > 0 ? { paddingLeft: 16 } : undefined}>
+    // margin (not padding) so the border-bottom is inset along with the row —
+    // padding left the divider line running full-width while the text/chevron
+    // sat indented above it, visually disconnecting the line from its item
+    <div className="border-b border-line" style={depth > 0 ? { marginLeft: depth * 16 } : undefined}>
       <div className="flex items-center">
         <MenuLink
           item={item}
@@ -336,8 +339,8 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
             <MobileItem key={m.id} item={m} depth={0} close={() => setOpen(false)} />
           ))}
           <div className="mt-5 flex items-center gap-2 sm:hidden">
-            <TextSizeControl />
-            <ThemeColorControl />
+            <TextSizeControl align="left" />
+            <ThemeColorControl align="left" />
           </div>
           <div className="mt-5 flex flex-col gap-2">
             <Button asChild onClick={() => setOpen(false)}>
