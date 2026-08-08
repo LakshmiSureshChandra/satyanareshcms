@@ -9,7 +9,6 @@ import { Hero } from '@/components/public/home/Hero'
 import { TrustStats } from '@/components/public/home/TrustStats'
 import { ComplianceTicker } from '@/components/public/home/ComplianceTicker'
 import { ServicesBento } from '@/components/public/home/ServicesBento'
-import { TaxTools } from '@/components/public/home/TaxTools'
 
 export const revalidate = 300
 
@@ -53,8 +52,6 @@ export default async function HomePage() {
           </div>
         </section>
       )}
-
-      <TaxTools />
 
       {/* ---- CMS content: whatever the admin publishes ---- */}
       {insights.length > 0 && (
