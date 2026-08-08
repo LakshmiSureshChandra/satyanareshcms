@@ -31,7 +31,16 @@ export function ThemeColorControl({ align = 'right' }: { align?: 'left' | 'right
 
   useEffect(() => {
     const saved = localStorage.getItem('theme-color') as ThemeKey | null
-    if (saved) setTheme(saved)
+    if (!saved) return
+    setTheme(saved)
+    // Re-applies the attribute here too, not just in choose() — a pre-hydration
+    // <script> sets it earlier for a flash-free first paint, but something in
+    // the hydration path was reliably wiping it back off moments later (visible
+    // via a MutationObserver: attribute went sepia -> null within ~100ms,
+    // without ever going through setAttribute/removeAttribute, so it wasn't
+    // even our own code doing it). Re-asserting it from a real useEffect, which
+    // runs after hydration/commit has settled, makes it stick regardless.
+    if (saved !== 'default') document.documentElement.setAttribute('data-theme-color', saved)
   }, [])
 
   useEffect(() => {

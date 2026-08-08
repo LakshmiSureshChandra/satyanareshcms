@@ -22,7 +22,16 @@ export function TextSizeControl({ align = 'right' }: { align?: 'left' | 'right' 
 
   useEffect(() => {
     const saved = localStorage.getItem('text-size') as SizeKey | null
-    if (saved) setSize(saved)
+    if (!saved) return
+    setSize(saved)
+    // Re-applies the attribute here too, not just in choose() — a pre-hydration
+    // <script> sets it earlier for a flash-free first paint, but something in
+    // the hydration path was reliably wiping it back off moments later (visible
+    // via a MutationObserver: attribute went sepia -> null within ~100ms,
+    // without ever going through setAttribute/removeAttribute, so it wasn't
+    // even our own code doing it). Re-asserting it from a real useEffect, which
+    // runs after hydration/commit has settled, makes it stick regardless.
+    if (saved !== 'md') document.documentElement.setAttribute('data-text-size', saved)
   }, [])
 
   useEffect(() => {
