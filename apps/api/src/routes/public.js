@@ -511,14 +511,22 @@ router.post('/newsletter/subscribe', subscribeLimiter, async (req, res) => {
       : settings.newsletter_from_email
     : undefined
 
-  await sendMail({
-    to: email,
-    from,
-    subject: 'Confirm your subscription — AK Ganesh & Co',
-    html: `<p>Please confirm you'd like to receive updates from AK Ganesh & Co.</p>
-      <p><a href="${WEB_URL}/newsletter/confirm/${sub.confirmToken}">Confirm subscription</a></p>
-      <p>If you didn't request this, you can ignore this email.</p>`,
-  }).catch((e) => console.error('Subscribe confirmation email failed:', e.message))
+  try {
+    await sendMail({
+      to: email,
+      from,
+      subject: 'Confirm your subscription — AK Ganesh & Co',
+      html: `<p>Please confirm you'd like to receive updates from AK Ganesh & Co.</p>
+        <p><a href="${WEB_URL}/newsletter/confirm/${sub.confirmToken}">Confirm subscription</a></p>
+        <p>If you didn't request this, you can ignore this email.</p>`,
+    })
+  } catch (e) {
+    // the subscriber row is still created (harmless, stays "pending" until a
+    // resend succeeds) — but the visitor must be told the email didn't go
+    // out, not shown a false "check your inbox" success message
+    console.error('Subscribe confirmation email failed:', e.message)
+    return res.status(500).json({ error: 'Could not send the confirmation email. Please try again shortly.' })
+  }
 
   res.json({ ok: true })
 })
