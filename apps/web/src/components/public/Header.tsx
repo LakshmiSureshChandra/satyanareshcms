@@ -261,20 +261,28 @@ export function Header({ menus, settings, logoUrl }: { menus: MenuItem[]; settin
   return (
     <header className="glass fixed inset-x-0 top-0 z-50 border-b border-line">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
-        <Link href="/" className="flex shrink-0 flex-col leading-none" onClick={() => setOpen(false)}>
-          {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt={name} className="h-9 w-auto md:h-10" />
-          ) : (
-            <>
-              <span className="text-lg font-bold tracking-tight text-ink md:text-xl">
-                <span className="text-accent">{firstWord}</span>
-                {restWords.length > 0 && ` ${restWords.join(' ')}`}
-              </span>
-              <span className="mt-1 text-[10px] uppercase tracking-[0.15em] text-ink-soft">Chartered Accountants</span>
-            </>
-          )}
-        </Link>
+        <div className="flex shrink-0 items-center gap-3">
+          {/* ICAI credential mark — a fixed badge (not the site logo), so it
+              doesn't participate in the settings.site_logo / text-wordmark
+              fallback above; always shows regardless of what's configured */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/Caindia-Logo.webp" alt="ICAI — Chartered Accountants of India" className="h-8 w-auto shrink-0 md:h-9" />
+          <span className="h-8 w-px shrink-0 bg-line md:h-9" aria-hidden />
+          <Link href="/" className="flex flex-col leading-none" onClick={() => setOpen(false)}>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt={name} className="h-9 w-auto md:h-10" />
+            ) : (
+              <>
+                <span className="text-lg font-bold tracking-tight text-ink md:text-xl">
+                  <span className="text-accent">{firstWord}</span>
+                  {restWords.length > 0 && ` ${restWords.join(' ')}`}
+                </span>
+                <span className="mt-1 text-[10px] uppercase tracking-[0.15em] text-ink-soft">Chartered Accountants</span>
+              </>
+            )}
+          </Link>
+        </div>
 
         {/* min-w-0 lets this shrink inside the flex row; overflow-x-auto lets a
             long menu scroll horizontally (each pill stays whitespace-nowrap)
