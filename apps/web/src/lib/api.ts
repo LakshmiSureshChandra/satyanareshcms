@@ -80,14 +80,3 @@ export type GalleryAlbum = Omit<GalleryAlbumCard, 'category'> & {
 }
 
 export type GalleryAlbumSearch = { albums: GalleryAlbumCard[]; total: number; page: number; pages: number; query: string }
-
-export type PollOptionData = { id: number; text: string; votes: number }
-export type Poll = {
-  id: number
-  title: string
-  totalVotes: number
-  hasVoted: boolean
-  closed?: boolean
-  options: PollOptionData[]
-}
-export type PollListItem = { id: number; title: string; createdAt: string }

@@ -1,8 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import { api, type PostCard as PostCardType, type PollListItem, type Settings } from '@/lib/api'
-import { formatDateTime } from '@/components/public/PostCard'
-import { PollWidget } from '@/components/public/PollWidget'
+import { api, type PostCard as PostCardType, type Settings } from '@/lib/api'
 import { HeroSlider } from '@/components/public/HeroSlider'
 import { Reveal } from '@/components/public/Reveal'
 import { Button } from '@/components/ui/button'
@@ -22,12 +20,9 @@ type Home = {
   more: PostCardType[]
   banners: Banner[]
 }
-type PollList = { polls: PollListItem[] }
-
 export default async function HomePage() {
-  const [home, pollArchive, settings] = await Promise.all([
+  const [home, settings] = await Promise.all([
     api<Home>('/home', 300),
-    api<PollList>('/polls?page=1', 300),
     api<Settings>('/settings', 300),
   ])
 
@@ -81,8 +76,7 @@ export default async function HomePage() {
               ))}
             </div>
 
-            <Reveal delay={120} className="space-y-6">
-              <PollWidget />
+            <Reveal delay={120}>
               <div className="rounded-2xl border border-line bg-card p-5">
                 <h3 className="text-sm font-semibold text-ink">Need advice specific to your business?</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-2">
@@ -94,29 +88,6 @@ export default async function HomePage() {
               </div>
             </Reveal>
           </div>
-
-          {pollArchive.polls.length > 0 && (
-            <Reveal className="mt-16 border-t border-line pt-8">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-soft">Poll archive</h3>
-                <Link href="/polls" className="text-xs font-semibold text-accent hover:underline">
-                  View all →
-                </Link>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {pollArchive.polls.slice(0, 4).map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/polls/${p.id}`}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-line bg-card px-4 py-3 text-xs transition-colors hover:border-accent-dark hover:bg-card-hover"
-                  >
-                    <span className="truncate font-medium text-ink">{p.title}</span>
-                    <span className="shrink-0 text-ink-soft">{formatDateTime(p.createdAt)}</span>
-                  </Link>
-                ))}
-              </div>
-            </Reveal>
-          )}
         </section>
       )}
     </>
