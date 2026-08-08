@@ -103,21 +103,3 @@ export function OverlayCard({ post }: { post: PostCardType }) {
   )
 }
 
-export function PostRow({ post }: { post: PostCardType }) {
-  return (
-    <article className="card-zoom group flex gap-4">
-      <Link href={`/${post.slug}`} className="w-24 shrink-0 md:w-28">
-        <CardImage post={post} className="aspect-square" rounded="rounded-lg" />
-      </Link>
-      <div className="min-w-0">
-        {post.categories[0] && <CategoryTag cat={post.categories[0]} />}
-        <Link href={`/${post.slug}`}>
-          <h3 className="headline mt-1 line-clamp-2 text-[0.95rem] leading-snug transition-colors group-hover:text-accent">
-            {post.title}
-          </h3>
-        </Link>
-        <time className="mt-1.5 block text-xs text-ink-soft">{formatDate(post.publishedAt)}</time>
-      </div>
-    </article>
-  )
-}

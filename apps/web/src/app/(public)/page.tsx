@@ -1,14 +1,16 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { api, type PostCard as PostCardType, type PollListItem, type Settings } from '@/lib/api'
-import { PostCard, PostRow, formatDateTime } from '@/components/public/PostCard'
+import { formatDateTime } from '@/components/public/PostCard'
 import { PollWidget } from '@/components/public/PollWidget'
 import { HeroSlider } from '@/components/public/HeroSlider'
 import { Reveal } from '@/components/public/Reveal'
+import { Button } from '@/components/ui/button'
 import { Hero } from '@/components/public/home/Hero'
 import { TrustStats } from '@/components/public/home/TrustStats'
 import { ComplianceTicker } from '@/components/public/home/ComplianceTicker'
 import { ServicesBento } from '@/components/public/home/ServicesBento'
+import { InsightRow } from '@/components/public/home/InsightRow'
 
 export const revalidate = 300
 
@@ -36,8 +38,6 @@ export default async function HomePage() {
     seen.add(p.id)
     return true
   })
-  const [leadInsight, ...restInsights] = insights
-
   return (
     <>
       <Hero siteName={settings.site_name || 'AK Ganesh & Co'} />
@@ -55,12 +55,15 @@ export default async function HomePage() {
 
       {/* ---- CMS content: whatever the admin publishes ---- */}
       {insights.length > 0 && (
-        <section id="insights" className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
+        <section id="insights" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <span className="eyebrow">Insights &amp; updates</span>
-                <h2 className="headline mt-3 text-3xl sm:text-4xl">Latest from the practice.</h2>
+                <h2 className="headline mt-2 text-2xl sm:text-3xl">Latest from the practice.</h2>
+                <p className="mt-2 max-w-md text-sm text-ink-2">
+                  Practical guidance on tax, compliance, and financial planning from our team.
+                </p>
               </div>
               <Link href="/search" className="flex items-center gap-1 text-sm font-medium text-accent hover:underline">
                 Browse all
@@ -69,38 +72,26 @@ export default async function HomePage() {
             </div>
           </Reveal>
 
-          <div className="mt-12 grid gap-10 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              {leadInsight && (
-                <Reveal>
-                  <PostCard post={leadInsight} big />
+          <div className="mt-10 grid gap-10 lg:grid-cols-3">
+            <div className="divide-y divide-line lg:col-span-2">
+              {insights.slice(0, 6).map((p, i) => (
+                <Reveal key={p.id} delay={i * 50}>
+                  <InsightRow post={p} />
                 </Reveal>
-              )}
-              {restInsights.length > 0 && (
-                <div className="mt-10 grid gap-8 sm:grid-cols-2">
-                  {restInsights.slice(0, 4).map((p, i) => (
-                    <Reveal key={p.id} delay={i * 70}>
-                      <PostCard post={p} />
-                    </Reveal>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
 
-            <Reveal delay={120} className="space-y-8">
+            <Reveal delay={120} className="space-y-6">
               <PollWidget />
-              {restInsights.length > 4 && (
-                <div className="rounded-2xl border border-line bg-card p-5">
-                  <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-ink-soft">
-                    More reading
-                  </h3>
-                  <div className="space-y-5">
-                    {restInsights.slice(4, 9).map((p) => (
-                      <PostRow key={p.id} post={p} />
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div className="rounded-2xl border border-line bg-card p-5">
+                <h3 className="text-sm font-semibold text-ink">Need advice specific to your business?</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink-2">
+                  Book a short call with a chartered accountant — no obligation.
+                </p>
+                <Button asChild size="sm" className="mt-4">
+                  <Link href="/contact">Book a Consultation</Link>
+                </Button>
+              </div>
             </Reveal>
           </div>
 
