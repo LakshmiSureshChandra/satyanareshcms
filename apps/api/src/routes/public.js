@@ -47,7 +47,7 @@ async function getSettings() {
 
 // public settings whitelist — never expose everything
 const PUBLIC_SETTINGS = [
-  'site_name', 'site_logo', 'fav_icon', 'site_email', 'site_phone', 'google_analytics',
+  'site_name', 'site_logo', 'fav_icon', 'site_email', 'site_phone', 'site_mobile', 'site_fax', 'site_address', 'google_analytics',
   'facebook_link', 'twitter_link', 'linkedin_link', 'instagram_link', 'youtube_link',
   'copy_rights_info', 'footer_config',
   'default_meta_description', 'google_site_verification', 'og_image',

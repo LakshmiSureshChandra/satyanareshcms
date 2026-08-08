@@ -18,9 +18,12 @@ export async function seedDatabase(db) {
   })
 
   const settings = {
-    site_name: 'AK Ganesh',
-    site_email: 'mail@akganesh.in',
-    site_phone: '',
+    site_name: 'AK Ganesh & Co',
+    site_email: 'akganeshco@yahoo.com',
+    site_phone: '040 - 2760 1117',
+    site_mobile: '+91 - 9440971117',
+    site_fax: '+040 - 2766 4455',
+    site_address: '1-10-160/A, 160/B, SML Nivas, Ashok Nagar, Hyderabad - 500 020.',
     google_analytics: '',
     facebook_link: '', twitter_link: '', linkedin_link: '', instagram_link: '', youtube_link: '',
     copy_rights_info: `© ${new Date().getFullYear()} AKGanesh.com. All rights reserved.`,

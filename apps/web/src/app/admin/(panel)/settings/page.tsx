@@ -10,6 +10,9 @@ const TEXT_FIELDS: [string, string][] = [
   ['site_name', 'Site Name'],
   ['site_email', 'Site Email'],
   ['site_phone', 'Site Phone'],
+  ['site_mobile', 'Mobile Number'],
+  ['site_fax', 'Fax Number'],
+  ['site_address', 'Office Address'],
   ['copy_rights_info', 'Copyright Line'],
 ]
 
@@ -50,9 +53,13 @@ export default function SettingsPage() {
       <div className="space-y-6 rounded-xl border border-stone-200 bg-white p-6">
         <div className="grid gap-4 md:grid-cols-2">
           {TEXT_FIELDS.map(([key, label]) => (
-            <div key={key} className={key === 'copy_rights_info' ? 'md:col-span-2' : ''}>
+            <div key={key} className={key === 'copy_rights_info' || key === 'site_address' ? 'md:col-span-2' : ''}>
               <label className="admin-label">{label}</label>
-              <input value={form[key] || ''} onChange={(e) => set(key, e.target.value)} className="admin-input" />
+              {key === 'site_address' ? (
+                <textarea value={form[key] || ''} onChange={(e) => set(key, e.target.value)} rows={2} className="admin-input" />
+              ) : (
+                <input value={form[key] || ''} onChange={(e) => set(key, e.target.value)} className="admin-input" />
+              )}
             </div>
           ))}
         </div>
