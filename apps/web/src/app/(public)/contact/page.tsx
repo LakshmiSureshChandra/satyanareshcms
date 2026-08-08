@@ -3,6 +3,7 @@ import { Clock, Mail, MapPin, Phone, Printer, Smartphone } from 'lucide-react'
 import { api, type Settings } from '@/lib/api'
 import { ContactForm } from '@/components/public/ContactForm'
 import { PageHeader } from '@/components/public/PageHeader'
+import { GoogleMapEmbed } from '@/components/public/GoogleMapEmbed'
 
 export const metadata: Metadata = { title: 'Contact Us' }
 export const revalidate = 3600
@@ -90,16 +91,8 @@ export default async function ContactPage() {
         </div>
 
         {mapQuery && (
-          <div className="mt-10 overflow-hidden rounded-2xl border border-line">
-            <iframe
-              title="Office location"
-              src={`https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`}
-              width="100%"
-              height="360"
-              style={{ border: 0, filter: 'grayscale(0.15) contrast(1.05)' }}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+          <div className="mt-10">
+            <GoogleMapEmbed query={mapQuery} />
           </div>
         )}
       </div>

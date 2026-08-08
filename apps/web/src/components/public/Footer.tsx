@@ -4,6 +4,7 @@ import type { MenuItem, Settings } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { SocialIcons } from './SocialIcons'
 import { NewsletterSubscribeBox } from './NewsletterSubscribeBox'
+import { ManageCookiePreferencesLink } from './ManageCookiePreferencesLink'
 
 const linkClass = 'text-sm text-ink-2 transition-colors hover:text-accent'
 
@@ -112,9 +113,12 @@ export function Footer({ settings, menu }: { settings: Settings; menu: MenuItem[
       </div>
 
       <div className="border-t border-line">
-        <p className="mx-auto max-w-6xl px-4 py-6 text-center text-xs text-ink-soft sm:px-6">
-          {settings.copy_rights_info || `© ${new Date().getFullYear()} ${name}. All rights reserved.`}
-        </p>
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center sm:flex-row sm:justify-between sm:px-6">
+          <p className="text-xs text-ink-soft">
+            {settings.copy_rights_info || `© ${new Date().getFullYear()} ${name}. All rights reserved.`}
+          </p>
+          <ManageCookiePreferencesLink />
+        </div>
       </div>
     </footer>
   )
